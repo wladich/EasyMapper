@@ -4,7 +4,7 @@ environments:
 processors:
     production:
         css: "css-embed-urls {input} - | cssmin > {output}"
-        js: "cat {input} | uglifyjs > {output}"
+        js: "cat {input} | uglifyjs --no-copyright > {output}"
 root:
     -
         src: src/index.html.tpl

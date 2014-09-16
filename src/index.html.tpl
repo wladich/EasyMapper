@@ -6,9 +6,8 @@
         <!-- @require app -->
 
         <script>
-
             function setUp(){
-
+                new mapperApp('map');
             }
             window.onload = setUp;
         </script>        
