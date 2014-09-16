@@ -7,6 +7,6 @@ provides:
             - http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js
             - http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css
         develop:
-            - lib/leaflet/leaflet-src.js
-            - lib/leaflet/leaflet.css
+            - src/vendor/leaflet-0.7.3/leaflet-src.js
+            - src/vendor/leaflet-0.7.3/leaflet.css
 depends:
