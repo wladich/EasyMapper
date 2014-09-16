@@ -1,0 +1,14 @@
+environments:
+    - production
+    - develop
+processors:
+    production:
+        css: "css-embed-urls {input} - | cssmin > {output}"
+        js: "cat {input} | uglifyjs > {output}"
+root:
+    -
+        src: src/index.html.tpl
+        filename: index.html
+        injectCss: false
+        injectJs: false
+

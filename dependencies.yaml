@@ -1,0 +1,12 @@
+provides:
+    app:
+        - src/mapper.js
+        - src/style.css
+    leaflet:
+        production:
+            - http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js
+            - http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css
+        develop:
+            - lib/leaflet/leaflet-src.js
+            - lib/leaflet/leaflet.css
+depends:
