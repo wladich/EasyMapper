@@ -1,3 +1,5 @@
+/* copied from https://github.com/shramov/leaflet-plugins @1e8779ef1f */
+
 /*
  * L.TileLayer is used for standard xyz-numbered tile layers.
  */
