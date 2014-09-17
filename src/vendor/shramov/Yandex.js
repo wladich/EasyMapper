@@ -1,4 +1,5 @@
 /* copied from https://github.com/shramov/leaflet-plugins @1e8779ef1f */
+//@require http://api-maps.yandex.ru/2.0-stable/?load=package.standard&lang=ru-RU#.js
 
 /*
  * L.TileLayer is used for standard xyz-numbered tile layers.
