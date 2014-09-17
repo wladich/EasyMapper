@@ -6,7 +6,7 @@ window.layers.getBaseMaps = function getBaseMaps() {
     return {
         'OpenStreetMap': L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'),
         'ESRI Sat': L.tileLayer('http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',             {maxNativeZoom: 17}),
-        'Yandex': new L.Yandex('map', {yandexMapAutoSwitch: false, 'scaleDependent': true}),
+        'Yandex': new L.Yandex('map', {'scaleDependent': true}, {yandexMapAutoSwitch: false}),
         'Yandex Public': new L.Yandex('publicMap', {'scaleDependent': true}),
         'Yandex Sat': new L.Yandex('satellite'),
 
