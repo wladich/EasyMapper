@@ -11,6 +11,8 @@
 L.Yandex = L.Class.extend({
 	includes: L.Mixin.Events,
 
+	yandexAnimationOptions: {duration: 250, delay: 0, timingFunction: 'cubic-bezier(0,0,0.25,1)'},
+
 	options: {
 		minZoom: 0,
 		maxZoom: 18,
@@ -67,7 +69,8 @@ L.Yandex = L.Class.extend({
 			'viewreset': this._viewReset,
 			'move': this._move,
 			'resize': this._resize,
-			'zoomend': this._setZoom},
+			'zoomend': this._setZoom,
+			'zoomstart': this._beforeZoom},
 			this);
 
 		if (this._animated) {
@@ -117,7 +120,7 @@ L.Yandex = L.Class.extend({
 			first = tilePane.firstChild;
 
 		if (!this._container) {
-			this._container = L.DomUtil.create('div', 'leaflet-yandex-layer leaflet-top leaflet-left leaflet-zoom-animated');
+			this._container = L.DomUtil.create('div', 'leaflet-yandex-layer leaflet-top leaflet-left');
 			this._container.id = '_YMapContainer_' + L.Util.stamp(this);
 			this._container.style.zIndex = 'auto';
 		}
@@ -163,43 +166,46 @@ L.Yandex = L.Class.extend({
 		map.setType(this._type);
 
 		this._yandex = map;
-		this._yandex.events.add('actionend', this._onAnimationEnd, this);
 		//Reporting that map-object was initialized
 		this.fire('MapObjectInitialized', { mapObject: map });
 	},
 
 	_viewReset: function() {
-		this._setZoom();
-		this._move();
+		if (!this._zooming) {
+			var center = this._map.getCenter();
+			center = [center.lat, center.lng];
+			var zoom = this._map.getZoom();
+			this._yandex.setCenter(center, zoom);
+		}
 	},
 
 	_setZoom: function() {
 		var zoom = this._map.getZoom();
 		if (zoom !== this._yandex.getZoom()){
-			this._yandex.setZoom(zoom);
+			var zoomOptions = this._animated ? this.yandexAnimationOptions : {};
+			this._yandex.setZoom(zoom, zoomOptions);
 		}
+		this._zooming = false;
 	},
 
 	_move: function() {
-		if (!this._animating) {
+		if (!this._zooming) {
 			var center = this._map.getCenter();
 			center = [center.lat, center.lng];
+			//setTimeout(function(){this._yandex.setCenter(center);}.bind(this), 50);
 			this._yandex.setCenter(center);
+			//this._yandex.panTo(center,  {duration: 0, delay: 0});
 		}
 	},
 
 	_animateZoom: function(e) {
 		var center = [e.center.lat, e.center.lng];
 		var zoom = e.zoom;
-		this._animating = true;
-		this._yandex.setCenter(center, zoom, {duration: 250, timingFunction: 'cubic-bezier(0,0,0.25,1)'});
+		this._yandex.setCenter(center, zoom, this.yandexAnimationOptions);
 	},
 
-	_onAnimationEnd: function() {
-		if (this._animating) {
-			this._map._onZoomTransitionEnd();
-			this._animating = false;
-		}
+	_beforeZoom: function() {
+		this._zooming = true;
 	},
 
 	_resize: function(force) {
