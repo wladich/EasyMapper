@@ -1,3 +1,4 @@
+/* copied from https://github.com/shramov/leaflet-plugins @1e8779ef1f */
 /*
  * Google layer using Google Maps API
  */
