@@ -11,4 +11,6 @@ provides:
             - src/vendor/leaflet-0.7.3/leaflet.css
     yandex-api:
         - http://api-maps.yandex.ru/2.0-stable/?load=package.standard&lang=ru-RU#.js
+    google-api:
+        - https://maps.googleapis.com/maps/api/js?sensor=false#.js
 depends:

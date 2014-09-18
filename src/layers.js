@@ -1,5 +1,6 @@
 //@require leaflet
 //@require leaflet_plugins/Yandex.js
+//@require vendor/shramov/Google.js
 window.layers = {};
 
 window.layers.getBaseMaps = function getBaseMaps() {
@@ -7,8 +8,11 @@ window.layers.getBaseMaps = function getBaseMaps() {
         'OpenStreetMap': L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'),
         'ESRI Sat': L.tileLayer('http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',             {maxNativeZoom: 17}),
         'Yandex': new L.Yandex('map', {'scaleDependent': true}, {yandexMapAutoSwitch: false}),
-        'Yandex Public': new L.Yandex('publicMap', {'scaleDependent': true}),
+        'Yandex Public': new L.Yandex('publicMap'),
         'Yandex Sat': new L.Yandex('satellite'),
+         'Google': new L.Google('ROADMAP'),
+         'Google Sat': new L.Google('SATELLITE'),
+         'Google Sat Hybrid': new L.Google('HYBRID'),
 
         'Topomapper 2km': L.tileLayer('http://maps.atlogis.com/cgi-bin/tilecache-2.11/tilecache.py/1.0.0/topomapper_gmerc/{z}/{x}/{y}.jpg', {maxNativeZoom: 12})
     };
