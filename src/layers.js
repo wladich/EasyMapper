@@ -1,5 +1,5 @@
 //@require leaflet
-//@require vendor/shramov/Yandex.js
+//@require leaflet_plugins/Yandex.js
 window.layers = {};
 
 window.layers.getBaseMaps = function getBaseMaps() {
