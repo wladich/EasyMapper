@@ -13,4 +13,6 @@ provides:
         - http://api-maps.yandex.ru/2.0-stable/?load=package.standard&lang=ru-RU#.js
     google-api:
         - https://maps.googleapis.com/maps/api/js?sensor=false#.js
+    leaflet.hash_state.Map:
+        - src/leaflet_plugins/hash_state/Leaflet.Map.js
 depends:
