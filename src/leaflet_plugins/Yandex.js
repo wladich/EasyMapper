@@ -85,11 +85,12 @@ L.Yandex = L.Class.extend({
 	onRemove: function(map) {
 		this._map._container.removeChild(this._container);
 
-		map.on({
+		map.off({
 			'viewreset': this._viewReset,
 			'move': this._move,
 			'resize': this._resize,
-			'zoomend': this._setZoom},
+			'zoomend': this._setZoom,
+			'zoomstart': this._beforeZoom},
 			this);
 
 		if (this._animated) {
@@ -171,12 +172,12 @@ L.Yandex = L.Class.extend({
 	},
 
 	_viewReset: function() {
-		if (!this._zooming) {
+		//if (!this._zooming) {
 			var center = this._map.getCenter();
 			center = [center.lat, center.lng];
 			var zoom = this._map.getZoom();
-			this._yandex.setCenter(center, zoom);
-		}
+			this._yandex.setCenter(center, zoom, this._animated ? this.yandexAnimationOptions : {});
+		//}
 	},
 
 	_setZoom: function() {
@@ -192,9 +193,7 @@ L.Yandex = L.Class.extend({
 		if (!this._zooming) {
 			var center = this._map.getCenter();
 			center = [center.lat, center.lng];
-			//setTimeout(function(){this._yandex.setCenter(center);}.bind(this), 50);
 			this._yandex.setCenter(center);
-			//this._yandex.panTo(center,  {duration: 0, delay: 0});
 		}
 	},
 
