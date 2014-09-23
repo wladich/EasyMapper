@@ -12,7 +12,7 @@
         },
 
         setupMap: function(mapContainer) {
-            var map = this._map = L.map(mapContainer, {fadeAnimation: false});
+            var map = this._map = L.map(mapContainer, {fadeAnimation: false, attributionControl: false});
             var baseMaps = layers.getBaseMaps();
             var layersControl = L.control.layers(baseMaps, layers.getOverlays(), {collapsed: false, hotkeys: true})
                 .addTo(map);
