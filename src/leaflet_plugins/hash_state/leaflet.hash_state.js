@@ -5,13 +5,15 @@
     L.Mixin.HashState = {
         enableHashState: function(key, defaults) {
             this._hash_state_key = key;
-            var saveFunc = (function saveFunc() {
-                var state = this._serializeState();
+            var saveFunc = (function saveFunc(e) {
+                var state = this._serializeState(e);
                 window.hashState.saveState(key, state);
             }).bind(this);
             var loadFunc = this._unserializeState.bind(this);
+            var eventSource = this.stateChangeEventsSource ? this[this.stateChangeEventsSource] : this;
             for (var i=0; i < this.stateChangeEvents.length; i++) {
-                this.on(this.stateChangeEvents[i], saveFunc);
+                var event = this.stateChangeEvents[i];
+                eventSource.on(event, saveFunc);
             }
             window.hashState.addEventListener(key, loadFunc);
             var state = window.hashState.getState(key);

@@ -1,6 +1,7 @@
 //@require leaflet
 //@require layers.js
 //@require leaflet.hash_state.Map
+//@require leaflet.hash_state.Control.Layers
 (function(){
     "use strict";
 
@@ -12,9 +13,9 @@
         setupMap: function(mapContainer) {
             var map = this._map = L.map(mapContainer, {fadeAnimation: false});
             var baseMaps = layers.getBaseMaps();
-            L.control.layers(baseMaps, layers.getOverlays(), {collapsed: false})
+            var layersControl = L.control.layers(baseMaps, layers.getOverlays(), {collapsed: false})
                 .addTo(map);
-            map.addLayer(baseMaps['OpenStreetMap']);
+            layersControl.enableHashState('l', ['O']);
             map.enableHashState('m', [10, 55.7, 37.5]);
         }
 

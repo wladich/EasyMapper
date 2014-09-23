@@ -41,7 +41,7 @@
             if (i >= 0) {
                 hash = hash.substr(i+1).trim();
                 var pairs = hash.split('&');
-                for (var j=0, len=pairs.length; i < len; i++) {
+                for (var j=0, len=pairs.length; j < len; j++) {
                     var key_value = pairs[j].split('=');
                     if (key_value.length === 2) {
                         var key = key_value[0];
