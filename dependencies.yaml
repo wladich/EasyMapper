@@ -17,4 +17,6 @@ provides:
         - src/leaflet_plugins/hash_state/Leaflet.Map.js
     leaflet.hash_state.Control.Layers:
         - src/leaflet_plugins/hash_state/Leaflet.Control.Layers.js
+    leaflet.layers_control.hotkeys:
+        - src/leaflet_plugins/Control.Layers.Hotkeys.js
 depends:
