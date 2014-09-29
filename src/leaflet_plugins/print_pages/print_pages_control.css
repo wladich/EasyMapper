@@ -1,0 +1,157 @@
+.leaflet-control-printpages .right-side {
+    float: right;
+}
+
+.leaflet-control-printpages {
+    position: relative;
+    background-color: white;
+    border-radius: 5px 5px 5px 5px;
+    box-shadow: 0 1px 5px rgba(0, 0, 0, 0.4);
+    padding: 5px 8px 5px 8px;
+    color: #333;
+}
+
+.leaflet-control-printpages tr, 
+.leaflet-control-printpages tbody, 
+.leaflet-control-printpages tr, 
+.leaflet-control-printpages td {
+    margin: 0;
+    padding: 0;
+}
+
+
+.leaflet-control-printpages .main-layout > tbody >tr > td {
+    border-top: 1px solid #eee;
+    padding-top: 4px;
+    padding-bottom: 2px;
+    
+}
+
+.leaflet-control-printpages .main-layout > tbody > tr:last-child > td,
+.leaflet-control-printpages .main-layout > tbody > tr:first-child > td {
+    border-top: none;
+}
+
+.leaflet-control-printpages input {
+    padding: 0 5px;
+    margin: 0;
+    border: 1px solid #777;
+    border-radius: 3px;
+    border: 1px solid #ddd;
+    text-align: right;
+}
+
+.leaflet-control-printpages .button, .leaflet-control-printpages .text-button {
+    display: inline-block;
+    height: 26px;
+    border-radius: 4px 4px 4px 4px;
+    border: 1px solid #ccc;
+    cursor: pointer;
+    margin-right: 6px;
+}
+
+.leaflet-control-printpages .button {
+    width: 26px;
+    background-position: 50% 50%;
+    background-repeat: no-repeat;
+}
+
+.leaflet-control-printpages .text-button {
+    padding: 0 1em;
+    line-height: 26px;
+    font-weight: bold;
+    color: #333;
+}
+
+.leaflet-control-printpages .button.right-side
+{
+    margin-right: 0;  
+    margin-left: 6px;
+}
+
+.leaflet-control-printpages .button:hover, .text-button:hover {
+    background-color: #f4f4f4;
+}
+
+.leaflet-control-printpages .section-title{
+    vertical-align: bottom;
+    padding-right: 0.8em;
+}
+
+.leaflet-control-printpages .section-title-middle{
+    vertical-align: middle;
+}
+
+.leaflet-control-printpages .predefined-values {
+    margin-bottom: 4px;
+}
+
+.leaflet-control-printpages .predefined-values a {
+    color: #999;
+    border-bottom: 1px dashed #999;
+    cursor: pointer;
+    margin-right: 0.7em;
+}
+
+.leaflet-control-printpages .predefined-values a:last-child {
+    margin-right: 0;
+}
+
+.leaflet-control-printpages .settings-summary {
+    display: inline-block;
+}
+
+.leaflet-control-printpages .download-button-row {
+    position: relative;
+    text-align: center;
+}
+
+.leaflet-control-printpages .progress-unknown {
+    display: inline-block;
+    height: 26px;
+    width: 26px;
+    background-position: 50% 50%;
+    background-repeat: no-repeat;
+    border-radius: 4px 4px 4px 4px;
+    border: 1px solid #ccc;
+    background-image: url('images/spinner.gif');
+}
+
+.leaflet-control-printpages .progress {
+    border-radius: 4px 4px 4px 4px;
+    border: 1px solid #ccc;
+    height: 26px;
+    line-height: 26px;
+    vertical-align: middle;
+    padding: 0 4px;
+}
+
+.leaflet-control-printpages .leaflet-control-progress-bkg {
+    display: inline-block;
+    width: 100%;
+    background-color: #ccc;
+    height: 10px;
+}
+
+.leaflet-control-printpages .leaflet-control-progress-bar {
+    width: 30%;
+    background-color: #888;
+    height: 100%    ;
+}
+
+.icon-addpageportrait {
+    background-image: url('images/add-page-vert.png');
+}
+
+.icon-addpagelandscape {
+    background-image: url('images/add-page-horiz.png');
+}
+
+.icon-removeallpages {
+    background-image: url('images/remove-pages.png');
+}
+
+.icon-settings {
+    background-image: url('images/settings.png');
+}
+

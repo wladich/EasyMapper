@@ -19,4 +19,6 @@ provides:
         - src/leaflet_plugins/hash_state/Leaflet.Control.Layers.js
     leaflet.layers_control.hotkeys:
         - src/leaflet_plugins/Control.Layers.Hotkeys.js
+    leaflet.print_pages:
+        - src/leaflet_plugins/print_pages/print_pages_control.js
 depends:
