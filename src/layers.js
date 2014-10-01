@@ -24,7 +24,7 @@ window.layers.getBaseMaps = function getBaseMaps() {
 window.layers.getOverlays = function getOverlays() {
     return {
         "Poehali 10km": new L.TileLayer("http://tiles.wladich.tk/poehali001m/{z}/{x}/{y}",
-                                        {code: 'T1', tms: true, maxNativeZoom: 9}),
+                                        {code: 'D', tms: true, maxNativeZoom: 9}),
         "ArbaletMO": new L.TileLayer("http://tiles.wladich.tk/ArbaletMO/{z}/{x}/{y}",
                                      {code: 'A', tms: true, maxNativeZoom: 13}),
         "topo500": new L.TileLayer("http://tiles.wladich.tk/topo500/{z}/{x}/{y}",
