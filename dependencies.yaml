@@ -21,4 +21,9 @@ provides:
         - src/leaflet_plugins/Control.Layers.Hotkeys.js
     leaflet.print_pages:
         - src/leaflet_plugins/print_pages/print_pages_control.js
+    knockout:
+        production:
+            - src/vendor/knockout/knockout-3.2.0.js
+        develop:
+            - src/vendor/knockout/knockout-3.2.0.debug.js
 depends:
