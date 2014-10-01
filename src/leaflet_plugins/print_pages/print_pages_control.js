@@ -12,7 +12,6 @@
                         '</div>' +
                     '</div>',
         viewModel: function(params) {
-            console.log(params);
             this.progress = params.progress;
         }
     });
@@ -36,11 +35,14 @@
             this.settingsExpanded = ko.observable(false);
             this.makingPdf = ko.observable(false);
             this.progress = ko.observable(undefined);
+            this.sheets = ko.observableArray();
+            this.mapMoveNotifier = ko.observable();
+            this.suggestedZooms = ko.computed(this.suggestZooms, this);
         },
 
         onAdd: function(map) {
             this._map = map;
-            this.sheets = [];
+            this.sheets.removeAll();
             var dialogContainer = this._container = L.DomUtil.create('div', 'leaflet-control leaflet-control-printpages');
             dialogContainer.innerHTML = '\
                 <table class="main-layout">\
@@ -50,7 +52,7 @@
                             <a title="Remove all pages" class="button right-side icon-removeallpages"></a>\
                     </td></tr>\
                     <tr>\
-                        <td class="section-title">Map scale</td>\
+                        <td class="section-title">Print scale</td>\
                         <td>\
                             <div class="predefined-values" data-bind="foreach: predefinedScales">\
                                 <a data-bind="text: $data[0], click: function() {$root.mapScale($data[1])}"></a>\
@@ -100,7 +102,12 @@
                             <a class="button icon-settings" data-bind="click: function() {settingsExpanded(!settingsExpanded())}"></a>\
                             <div class="settings-summary">\
                                 <span data-bind="text: pageWidth"></span>&nbsp;x&nbsp;<span data-bind="text: pageHeight"></span>&nbsp;mm,<br/>\
-                                <span data-bind="text: printResolution"></span>&nbsp;dpi, zoom&nbsp;<span data-bind="text: srcZoomLevel"></span>\
+                                <span data-bind="text: printResolution"></span>&nbsp;dpi,\
+                                zoom&nbsp;<span data-bind="text: srcZoomLevel"></span>\
+                                    <!-- ko if: srcZoomLevel()=== "auto" -->\
+                                        (<span title="Zoom for satellite and scanned imagery" data-bind="text: suggestedZooms()[0]"></span>&nbsp;\
+                                         /&nbsp;<span title="Zoom for maps like OSM and Google" data-bind="text: suggestedZooms()[1]"></span>)\
+                                    <!-- /ko -->\
                             </div>\
                     </td></tr>\
                     <tr><td colspan="2">\
@@ -128,7 +135,39 @@
                 L.DomEvent.on(dialogContainer, 'click', L.DomEvent.stopPropagation);
             }
 
+            this._map.on('moveend', function() {this.mapMoveNotifier.valueHasMutated();}, this);
             return dialogContainer;
+        },
+
+        suggestZooms: function() {
+            var reference_lat,
+                mapScale = this.mapScale(),
+                resolution = this.printResolution();
+            this.mapMoveNotifier();
+            var sheets = this.sheets();
+            if (sheets.length > 0) {
+                var reference_lat = 1e20;
+                for (var i=0; i < sheets.length; i++) {
+                    var sheet = sheets[i];
+                    var sheet_lat = Math.abs(sheet.getCenter().lat);
+                    if (Math.abs(sheet_lat < reference_lat)) {
+                        reference_lat = sheet_lat;
+                    }
+                }
+            } else {
+                if (!this._map) {
+                    return [null, null];
+                }
+                reference_lat = this._map.getCenter().lat;
+            };
+            var target_meters_per_pixel = mapScale / (resolution / 2.54) ;
+            var map_units_per_pixel = target_meters_per_pixel / Math.cos(reference_lat * Math.PI / 180);
+            var zoom_sat = Math.ceil(Math.log(40075016.4 / 256 / map_units_per_pixel)/Math.LN2);
+
+            target_meters_per_pixel = mapScale / (90 / 2.54) / 1.5;
+            map_units_per_pixel = target_meters_per_pixel / Math.cos(reference_lat * Math.PI / 180);
+            var zoom_map = Math.round(Math.log(40075016.4 / 256 / map_units_per_pixel)/Math.LN2);
+            return [zoom_sat, zoom_map];
         },
 
         onDownloadButtonClick: function() {
