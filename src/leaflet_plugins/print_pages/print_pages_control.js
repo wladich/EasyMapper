@@ -16,6 +16,21 @@
         }
     });
 
+    ko.extenders.checkNumberRange = function(target, range) {
+        var result = ko.pureComputed({
+            read: target,  //always return the original observables value
+            write: function(newValue) {
+                newValue = parseFloat(newValue);
+                if (newValue >= range[0] && newValue <= range[1]) {
+                    target(newValue);
+                } else {
+                    target.notifySubscribers(target());
+                }
+            }
+        }).extend({ notify: 'always' });
+        return result;
+    };
+
     L.Control.PrintPages = L.Control.extend({
         includes: [L.Mixin.Events, L.Mixin.HashState],
         options: {position: 'bottomleft'},
@@ -27,11 +42,11 @@
         initialize: function() {
             L.Control.prototype.initialize.call(this);
             // knockout viewModel fields
-            this.mapScale = ko.observable(500);
-            this.printResolution = ko.observable(300);
+            this.mapScale = ko.observable(500).extend({checkNumberRange: [0.01, 1000000]});
+            this.printResolution = ko.observable(300).extend({checkNumberRange: [10, 9999]});
             this.srcZoomLevel = ko.observable('auto');
-            this.pageWidth = ko.observable(210);
-            this.pageHeight = ko.observable(297);
+            this.pageWidth = ko.observable(210).extend({checkNumberRange: [10, 9999]});
+            this.pageHeight = ko.observable(297).extend({checkNumberRange: [10, 9999]});
             this.settingsExpanded = ko.observable(false);
             this.makingPdf = ko.observable(false);
             this.progress = ko.observable(undefined);
