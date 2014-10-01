@@ -7,7 +7,7 @@
     background-color: white;
     border-radius: 5px 5px 5px 5px;
     box-shadow: 0 1px 5px rgba(0, 0, 0, 0.4);
-    padding: 5px 8px 5px 8px;
+    padding: 5px 10px 5px 12px;
     color: #333;
 }
 
@@ -19,6 +19,10 @@
     padding: 0;
 }
 
+
+.leaflet-control-printpages table {
+    border-collapse: collapse;
+}
 
 .leaflet-control-printpages .main-layout > tbody >tr > td {
     border-top: 1px solid #eee;
@@ -115,6 +119,7 @@
     border-radius: 4px 4px 4px 4px;
     border: 1px solid #ccc;
     background-image: url('images/spinner.gif');
+    margin-bottom: -5px;
 }
 
 .leaflet-control-printpages .progress {
