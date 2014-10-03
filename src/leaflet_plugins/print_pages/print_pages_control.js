@@ -1,6 +1,7 @@
 //@require leaflet
 //@require print_pages_control.css
 //@require knockout
+//@require papersheet_feature.js
 
 (function(){
     "use strict";
@@ -50,9 +51,19 @@
             this.settingsExpanded = ko.observable(false);
             this.makingPdf = ko.observable(false);
             this.progress = ko.observable(undefined);
+            this.marginLeft = ko.observable(3).extend({checkNumberRange: [0, 99]});
+            this.marginRight = ko.observable(3).extend({checkNumberRange: [0, 99]});
+            this.marginTop = ko.observable(3).extend({checkNumberRange: [0, 99]});
+            this.marginBottom = ko.observable(3).extend({checkNumberRange: [0, 99]});
             this.sheets = ko.observableArray();
             this.mapMoveNotifier = ko.observable();
-            this.suggestedZooms = ko.computed(this.suggestZooms, this);
+            this.suggestedZooms = ko.pureComputed(this.suggestZooms, this);
+            this.printSize = ko.pureComputed(this._printSize, this);
+            this.pageMoveNotifier = ko.observable();
+
+            this.printSize.subscribe(this._replaceAllPages, this);
+            this.mapScale.subscribe(this._replaceAllPages, this);
+
         },
 
         onAdd: function(map) {
@@ -62,8 +73,8 @@
             dialogContainer.innerHTML = '\
                 <table class="main-layout">\
                     <tr><td colspan="2">\
-                            <a title="Add page in portrait orientation" class="button icon-addpageportrait"></a>\
-                            <a title="Add page in landscape orientation" class="button icon-addpagelandscape"></a>\
+                            <a title="Add page in portrait orientation" class="button icon-addpageportrait" data-bind="click: addPagePortrait"></a>\
+                            <a title="Add page in landscape orientation" class="button icon-addpagelandscape" data-bind="click: addPageLandscape"></a>\
                             <a title="Remove all pages" class="button right-side icon-removeallpages"></a>\
                     </td></tr>\
                     <tr>\
@@ -72,7 +83,7 @@
                             <div class="predefined-values" data-bind="foreach: predefinedScales">\
                                 <a data-bind="text: $data[0], click: function() {$root.mapScale($data[1])}"></a>\
                             </div>\
-                            <input type="text" size="3" pattern="\\d+" maxlength="6" data-bind="value: mapScale">&nbsp;m in 1 cm\
+                            <input type="text" style="width: 3.2em" maxlength="6" data-bind="value: mapScale">&nbsp;m in 1 cm\
                         </td>\
                     </tr>\
                     <tr data-bind="visible: settingsExpanded">\
@@ -85,26 +96,26 @@
                                                 $root.pageHeight($data[2]);\
                                             }"></a>\
                             </div>\
-                            <input type="text" pattern="\\d+" maxlength="4" title="width" placeholder="width" style="width: 2em" data-bind="value: pageWidth">\
-                            x <input type="text" pattern="\\d+" maxlength="4" heigh="height" placeholder="height" style="width: 2em" data-bind="value: pageHeight"> mm\
+                            <input type="text" maxlength="4" title="width" placeholder="width" style="width: 2.1em" data-bind="value: pageWidth">\
+                            x <input type="text" maxlength="4" heigh="height" placeholder="height" style="width: 2.1em" data-bind="value: pageHeight"> mm\
                         </td>\
                     </tr>\
                     <tr data-bind="visible: settingsExpanded">\
                         <td class="section-title-middle">Margins</td>\
                         <td>\
                             <table class="margins">\
-                                <tr><td></td><td><input "type="text" pattern="\\d+" maxlength="2" value="3" style="width: 1.1em"></td><td></td></tr>\
+                                <tr><td></td><td><input "type="text" maxlength="2" value="3" style="width: 1.1em" data-bind="value: marginTop"></td><td></td></tr>\
                                 <tr>\
-                                    <td><input type="text" pattern="\\d+" maxlength="2" value="3" style="width: 1.1em"></td>\
-                                    <td></td><td><input type="text" pattern="\\d+" maxlength="2" value="3" style="width: 1.1em"> mm</td>\
+                                    <td><input type="text" maxlength="2" value="3" style="width: 1.1em" data-bind="value: marginLeft"></td>\
+                                    <td></td><td><input type="text" maxlength="2" value="3" style="width: 1.1em" data-bind="value: marginRight"> mm</td>\
                                 </tr>\
-                                <tr><td></td><td><input type="text" pattern="\\d+" maxlength="2" value="3" style="width: 1.1em"></td><td></td></tr>\
+                                <tr><td></td><td><input type="text" maxlength="2" value="3" style="width: 1.1em" data-bind="value: marginBottom"></td><td></td></tr>\
                             </table>\
                         </td>\
                     </tr>\
                     <tr data-bind="visible: settingsExpanded">\
                          <td class="section-title">Resolution</td>\
-                        <td><input type="text" pattern="\\d+" maxlength="4" style="width: 2em" data-bind="value: printResolution"> dpi</td>\
+                        <td><input type="text" maxlength="4" style="width: 2.1em" data-bind="value: printResolution"> dpi</td>\
                     </tr>\
                     <tr data-bind="visible: settingsExpanded">\
                         <td class="section-title">Source zoom<br />level</td>\
@@ -154,17 +165,23 @@
             return dialogContainer;
         },
 
+        _printSize: function() {
+            return [this.pageWidth() - this.marginLeft() - this.marginRight(),
+                    this.pageHeight() - this.marginTop() - this.marginBottom()];
+        },
+
         suggestZooms: function() {
             var reference_lat,
                 mapScale = this.mapScale(),
                 resolution = this.printResolution();
             this.mapMoveNotifier();
+            this.pageMoveNotifier();
             var sheets = this.sheets();
             if (sheets.length > 0) {
                 var reference_lat = 1e20;
                 for (var i=0; i < sheets.length; i++) {
                     var sheet = sheets[i];
-                    var sheet_lat = Math.abs(sheet.getCenter().lat);
+                    var sheet_lat = Math.abs(sheet.getLatLngBounds().getSouth());
                     if (Math.abs(sheet_lat < reference_lat)) {
                         reference_lat = sheet_lat;
                     }
@@ -202,6 +219,56 @@
                 this.makingPdf(false);
             }.bind(this), 1500);
 
+        },
+
+        addPagePortrait: function() {
+            this._addPage(this.printSize());
+        },
+
+        addPageLandscape: function() {
+            var size = this.printSize();
+            size = [size[1], size[0]];
+            this._addPage(size);
+        },
+
+        _replacePage: function(feature) {
+            var i = this.sheets.indexOf(feature);
+            var center = feature.getLatLng();
+            var size = this.printSize();
+            if (feature._rotated) {
+                size = [size[1], size[0]];
+            }
+            var newFeature = this._createPage(center, size, i+1);
+            newFeature._rotated = feature._rotated;
+            this._map.removeLayer(feature);
+            this.sheets.splice(i, 1, newFeature)
+        },
+
+        _replaceAllPages: function() {
+            this.sheets().forEach(this._replacePage.bind(this));
+        },
+
+        _rotatePage: function(feature){
+            feature._rotated = !feature._rotated;
+            this._replacePage(feature);
+        },
+
+        _addPage: function(size) {
+            var sheet = this._createPage(this._map.getCenter(), size, this.sheets().length+1);
+            this.sheets.push(sheet);
+        },
+
+        _createPage: function(center, size, label) {
+            var sheet = new L.PaperSheet(
+                center,
+                size,
+                this.mapScale(),
+                label);
+            sheet.addTo(this._map);
+            sheet.on('click', function() {this._rotatePage(sheet);}, this);
+            sheet.on('move', function() {this.pageMoveNotifier.valueHasMutated();}, this)
+            this.pageMoveNotifier.valueHasMutated();
+            return sheet;
         }
     });
 })();
