@@ -2,6 +2,7 @@
 //@require print_pages_control.css
 //@require knockout
 //@require papersheet_feature.js
+//@require leaflet.contextmenu
 
 (function(){
     "use strict";
@@ -75,7 +76,7 @@
                     <tr><td colspan="2">\
                             <a title="Add page in portrait orientation" class="button icon-addpageportrait" data-bind="click: addPagePortrait"></a>\
                             <a title="Add page in landscape orientation" class="button icon-addpagelandscape" data-bind="click: addPageLandscape"></a>\
-                            <a title="Remove all pages" class="button right-side icon-removeallpages"></a>\
+                            <a title="Remove all pages" class="button right-side icon-removeallpages" data-bind="click: removeAllPages"></a>\
                     </td></tr>\
                     <tr>\
                         <td class="section-title">Print scale</td>\
@@ -226,20 +227,14 @@
         },
 
         addPageLandscape: function() {
-            var size = this.printSize();
-            size = [size[1], size[0]];
-            this._addPage(size);
+            this._addPage(this.printSize(), true);
         },
 
         _replacePage: function(feature) {
             var i = this.sheets.indexOf(feature);
             var center = feature.getLatLng();
             var size = this.printSize();
-            if (feature._rotated) {
-                size = [size[1], size[0]];
-            }
-            var newFeature = this._createPage(center, size, i+1);
-            newFeature._rotated = feature._rotated;
+            var newFeature = this._createPage(center, size, i, feature._rotated);
             this._map.removeLayer(feature);
             this.sheets.splice(i, 1, newFeature)
         },
@@ -253,20 +248,70 @@
             this._replacePage(feature);
         },
 
-        _addPage: function(size) {
-            var sheet = this._createPage(this._map.getCenter(), size, this.sheets().length+1);
+        _removePage: function(feature) {
+            this.sheets.remove(feature);
+            this._map.removeLayer(feature);
+            this._replaceAllPages();
+        },
+
+        removeAllPages: function() {
+            var sheets = this.sheets(),
+                sheets_n = sheets.length;
+            for (var i=0; i < sheets_n; i++) {
+                this._map.removeLayer(sheets[i]);
+            }
+            this.sheets.removeAll();
+        },
+
+        _addPage: function(size, rotated) {
+            var sheet = this._createPage(this._map.getCenter(), size, this.sheets().length, rotated);
             this.sheets.push(sheet);
         },
 
-        _createPage: function(center, size, label) {
+        _changePageOrder: function(feature, newIndex) {
+            this.sheets.remove(feature);
+            this.sheets.splice(newIndex, 0, feature);
+            this._replaceAllPages();
+        },
+
+        _makePageContexmenuItems: function(feature, index) {
+            var items = [
+                  {text: 'Rotate', callback: function() {this._rotatePage(feature)}.bind(this)},
+                  '-',
+                  {text: 'Delete', callback: function() {this._removePage(feature)}.bind(this)}
+            ];
+            var sheets = this.sheets(),
+                sheets_n = sheets.length;
+            if (sheets_n > 1 || index == sheets_n) {
+                items.push({text: 'Change order', separator: true})
+                for (var i=0; i<sheets_n; i++) {
+                    if (i != index) {
+                        items.push({
+                            text: i+1,
+                            callback: function(i) {
+                                return function() {this._changePageOrder(feature, i)}.bind(this);
+                            }.bind(this)(i)
+                        });
+                    }
+                }
+            }
+            return items;
+        },
+
+        _createPage: function(center, size, index, rotated) {
+            if (rotated) {
+                size = [size[1], size[0]];
+            }
             var sheet = new L.PaperSheet(
                 center,
                 size,
                 this.mapScale(),
-                label);
+                index + 1);
+            sheet._rotated = !!rotated;
             sheet.addTo(this._map);
             sheet.on('click', function() {this._rotatePage(sheet);}, this);
             sheet.on('move', function() {this.pageMoveNotifier.valueHasMutated();}, this)
+            sheet.bindContextmenu(function(){return this._makePageContexmenuItems(sheet, index)}.bind(this));
             this.pageMoveNotifier.valueHasMutated();
             return sheet;
         }
