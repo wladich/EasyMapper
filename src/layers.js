@@ -1,23 +1,23 @@
 //@require leaflet
-//@require leaflet_plugins/Yandex.js
-//@require vendor/shramov/Google.js
+//@require leaflet.yandex
+//@require leaflet.google
 window.layers = {};
 
 window.layers.getBaseMaps = function getBaseMaps() {
     return {
         'OpenStreetMap': L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-                                     {code: 'O'}),
+                                     {code: 'O', scaleDependent: true}),
         'ESRI Sat': L.tileLayer('http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
                                 {code: 'E', maxNativeZoom: 17}),
-        'Yandex': new L.Yandex('map', {'scaleDependent': true, 'code': 'Y'}, {yandexMapAutoSwitch: false}),
-        'Yandex Public': new L.Yandex('publicMap', {code: 'P'}),
+        'Yandex': new L.Yandex('map', {scaleDependent: true, code: 'Y', noCors: true}, {yandexMapAutoSwitch: false}),
+        'Yandex Public': new L.Yandex('publicMap', {code: 'P', scaleDependent: true, noCors: true}),
         'Yandex Sat': new L.Yandex('satellite', {code: 'S'}),
-        'Google': new L.Google('ROADMAP', {code: 'G'}),
+        'Google': new L.Google('ROADMAP', {code: 'G', scaleDependent: true}),
         'Google Sat': new L.Google('SATELLITE', {code: 'L'}),
-        'Google Sat Hybrid': new L.Google('HYBRID', {code: 'H'}),
+        'Google Sat Hybrid': new L.Google('HYBRID', {code: 'H', scaleDependent: true}),
 
         'Topomapper 2km': L.tileLayer('http://maps.atlogis.com/cgi-bin/tilecache-2.11/tilecache.py/1.0.0/topomapper_gmerc/{z}/{x}/{y}.jpg',
-                                      {code: 'T', maxNativeZoom: 12})
+                                      {code: 'T', maxNativeZoom: 12, noCors: true})
     };
 };
 

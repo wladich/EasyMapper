@@ -3,6 +3,9 @@
 //@require knockout
 //@require papersheet_feature.js
 //@require leaflet.contextmenu
+//@require lib/map_to_image.js
+//@require lib/pdf.js
+//@require fileutils
 
 (function(){
     "use strict";
@@ -14,7 +17,11 @@
                         '</div>' +
                     '</div>',
         viewModel: function(params) {
-            this.progress = params.progress;
+            this.progress = ko.pureComputed(function() {
+                var range = params.progressRange(),
+                    done = params.progressDone();
+                return done === undefined ? undefined : done * 100 / range;
+            }.bind(this));
         }
     });
 
@@ -35,6 +42,7 @@
 
     L.Control.PrintPages = L.Control.extend({
         includes: [L.Mixin.Events, L.Mixin.HashState],
+        stateChangeEvents: ['change'],
         options: {position: 'bottomleft'},
         
         srcZoomLevelOptions: ['auto', 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18],
@@ -51,7 +59,8 @@
             this.pageHeight = ko.observable(297).extend({checkNumberRange: [10, 9999]});
             this.settingsExpanded = ko.observable(false);
             this.makingPdf = ko.observable(false);
-            this.progress = ko.observable(undefined);
+            this.downloadProgressRange = ko.observable(undefined);
+            this.downloadProgressDone = ko.observable(undefined);
             this.marginLeft = ko.observable(3).extend({checkNumberRange: [0, 99]});
             this.marginRight = ko.observable(3).extend({checkNumberRange: [0, 99]});
             this.marginTop = ko.observable(3).extend({checkNumberRange: [0, 99]});
@@ -64,6 +73,7 @@
 
             this.printSize.subscribe(this._replaceAllPages, this);
             this.mapScale.subscribe(this._replaceAllPages, this);
+            ko.pureComputed(this._serializeState, this).subscribe(this.notifyChange, this);
 
         },
 
@@ -145,7 +155,7 @@
                             <div data-bind="\
                                 component: { \
                                     name: \'progress-indicator\',\
-                                    params: {progress: progress}\
+                                    params: {progressRange: downloadProgressRange, progressDone: downloadProgressDone}\
                                 },\
                                 visible: makingPdf()"></div>\
                         </div>\
@@ -204,37 +214,66 @@
         },
 
         onDownloadButtonClick: function() {
-            console.log('Start download');
+            var sheets = this.sheets(),
+                resolution = this.printResolution();
+            if (sheets.length) {
+                this.makingPdf(true);
+                this.downloadProgressDone(undefined);
+                this.downloadProgressRange(sheets.length * mapRender.getRenderableLayers(this._map).length);
+                var pages = sheets.map(function(sheet) {
+                    var q = resolution / 25.4;
+                    return {
+                        latLngBounds: sheet.getLatLngBounds(),
+                        pixelSize: [Math.round(sheet.paperSize[0] * q), Math.round(sheet.paperSize[1] * q)]
+                    };
+                }.bind(this));
+                var zooms = (this.srcZoomLevel() == 'auto') ? this.suggestZooms() : [this.srcZoomLevel(), this.srcZoomLevel()];
+                var X = 0;
+                var onTileLoad = function(x) {
+                    X += x;
+                    this.downloadProgressDone(X);
+                }.bind(this);
+                mapRender.mapToImages(this._map, pages, zooms, onTileLoad)
+                .then(buildPDF.bind(null, resolution))
+                .then(fileutils.saveStringToFile.bind(null, 'map.pdf', 'application/pdf'))
+                .done(function() {
+                    this.makingPdf(false);
+                    console.log('DONE');
+                }.bind(this), function(error) {
+                    this.makingPdf(false);
+                    alert('Failed to make PDF: ' + error);
+                }.bind(this));
+            } else {
+                alert('Add some pages to print')
+            }
+            /*console.log('Start download');
             this.makingPdf(true);
-            this.progress(undefined);
+            this.downloadProgressRange(5);
+            this.downloadProgressDone(undefined);
             setTimeout(function(){
-                console.log('0% done');
-                this.progress(0);
+                this.downloadProgressDone(0);
             }.bind(this), 500);
             setTimeout(function(){
-                console.log('70% done');
-                this.progress(70);
+                this.downloadProgressDone(1);
             }.bind(this), 1000);
             setTimeout(function(){
-                console.log('All done');
-                this.makingPdf(false);
+                this.downloadProgressDone(2);
             }.bind(this), 1500);
-
+            */
         },
 
         addPagePortrait: function() {
-            this._addPage(this.printSize());
+            this._addPage();
         },
 
         addPageLandscape: function() {
-            this._addPage(this.printSize(), true);
+            this._addPage(true);
         },
 
         _replacePage: function(feature) {
             var i = this.sheets.indexOf(feature);
             var center = feature.getLatLng();
-            var size = this.printSize();
-            var newFeature = this._createPage(center, size, i, feature._rotated);
+            var newFeature = this._createPage(center, i, feature._rotated);
             this._map.removeLayer(feature);
             this.sheets.splice(i, 1, newFeature)
         },
@@ -263,8 +302,8 @@
             this.sheets.removeAll();
         },
 
-        _addPage: function(size, rotated) {
-            var sheet = this._createPage(this._map.getCenter(), size, this.sheets().length, rotated);
+        _addPage: function(rotated) {
+            var sheet = this._createPage(this._map.getCenter(), this.sheets().length, rotated);
             this.sheets.push(sheet);
         },
 
@@ -276,9 +315,9 @@
 
         _makePageContexmenuItems: function(feature, index) {
             var items = [
-                  {text: 'Rotate', callback: function() {this._rotatePage(feature)}.bind(this)},
+                  {text: 'Rotate', callback: this._rotatePage.bind(this, feature)},
                   '-',
-                  {text: 'Delete', callback: function() {this._removePage(feature)}.bind(this)}
+                  {text: 'Delete', callback: this._removePage.bind(this, feature)}
             ];
             var sheets = this.sheets(),
                 sheets_n = sheets.length;
@@ -288,9 +327,7 @@
                     if (i != index) {
                         items.push({
                             text: i+1,
-                            callback: function(i) {
-                                return function() {this._changePageOrder(feature, i)}.bind(this);
-                            }.bind(this)(i)
+                            callback: this._changePageOrder.bind(this, feature, i)
                         });
                     }
                 }
@@ -298,7 +335,8 @@
             return items;
         },
 
-        _createPage: function(center, size, index, rotated) {
+        _createPage: function(center, index, rotated) {
+            var size = this.printSize();
             if (rotated) {
                 size = [size[1], size[0]];
             }
@@ -309,11 +347,77 @@
                 index + 1);
             sheet._rotated = !!rotated;
             sheet.addTo(this._map);
-            sheet.on('click', function() {this._rotatePage(sheet);}, this);
-            sheet.on('move', function() {this.pageMoveNotifier.valueHasMutated();}, this)
-            sheet.bindContextmenu(function(){return this._makePageContexmenuItems(sheet, index)}.bind(this));
+            sheet.on('click', this._rotatePage.bind(this, sheet));
+            sheet.on('move', this.pageMoveNotifier.valueHasMutated);
+            sheet.on('moveend', this.notifyChange, this)
+            sheet.bindContextmenu(this._makePageContexmenuItems.bind(this, sheet, index));
             this.pageMoveNotifier.valueHasMutated();
             return sheet;
-        }
+        },
+
+        notifyChange: function() {
+            this.fire('change');
+        },
+
+        _serializeState: function(){
+            var state = [];
+            state.push(this.mapScale());
+            state.push(this.printResolution());
+            state.push(this.srcZoomLevel());
+            state.push(this.pageWidth());
+            state.push(this.pageHeight());
+            state.push(this.marginLeft());
+            state.push(this.marginRight());
+            state.push(this.marginTop());
+            state.push(this.marginBottom());
+            var sheets = this.sheets();
+            for (var i=0; i < sheets.length; i++) {
+                var sheet = sheets[i],
+                    ll = sheet.getLatLng();
+                state.push(ll.lat.toFixed(5));
+                state.push(ll.lng.toFixed(5));
+                state.push(sheet._rotated ? 1 : 0);
+            }
+            return state;
+        },
+
+        _unserializeState: function(values) {
+
+            function validateFloat(value, min, max) {
+                value = pasrseFloat(value);
+                if (isNaN(value) || value < min || value > max) {
+                    throw 'INVALID VALUE';
+                }
+                return value;
+            }
+
+            if (!values) {
+                return false;
+            }
+            this.removeAllPages();
+            values = values.slice();
+            this.mapScale(values.shift());
+            this.printResolution(values.shift());
+            this.srcZoomLevel(values.shift());
+            this.pageWidth(values.shift());
+            this.pageHeight(values.shift());
+            this.marginLeft(values.shift());
+            this.marginRight(values.shift());
+            this.marginTop(values.shift());
+            this.marginBottom(values.shift());
+            var lat, lng, rotated;
+            while (values.length >= 3) {
+                lat = parseFloat(values.shift());
+                lng = parseFloat(values.shift());
+                rotated = parseInt(values.shift(), 10);
+                if (isNaN(lat) || isNaN(lng) || lat < -85 || lat > 85 || lng < -180 || lng > 180) {
+                    break;
+                }
+                this.sheets.push(this._createPage([lat, lng], this.sheets().length, rotated));
+            }
+            return true;
+
+        },
+
     });
 })();

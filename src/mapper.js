@@ -3,6 +3,7 @@
 //@require leaflet.hash_state.Map
 //@require leaflet.hash_state.Control.Layers
 //@require leaflet.layers_control.hotkeys
+
 //@require leaflet.print_pages
 (function(){
     "use strict";
@@ -21,6 +22,7 @@
             map.enableHashState('m', [10, 55.7, 37.5]);
             var printPagesControl = new L.Control.PrintPages()
                 .addTo(map);
+            printPagesControl.enableHashState('p');
         }
 
     });

@@ -1,7 +1,3 @@
-/* copied from https://github.com/shramov/leaflet-plugins @1e8779ef1f */
-//@require leaflet
-//@require google-api
-
 /*
  * Google layer using Google Maps API
  */

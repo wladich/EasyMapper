@@ -7,12 +7,16 @@ provides:
             - http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js
             - http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css
         develop:
-            - src/vendor/leaflet-0.7.3/leaflet-src.js
-            - src/vendor/leaflet-0.7.3/leaflet.css
+            - src/lib/vendor/leaflet-0.7.3/leaflet-src.js
+            - src/lib/vendor/leaflet-0.7.3/leaflet.css
     yandex-api:
         - http://api-maps.yandex.ru/2.0-stable/?load=package.standard&lang=ru-RU#.js
     google-api:
         - https://maps.googleapis.com/maps/api/js?sensor=false#.js
+    leaflet.google:
+        - src/lib/vendor/shramov/Google.js
+    leaflet.yandex:
+        - src/leaflet_plugins/Yandex.js
     leaflet.hash_state.Map:
         - src/leaflet_plugins/hash_state/Leaflet.Map.js
     leaflet.hash_state.Control.Layers:
@@ -21,9 +25,26 @@ provides:
         - src/leaflet_plugins/Control.Layers.Hotkeys.js
     leaflet.print_pages:
         - src/leaflet_plugins/print_pages/print_pages_control.js
+    leaflet.contextmenu:
+        - src/leaflet_plugins/context_menu/leaflet.contextmenu.js
     knockout:
         production:
-            - src/vendor/knockout/knockout-3.2.0.js
+            - src/lib/vendor/knockout/knockout-3.2.0.js
         develop:
-            - src/vendor/knockout/knockout-3.2.0.debug.js
+            - src/lib/vendor/knockout/knockout-3.2.0.debug.js
+    promise:
+        - src/lib/vendor/promise/promise-4.0.0.js
+    blob:
+        - src/lib/vendor/Blob.js
+    filesaver:
+        - src/lib/vendor/FileSaver.js
+    fileutils:
+        - src/lib/file_utils.js
+    cors-proxy:
+        - src/cors_proxy.js
 depends:
+    filesaver:
+        - blob
+    leaflet.google:
+        - leaflet
+        - google-api
