@@ -1,0 +1,98 @@
+.leaflet-control-tracklist {
+    position: relative;
+    background-color: white;
+    border-radius: 5px 5px 5px 5px;
+    box-shadow: 0 1px 5px rgba(0, 0, 0, 0.4);
+    padding: 8px 8px 8px 8px;
+    width: 200px;
+}
+
+.leaflet-control-tracklist .hint {
+    color: #999;
+    font-size: 10px;
+    padding-bottom: 2px;
+}
+
+.leaflet-control-tracklist .inputs-row {
+    white-space: nowrap;
+}
+
+.leaflet-control-tracklist .button{
+    display: inline-block;
+    height: 26px;
+    border-radius: 4px 4px 4px 4px;
+    border: 1px solid #ccc;
+    cursor: pointer;
+    width: 26px;
+    background-position: 50% 50%;
+    background-repeat: no-repeat;
+    vertical-align: middle;
+}
+
+.leaflet-control-tracklist .input-url {
+    display: inline-block;
+    width: 120px;
+    height: 26px;
+    line-height: 26px;
+    padding: 0 3px;
+    border: 1px solid #777;
+    border-radius: 3px 3px 3px 3px;
+    vertical-align: middle;
+    margin-left: 12px;
+    margin-right: 6px;
+}
+
+.leaflet-control-tracklist .open-file {
+    background-image: url("images/folder_open.png");
+}
+
+.leaflet-control-tracklist .download-url {
+    background-image: url("images/arrow_bottom.png");
+}
+
+.leaflet-control-tracklist .track-item {
+    white-space: nowrap;
+    margin-top: 4px;
+}
+
+.leaflet-control-tracklist .visibility-switch {
+    display: inline-block;
+    margin: 0;
+    vertical-align: middle;
+}
+
+.leaflet-control-tracklist .color-sample {
+    display: inline-block;
+    width: 16px;
+    height: 4px;
+    vertical-align: middle;
+    cursor: pointer;
+    margin-left: 2px;
+    border-top-width: 6px;
+    border-bottom-width: 6px;
+    border-color: white;
+    border-style: solid;
+}
+
+.leaflet-control-tracklist .track-name {
+    display: inline-block;
+    color: #333;
+    border-bottom: 1px dashed #999;
+    cursor: pointer;
+    white-space:nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    max-width: 150px;
+    vertical-align: middle;    
+    margin-left: 2px;
+}
+
+.leaflet-control-tracklist .delete-button {
+    display: inline-block;
+    position: absolute;
+    font-weight: bold;
+    right: 0;
+    color: #333;
+    margin-right: 8px;
+    cursor: pointer;
+}

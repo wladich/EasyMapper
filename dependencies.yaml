@@ -25,6 +25,8 @@ provides:
         - src/leaflet_plugins/Control.Layers.Hotkeys.js
     leaflet.print_pages:
         - src/leaflet_plugins/print_pages/print_pages_control.js
+    leaflet.track_list:
+        - src/leaflet_plugins/track_list_control/track_list.js
     leaflet.contextmenu:
         - src/leaflet_plugins/context_menu/leaflet.contextmenu.js
     leaflet.tile_layer_grabber:
@@ -46,6 +48,10 @@ provides:
         - src/lib/file_utils.js
     cors-proxy:
         - src/cors_proxy.js
+    js-unzip:
+        - src/lib/vendor/js-unzip.js
+    zip-inflate:
+        - src/lib/vendor/rawinflate.js
 depends:
     filesaver:
         - blob

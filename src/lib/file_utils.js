@@ -90,6 +90,37 @@ var fileutils = (function() {
         return _get;
     })();
 
+    function openFiles(multiple) {
+        var fileInput = document.createElement('input');
+        document.body.appendChild(fileInput);
+        fileInput.type = 'file';
+        fileInput.multiple = !!multiple;
+        fileInput.style.left = '-100000px';
+        var result = new Promise(function(resolve) {
+            fileInput.onchange = function() {
+                resolve(fileInput.files);
+            };
+        }).then(function(files) {
+            files = Array.prototype.slice.apply(files);
+            return Promise.all(files.map(readFile));
+        });
+        setTimeout(fileInput.click.bind(fileInput), 0);
+        return result;
+    }
+
+    function readFile(file) {
+        return new Promise(function(resolve) {
+            var reader = new FileReader();
+            reader.onload = function (e) {
+                resolve({
+                    data: arrayBufferToString(e.target.result),
+                    filename: file.name
+                });
+            };
+            reader.readAsArrayBuffer(file);
+        });
+    }
+
     function intArrayToString(arr) {
         var s = [];
         var chunk;
@@ -115,9 +146,11 @@ var fileutils = (function() {
         var blob = new Blob([array], {'type': mimeType});
         saveAs(blob, name);
     }
+
     return {
         get: get,
         arrayBufferToString: arrayBufferToString,
-        saveStringToFile: saveStringToFile
+        saveStringToFile: saveStringToFile,
+        openFiles: openFiles
     };
 })();

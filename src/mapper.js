@@ -3,6 +3,7 @@
 //@require leaflet.hash_state.Map
 //@require leaflet.hash_state.Control.Layers
 //@require leaflet.layers_control.hotkeys
+//@require leaflet.track_list
 
 //@require leaflet.print_pages
 (function(){
@@ -23,6 +24,8 @@
             var printPagesControl = new L.Control.PrintPages()
                 .addTo(map);
             printPagesControl.enableHashState('p');
+            var TrackList = new L.Control.TrackList()
+                .addTo(map);
         }
 
     });
