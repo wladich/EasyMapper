@@ -246,20 +246,6 @@
             } else {
                 alert('Add some pages to print')
             }
-            /*console.log('Start download');
-            this.makingPdf(true);
-            this.downloadProgressRange(5);
-            this.downloadProgressDone(undefined);
-            setTimeout(function(){
-                this.downloadProgressDone(0);
-            }.bind(this), 500);
-            setTimeout(function(){
-                this.downloadProgressDone(1);
-            }.bind(this), 1000);
-            setTimeout(function(){
-                this.downloadProgressDone(2);
-            }.bind(this), 1500);
-            */
         },
 
         addPagePortrait: function() {
