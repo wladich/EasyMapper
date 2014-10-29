@@ -22,16 +22,22 @@
         onAdd: function(map) {
             var result = originalOnAdd.call(this, map);
             L.DomEvent.on(document, 'keypress', this._onHotkeyPress, this);
+            //L.DomEvent.on(map._container, 'keypress', this._onHotkeyPress, this);
+            //document.addEventListener('keypress', this._onHotkeyPress.bind(this));
+            //map.on('keypress', this._onHotkeyPress, this);
             return result;
         },
 
-        oninRemove: function(map) {
+        onRemove: function(map) {
             L.DomEvent.off(document, 'keypress', this._onHotkeyPress, this);
             originalOnRemove.call(this, map);
 
         },
 
         _onHotkeyPress: function(e) {
+            if ('input' == e.target.tagName.toLowerCase()) {
+                return;
+            }
             var key = String.fromCharCode(e.charCode);
             for (var layerId in this._layers) {
                 var layer = this._layers[layerId];
