@@ -1,6 +1,4 @@
-//@require layer_mixins/Yandex.js
-//@require layer_mixins/Google.js
-//@require layer_mixins/TileLayer.js
+//@require leaflet.tile_layer_grabber
 //@require promise
 //@require fileutils
 //@require cors-proxy

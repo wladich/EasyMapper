@@ -1,4 +1,5 @@
 //@require leaflet
+//@require promise
 (function(){
     "use strict";
     L.TileLayer.include({
