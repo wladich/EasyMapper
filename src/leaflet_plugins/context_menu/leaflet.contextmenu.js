@@ -23,7 +23,7 @@
             this.visible = true;
         },
 
-        handleClick: function(e) {
+        showOnMouseEvent: function(e) {
             if (e.originalEvent) {
                 e = e.originalEvent;
             }
@@ -32,9 +32,6 @@
         },
 
         onMouseDown: function(e) {
-            if (e.target._leafletContextMenuCallback) {
-                e.target._leafletContextMenuCallback();
-            }
             this.hide();
         },
 
@@ -73,7 +70,11 @@
             el.innerHTML = itemOptions.text;
             var callback = itemOptions.callback;
             if (callback) {
-                el._leafletContextMenuCallback = callback;
+                L.DomEvent.addListener(el, 'mousedown', function(e) {
+                    callback();
+                    L.DomEvent.stopPropagation(e);
+                    this.hide();
+                }, this);
             }
         },
 
@@ -107,7 +108,7 @@
     L.Mixin.Contextmenu = {
         bindContextmenu: function(items) {
             this._contextMenu = new L.Contextmenu(items);
-            this.on('contextmenu', this._contextMenu.handleClick, this._contextMenu);
+            this.on('contextmenu', this._contextMenu.showOnMouseEvent, this._contextMenu);
             this.on('remove', this.hideContextmenu, this);
         },
 
