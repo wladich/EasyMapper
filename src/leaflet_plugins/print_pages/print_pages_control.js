@@ -227,6 +227,9 @@
                     console.log('DONE');
                 }.bind(this), function(error) {
                     this.makingPdf(false);
+                    if (error.statusText !== undefined) {
+                        error = error.statusText || 'Server error or CORS violation';
+                    }
                     alert('Failed to make PDF: ' + error);
                 }.bind(this));
             } else {
