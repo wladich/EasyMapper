@@ -16,7 +16,7 @@ window.layers.getBaseMaps = function getBaseMaps() {
         'Google Sat': new L.Google('SATELLITE', {code: 'L'}),
         'Google Sat Hybrid': new L.Google('HYBRID', {code: 'H', scaleDependent: true}),
         'marshruty.ru': L.tileLayer('http://maps.marshruty.ru/ml.ashx?x={x}&y={y}&z={z}&i=1&al=1',
-                                      {code: 'M', maxNativeZoom: 18, noCors: true}),
+                                      {code: 'M', maxNativeZoom: 18, noCors: true, scaleDependent: true}),
         'Topomapper 2km': L.tileLayer('http://maps.atlogis.com/cgi-bin/tilecache-2.11/tilecache.py/1.0.0/topomapper_gmerc/{z}/{x}/{y}.jpg',
                                       {code: 'T', maxNativeZoom: 12, noCors: true})
     };
