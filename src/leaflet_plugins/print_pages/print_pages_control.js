@@ -35,8 +35,8 @@
         predefinedScales: [['100 m', 100], ['500 m', 500], ['1 km', 1000]],
         predefinedPaperSizes: [['A2', 420, 594], ['A3', 297, 420], ['A4', 210, 297], ['A5', 148, 210]],
 
-        initialize: function() {
-            L.Control.prototype.initialize.call(this);
+        initialize: function(options) {
+            L.Control.prototype.initialize.call(this, options);
             // knockout viewModel fields
             this.mapScale = ko.observable(500).extend({checkNumberRange: [0.01, 1000000]});
             this.printResolution = ko.observable(300).extend({checkNumberRange: [10, 9999]});
@@ -203,15 +203,20 @@
             var sheets = this.sheets(),
                 resolution = this.printResolution();
             if (sheets.length) {
+                this.fire('pdfstart');
                 this.makingPdf(true);
                 this.downloadProgressDone(undefined);
                 this.downloadProgressRange(sheets.length * mapRender.getRenderableLayers(this._map).length);
-                var pages = sheets.map(function(sheet) {
+                var pages = sheets.map(function(sheet, idx) {
                     var q = resolution / 25.4;
-                    return {
+                    var page = {
                         latLngBounds: sheet.getLatLngBounds(),
                         pixelSize: [Math.round(sheet.paperSize[0] * q), Math.round(sheet.paperSize[1] * q)]
-                    };
+                    }
+                    if (this.options.postprocess) {
+                        page.postprocess = this.options.postprocess.bind(null, idx, page.latLngBounds);
+                    }
+                    return page;
                 }.bind(this));
                 var zooms = (this.srcZoomLevel() == 'auto') ? this.suggestZooms() : [this.srcZoomLevel(), this.srcZoomLevel()];
                 var X = 0;

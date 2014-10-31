@@ -114,6 +114,9 @@ var mapRender = (function() {
     }
 
 
+    /*
+    pages: [{latLngBounds: , pixelSize: [width, height]}, postprocess: function(canvas)...]
+    */
     function mapToImages(map, pages, zooms, notifyTileLoad) {
         console.log(pages);
         return new Promise(function(resolve, reject) {
@@ -126,6 +129,12 @@ var mapRender = (function() {
                         _layerToImage.bind(undefined, page.latLngBounds, zooms, notifyTileLoad)
                     )
                 ).then(blendImages.bind(null, page.pixelSize))
+                .then(function(canvas) {
+                    if (page.postprocess) {
+                        canvas = page.postprocess(canvas) || canvas;
+                    }
+                    return canvas;
+                })
                 .then(canvasToData);
             }
 
@@ -137,7 +146,7 @@ var mapRender = (function() {
                 })
                 .done(function() {
                     console.log('PAGES READY', images.length);
-                    if (pagesCopy.length){
+                    if (pagesCopy.length) {
                         takeNextPage();
                     } else {
                         console.log('ALL PAGES READY');

@@ -180,8 +180,25 @@
         removeTrack: function(track) {
             track.visible(false);
             this.tracks.remove(track);
-        }
+        },
 
+        exportTracks: function() {
+            return this.tracks().map(function(track) {
+                var capturedTrack = track.feature.getLayers().map(function(pl) {
+                        return pl.getLatLngs().map(function(ll) {
+                            return [ll.lat, ll.lng];
+                        });
+                    });
+                var bounds = track.feature.getBounds();
+                var capturedBounds = [[bounds.getSouth(), bounds.getWest()], [bounds.getNorth(), bounds.getEast()]];
+                return {
+                    color: track.color(),
+                    visible: track.visible(),
+                    segments: capturedTrack,
+                    bounds: capturedBounds
+                };
+            });
+        }
 
     });
 
