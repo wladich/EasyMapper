@@ -147,10 +147,15 @@ var fileutils = (function() {
         saveAs(blob, name);
     }
 
+    function decodeUTF8(s){
+        return decodeURIComponent(escape(s));
+    }
+
     return {
         get: get,
         arrayBufferToString: arrayBufferToString,
         saveStringToFile: saveStringToFile,
-        openFiles: openFiles
+        openFiles: openFiles,
+        decodeUTF8: decodeUTF8
     };
 })();

@@ -1,5 +1,6 @@
 //@require js-unzip
 //@require zip-inflate
+//@require fileutils
 (function() {
     "use strict";
     
