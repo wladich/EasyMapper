@@ -279,9 +279,13 @@
         var segments = [];
         var error;
         if (map_data.vpage && map_data.vpage.data && map_data.vpage.data.objects && map_data.vpage.data.objects.length) {
-            if (map_data.vpage.data.name) {
-                name += ': ' + decodeUTF8(map_data.vpage.data.name);
+            var mapName = ('' + (map_data.vpage.data.name || '')).trim();
+            if (mapName.length > 3) {
+                name = '';
+            } else {
+                name += ': ';
             }
+            name += fileutils.decodeUTF8(mapName);
             map_data.vpage.data.objects.forEach(function(obj){
                 if (obj.pts && obj.pts.length) {
                     var segment = [];
