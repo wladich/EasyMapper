@@ -224,6 +224,7 @@
         return {error: error, points: points};
     }
 
+/*
     function parseYandexRulerUrl(s) {
         var re = /^\s*https?:\/\/maps\.yandex\..+[?&]rl=([^&]+).*?$/;
         if (!(re.test(s))) {
@@ -233,6 +234,7 @@
         var res = parseYandexRulerString(s);
         return [{name: 'Yandex ruler', error: res.error, tracks: [res.points]}];
     }
+*/
 
     function parseZip(txt, name) {
         var unzipper = new JSUnzip(txt);
@@ -322,7 +324,7 @@
             parseGpx,
             parseOziPlt,
             parseKml,
-            parseYandexRulerUrl,
+//            parseYandexRulerUrl,
             parseYandexMap
         ];
         for (var i=0; i<parsers.length; i++) {
