@@ -6,24 +6,10 @@
 //@require lib/map_to_image.js
 //@require lib/pdf.js
 //@require fileutils
+//@require knockout.progress
 
 (function(){
     "use strict";
-    ko.components.register('progress-indicator', {
-        template:   '<div class="progress-unknown" data-bind="visible: progress() === undefined"></div>' +
-                    '<div class="progress" data-bind="visible: progress() !== undefined">' +
-                        '<div class="leaflet-control-progress-bkg">' +
-                            '<div class="leaflet-control-progress-bar"  data-bind="style: {width: progress() + \'%\'}"></div>' +
-                        '</div>' +
-                    '</div>',
-        viewModel: function(params) {
-            this.progress = ko.pureComputed(function() {
-                var range = params.progressRange(),
-                    done = params.progressDone();
-                return done === undefined ? undefined : done * 100 / range;
-            }.bind(this));
-        }
-    });
 
     ko.extenders.checkNumberRange = function(target, range) {
         var result = ko.pureComputed({
