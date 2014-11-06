@@ -340,23 +340,25 @@
         },
 
         _serializeState: function(){
-            var state = [];
-            state.push(this.mapScale());
-            state.push(this.printResolution());
-            state.push(this.srcZoomLevel());
-            state.push(this.pageWidth());
-            state.push(this.pageHeight());
-            state.push(this.marginLeft());
-            state.push(this.marginRight());
-            state.push(this.marginTop());
-            state.push(this.marginBottom());
             var sheets = this.sheets();
-            for (var i=0; i < sheets.length; i++) {
-                var sheet = sheets[i],
-                    ll = sheet.getLatLng();
-                state.push(ll.lat.toFixed(5));
-                state.push(ll.lng.toFixed(5));
-                state.push(sheet._rotated ? 1 : 0);
+            var state = [];
+            if (sheets.length) {
+                state.push(this.mapScale());
+                state.push(this.printResolution());
+                state.push(this.srcZoomLevel());
+                state.push(this.pageWidth());
+                state.push(this.pageHeight());
+                state.push(this.marginLeft());
+                state.push(this.marginRight());
+                state.push(this.marginTop());
+                state.push(this.marginBottom());
+                for (var i=0; i < sheets.length; i++) {
+                    var sheet = sheets[i],
+                        ll = sheet.getLatLng();
+                    state.push(ll.lat.toFixed(5));
+                    state.push(ll.lng.toFixed(5));
+                    state.push(sheet._rotated ? 1 : 0);
+                }
             }
             return state;
         },

@@ -57,8 +57,10 @@
         _saveStateToHash: function() {
             var stateItems = [];
             for (var key in this._state) {
-                var values = this._state[key].join('/');
-                stateItems.push(key + '=' + values);
+                if (this._state[key].length) {
+                    var values = this._state[key].join('/');
+                    stateItems.push(key + '=' + values);
+                }
             }
             var hashString = '#' + stateItems.join('&');
             location.replace(hashString);
