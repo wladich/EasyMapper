@@ -4,6 +4,8 @@
 //@require knockout
 //@require lib/geo_file_formats.js
 //@require leaflet.contextmenu
+//@require knockout.progress
+//@require leaflet.measured_line
 
 (function() {
     "use strict";
@@ -17,6 +19,9 @@
             L.Control.prototype.initialize.call(this);
             this.tracks = ko.observableArray();
             this.url = ko.observable('');
+            this.readingFiles = ko.observable(false);
+            this.readProgressRange = ko.observable(10);
+            this.readProgressDone = ko.observable(2);
         },
 
         onAdd: function(map){
@@ -27,10 +32,17 @@
                 '<div class="hint">' +
                     'GPX Ozi GoogleEarth ZIP YandexMaps' +
                 '</div>' +
-                '<div class="inputs-row">' +
+                '<div class="inputs-row" data-bind="visible: !readingFiles()">' +
                     '<a class="button open-file" title="Open file" data-bind="click: loadFilesFromDisk"></a>' +
                     '<input type="text" class="input-url" placeholder="Track URL" data-bind="value: url">' +
                     '<a class="button download-url" title="Download URL" data-bind="click: loadFilesFromUrl"></a>' +
+                '</div>' +
+                '<div style="text-align: center"><div data-bind="' +
+                    'component: {' +
+                        'name: \'progress-indicator\',' +
+                        'params: {progressRange: readProgressRange, progressDone: readProgressDone}' +
+                    '},' +
+                    'visible: readingFiles"></div>' +
                 '</div>' +
                 '<!-- ko foreach: {data: tracks, as: "track"} -->' +
                     '<div class="track-item">' +
@@ -65,6 +77,9 @@
             var url = this.url().trim();
             var geodata;
             if (url.length > 0) {
+                this.readingFiles(true);
+                this.readProgressDone(undefined);
+                this.readProgressRange(1);
                 geodata = parseGeoFile('', url);
                 if (geodata.length > 1 || geodata[0].error != 'UNSUPPORTED') {
                     this.addTracksFromGeodataArray(geodata);
@@ -121,6 +136,7 @@
                     messages.push(message);
                 }
             }.bind(this));
+            this.readingFiles(false);
             if (messages.length) {
                 alert(messages.join('\n'));
             }
