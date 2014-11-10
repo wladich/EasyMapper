@@ -31,15 +31,15 @@
 
 .leaflet-control-tracklist .input-url {
     display: inline-block;
-    width: 120px;
+    width: 180px;
     height: 26px;
     line-height: 26px;
     padding: 0 3px;
-    border: 1px solid #777;
-    border-radius: 3px 3px 3px 3px;
+    border: 1px solid #ccc;
+    border-radius: 3px 0 0 3px;
     vertical-align: middle;
-    margin-left: 12px;
-    margin-right: 6px;
+    margin-left: 6px;
+    margin-right: -1px;
 }
 
 .leaflet-control-tracklist .open-file {
@@ -48,6 +48,8 @@
 
 .leaflet-control-tracklist .download-url {
     background-image: url("images/arrow_bottom.png");
+    border-bottom-left-radius: 0;
+    border-top-left-radius: 0;
 }
 
 .leaflet-control-tracklist .track-item {
@@ -75,6 +77,7 @@
 }
 
 .leaflet-control-tracklist .track-name {
+    font-size: 11px;
     display: inline-block;
     color: #333;
     border-bottom: 1px dashed #999;
@@ -103,9 +106,10 @@
     float: right;
     border-radius: 4px;
     border: 1px solid #aaa;
-    margin-right: 3px;
+    margin: 0 4px;
     padding: 0 3px;
     cursor: pointer;
+    white-space: nowrap;
 }
 
 .leaflet-control-tracklist .ticks-enabled {
