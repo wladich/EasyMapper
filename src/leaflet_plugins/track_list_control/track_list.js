@@ -34,7 +34,7 @@
                 '</div>' +
                 '<div class="inputs-row" data-bind="visible: !readingFiles()">' +
                     '<a class="button open-file" title="Open file" data-bind="click: loadFilesFromDisk"></a>' +
-                    '<input type="text" class="input-url" placeholder="Track URL" data-bind="value: url">' +
+                    '<input type="text" class="input-url" placeholder="Track URL" data-bind="textInput: url, event: {keypress: onEnterPressedInInput}">' +
                     '<a class="button download-url" title="Download URL" data-bind="click: loadFilesFromUrl"></a>' +
                 '</div>' +
                 '<div style="text-align: center"><div data-bind="' +
@@ -60,6 +60,14 @@
             ko.applyBindings(this, container);
             return container;
             
+        },
+
+        onEnterPressedInInput: function(this_, e) {
+            if (e.charCode == 13) {
+                this_.loadFilesFromUrl();
+            } else {
+                return true;
+            }
         },
 
         loadFilesFromDisk: function() {
