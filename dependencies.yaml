@@ -33,6 +33,8 @@ provides:
         - src/leaflet_plugins/tile_layer_grabber/Google.js
         - src/leaflet_plugins/tile_layer_grabber/TileLayer.js
         - src/leaflet_plugins/tile_layer_grabber/Yandex.js
+    leaflet.measured_line:
+        - src/leaflet_plugins/measured_line/measured_line.js
     knockout:
         production:
             - src/lib/vendor/knockout/knockout-3.2.0.js

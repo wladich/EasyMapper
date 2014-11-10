@@ -38,6 +38,7 @@
                         '<div class="color-sample" data-bind="style: {backgroundColor: $parent.colors[track.color()]}, click: $parent.onColorSelectorClicked.bind($parent)"></div>' +
                         '<span class="track-name" data-bind="text: track.name, attr: {title: track.name}, click: $parent.setViewToTrack.bind($parent)"></span>' +
                         '<a class="delete-button" title="Remove track" data-bind="click: $parent.removeTrack.bind($parent)">X</a>' +
+                        '<div class="button-length" data-bind="text: track.length, css: {\'ticks-enabled\': track.measureTicksShown}, click: $parent.setTrackMeasureTicksVisibility.bind($parent)"></div>' +
                     '</div>' +
                 '<!-- /ko -->'
 
@@ -142,6 +143,30 @@
             }
         },
 
+        onTrackLengthChanged: function(track) {
+            var lines = track.feature.getLayers(),
+                length = 0;
+            for (var i in lines) {
+                length += lines[i].getLength();
+            }
+            if (length < 10000) {
+                length = Math.round(length / 10) / 100;
+            } else if (length < 100000) {
+                length = Math.round(length / 100) / 10;
+            } else {
+                length = Math.round(length / 1000);
+            }
+            track.length(length + ' km');
+        },
+
+        setTrackMeasureTicksVisibility: function(track) {
+            track.measureTicksShown(!track.measureTicksShown());
+            var lines = track.feature.getLayers();
+            for (var i in lines) {
+                lines[i].setMeasureTicksVisible(track.measureTicksShown());
+            }
+        },
+
         onColorSelectorClicked: function(track, e) {
             track._contextmenu.showOnMouseEvent(e);
         },
@@ -163,11 +188,21 @@
 
         addTrack: function(geodata) {
             this._lastTrackColor = ((this._lastTrackColor | 0) + 1) % this.colors.length;
+            var polylines = [];
+            for (var i in geodata.tracks) {
+                var points = geodata.tracks[i],
+                    polyline = L.measuredLine(points);
+                polyline.on('lengthchanged', this.onTrackLengthChanged, this);
+                polylines.push(polyline);
+            }
+
             var track = {
                 name: geodata.name,
-                feature: L.featureGroup(geodata.tracks.map(L.polyline)),
+                feature: L.featureGroup(polylines),
                 color: ko.observable(this._lastTrackColor),
-                visible: ko.observable(true)
+                visible: ko.observable(true),
+                length: ko.observable('empty'),
+                measureTicksShown: ko.observable(false)
             };
             this.tracks.push(track);
             track.visible.subscribe(this.onTrackVisibilityChanged.bind(this, track));
@@ -175,6 +210,7 @@
             this.onTrackColorChanged(track);
             this.onTrackVisibilityChanged(track);
             this.attachColorSelector(track);
+            this.onTrackLengthChanged(track);
         },
 
         removeTrack: function(track) {
