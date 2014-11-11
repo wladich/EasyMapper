@@ -67,9 +67,12 @@
 
         _createItem: function (itemOptions) {
             var el = L.DomUtil.create('a', 'item', this._container);
+            if (itemOptions.disabled) {
+                L.DomUtil.addClass(el, 'disabled');
+            }
             el.innerHTML = itemOptions.text;
             var callback = itemOptions.callback;
-            if (callback) {
+            if (callback && !itemOptions.disabled) {
                 L.DomEvent.addListener(el, 'mousedown', function(e) {
                     callback();
                     L.DomEvent.stopPropagation(e);

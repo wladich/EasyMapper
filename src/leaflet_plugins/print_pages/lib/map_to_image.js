@@ -118,7 +118,6 @@ var mapRender = (function() {
     pages: [{latLngBounds: , pixelSize: [width, height]}, postprocess: function(canvas)...]
     */
     function mapToImages(map, pages, zooms, notifyTileLoad) {
-        console.log(pages);
         return new Promise(function(resolve, reject) {
             var images = [];
             var pagesCopy = pages.slice(0);

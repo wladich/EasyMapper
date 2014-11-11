@@ -199,6 +199,41 @@
             return [zoom_sat, zoom_map];
         },
 
+        _savePage: function (sheet) {
+            this.fire('pdfstart');
+            this.makingPdf(true);
+            this.downloadProgressDone(undefined);
+            this.downloadProgressRange(mapRender.getRenderableLayers(this._map).length);
+            var zooms = (this.srcZoomLevel() == 'auto') ? this.suggestZooms() : [this.srcZoomLevel(), this.srcZoomLevel()];
+            var q = this.printResolution() / 25.4;
+            var page = {
+                latLngBounds: sheet.getLatLngBounds(),
+                pixelSize: [Math.round(sheet.paperSize[0] * q), Math.round(sheet.paperSize[1] * q)]
+            };
+            if (this.options.postprocess) {
+                page.postprocess = this.options.postprocess.bind(null, null, page.latLngBounds);
+            }
+            var X = 0;
+            var onTileLoad = function(x) {
+                X += x;
+                this.downloadProgressDone(X);
+            }.bind(this);
+            mapRender.mapToImages(this._map, [page], zooms, onTileLoad)
+            .then(function(images) {
+                fileutils.saveStringToFile('map.jpg', 'application/octet-stream', images[0].data);
+            }).done(function() {
+                this.makingPdf(false);
+                console.log('DONE');
+            }.bind(this), function(error) {
+                this.makingPdf(false);
+                if (error.statusText !== undefined) {
+                    error = error.statusText || 'Server error or CORS violation';
+                }
+                alert('Failed to save image: ' + error);
+            }.bind(this));
+
+        },
+
         onDownloadButtonClick: function() {
             var sheets = this.sheets(),
                 resolution = this.printResolution();
@@ -241,6 +276,7 @@
                 alert('Add some pages to print')
             }
         },
+
 
         addPagePortrait: function() {
             this._addPage();
@@ -297,7 +333,9 @@
             var items = [
                   {text: 'Rotate', callback: this._rotatePage.bind(this, feature)},
                   '-',
-                  {text: 'Delete', callback: this._removePage.bind(this, feature)}
+                  {text: 'Delete', callback: this._removePage.bind(this, feature)},
+                  '-',
+                  {text: 'Save image', callback: this._savePage.bind(this, feature), disabled: this.makingPdf()},
             ];
             var sheets = this.sheets(),
                 sheets_n = sheets.length;

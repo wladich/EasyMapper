@@ -44,3 +44,7 @@
     line-height: 1px;
     margin: 8px 0;
 }
+
+.leaflet-contextmenu .disabled {
+    color: #aaa;
+}
