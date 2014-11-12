@@ -10,7 +10,7 @@
 (function() {
     "use strict";
     L.Control.TrackList = L.Control.extend({
-        options: {position: 'topright'},
+        options: {position: 'bottomright'},
 
         colors: ['#77f', '#f95', '#0ff', '#f77', '#f7f', '#ee5'],
 
@@ -44,16 +44,15 @@
                     '},' +
                     'visible: readingFiles"></div>' +
                 '</div>' +
-                '<!-- ko foreach: {data: tracks, as: "track"} -->' +
-                    '<div class="track-item">' +
-                        '<input type="checkbox" class="visibility-switch" data-bind="checked: track.visible">' +
-                        '<div class="color-sample" data-bind="style: {backgroundColor: $parent.colors[track.color()]}, click: $parent.onColorSelectorClicked.bind($parent)"></div>' +
-                        '<span class="track-name" data-bind="text: track.name, attr: {title: track.name}, click: $parent.setViewToTrack.bind($parent)"></span>' +
-                        '<a class="delete-button" title="Remove track" data-bind="click: $parent.removeTrack.bind($parent)">X</a>' +
-                        '<div class="button-length" data-bind="text: track.length, css: {\'ticks-enabled\': track.measureTicksShown}, click: $parent.setTrackMeasureTicksVisibility.bind($parent)"></div>' +
-                    '</div>' +
-                '<!-- /ko -->'
-
+                '<table class="tracks-rows" data-bind="foreach: {data: tracks, as: \'track\'}">' +
+                    '<tr>' +
+                        '<td><input type="checkbox" class="visibility-switch" data-bind="checked: track.visible"></td>' +
+                        '<td><div class="color-sample" data-bind="style: {backgroundColor: $parent.colors[track.color()]}, click: $parent.onColorSelectorClicked.bind($parent)"></div></td>' +
+                        '<td><div class="track-name"><span data-bind="text: track.name, attr: {title: track.name}, click: $parent.setViewToTrack.bind($parent)"></span></div></td>' +
+                        '<td><div class="button-length" data-bind="text: track.length, css: {\'ticks-enabled\': track.measureTicksShown}, click: $parent.setTrackMeasureTicksVisibility.bind($parent)"></div></td>' +
+                        '<td><a class="delete-button" title="Remove track" data-bind="click: $parent.removeTrack.bind($parent)">X</a></td>' +
+                    '</tr>' +
+                '</table>'
              );
 
             L.DomEvent.disableClickPropagation(container);
