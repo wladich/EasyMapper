@@ -43,12 +43,14 @@
             L.Polyline.prototype.onAdd.call(this, map);
             this._ticks = [];
             this.updateTicks();
-            this._map.on('viewreset', this.updateTicks, this);
+            this._map.on('zoomend', this.updateTicks, this);
+            this._map.on('dragend', this.updateTicks, this);
 
         },
 
         onRemove: function(map) {
-            this._map.off('viewreset', this.updateTicks, this);
+            this._map.off('zoomend', this.updateTicks, this);
+            this._map.off('dragend', this.updateTicks, this);
             this._clearTicks();
             L.Polyline.prototype.onRemove.call(this, map);
         },
@@ -62,6 +64,9 @@
         },
 
         _addTick: function(position, segment, distanceValue) {
+            if (!this._visibilityBounds.contains(position)) {
+                return;
+            }
             segment = [this._map.project(segment[0], 1), this._map.project(segment[1], 1)];
             var sinCos = sinCosFromSegment(segment),
                 sin = sinCos[0], cos = sinCos[1],
@@ -90,11 +95,16 @@
             this.updateTicks();
         },
 
+        _updateVisibilityBounds: function() {
+            this._visibilityBounds = this._map.getBounds().pad(1);
+        },
+
         updateTicks: function() {
             this._clearTicks();
             if (!this._map || !this.options.measureTicksShown) {
                 return;
             }
+            this._updateVisibilityBounds();
             var steps = [500, 1000, 2000, 5000, 10000, 20000, 50000, 100000, 200000, 500000, 1000000];
             var minTicksIntervalScreenMm = 15,
                 rad = Math.PI / 180,
