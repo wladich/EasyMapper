@@ -33,6 +33,7 @@
                     'GPX Ozi GoogleEarth ZIP YandexMaps' +
                 '</div>' +
                 '<div class="inputs-row" data-bind="visible: !readingFiles()">' +
+                    '<a class="button add-track" title="New track" data-bind="click: addNewTrack"></a>' +
                     '<a class="button open-file" title="Open file" data-bind="click: loadFilesFromDisk"></a>' +
                     '<input type="text" class="input-url" placeholder="Track URL" data-bind="textInput: url, event: {keypress: onEnterPressedInInput}">' +
                     '<a class="button download-url" title="Download URL" data-bind="click: loadFilesFromUrl"></a>' +
@@ -51,6 +52,7 @@
                         '<td><div class="track-name-wrapper"><div class="track-name" data-bind="text: track.name, attr: {title: track.name}, click: $parent.setViewToTrack.bind($parent)"></div></div></td>' +
                         '<td><div class="button-length" data-bind="text: track.length, css: {\'ticks-enabled\': track.measureTicksShown}, click: $parent.setTrackMeasureTicksVisibility.bind($parent)"></div></td>' +
                         '<td><a class="track-text-button" title="Remove track" data-bind="click: $parent.removeTrack.bind($parent)">X</a></td>' +
+                        '<td><a class="track-text-button" title="Add segment" data-bind="click: $parent.removeTrack.bind($parent)">+</a></td>' +
                     '</tr>' +
                 '</table>'
              );
@@ -67,6 +69,10 @@
             } else {
                 return true;
             }
+        },
+
+        addNewTrack: function() {
+            this.addTrack({name: 'New track'});
         },
 
         loadFilesFromDisk: function() {
@@ -195,7 +201,9 @@
         },
 
         setViewToTrack: function(track) {
-            this.map.fitBounds(track.feature.getBounds());
+            if (track.feature.getLayers().length) {
+                this.map.fitBounds(track.feature.getBounds());
+            }
         },
 
         attachColorSelector: function(track) {
@@ -242,7 +250,9 @@
         },
 
         exportTracks: function(minTicksIntervalMeters) {
-            return this.tracks().map(function(track) {
+            return this.tracks()
+            .filter(function(track) {return track.feature.getLayers().length;})
+            .map(function(track) {
                 var capturedTrack = track.feature.getLayers().map(function(pl) {
                         return pl.getLatLngs().map(function(ll) {
                             return [ll.lat, ll.lng];

@@ -47,6 +47,12 @@
 
 .leaflet-control-tracklist .open-file {
     background-image: url("images/folder_open.png");
+    margin-right: 5px;
+}
+
+.leaflet-control-tracklist .add-track {
+    background-image: url("images/plus.png");
+    margin-right: 5px;
 }
 
 
