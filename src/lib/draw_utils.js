@@ -32,7 +32,7 @@
         dest.getContext('2d').putImageData(d_image_data, 0, 0);
     }
 
-    function drawLinesOnCanvas(canvas, lines, widthPixels) {
+    function drawLinesOnCanvas(canvas, lines, widthPixels, ticksPixelSize) {
         var drawCanvas = document.createElement('canvas');
         drawCanvas.width = canvas.width;
         drawCanvas.height = canvas.height;
@@ -48,10 +48,18 @@
                 ctx.lineTo(p[0], p[1]);
             });
             ctx.stroke();
+
+            ctx.font = ticksPixelSize + 'px verdana';
+            ctx.fillStyle = line.color;
+            (line.ticks || []).forEach(function(tick) {
+                var m = tick.transformMatrix;
+                ctx.setTransform(m[0], m[1], m[2], m[3], tick.position[0], tick.position[1]);
+                ctx.fillText(tick.label, 0, ticksPixelSize * 0.3);
+            });
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
         });
         blendMultiplyCanvas(drawCanvas, canvas);
     }
-
     window.drawLinesOnCanvas = drawLinesOnCanvas;
 
 })();

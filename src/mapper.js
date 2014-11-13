@@ -32,17 +32,29 @@
             this._tracksForPrint.forEach(function(track) {
                 if (track.visible && bounds.intersects(track.bounds)) {
                     track.segments.forEach(function(segment) {
-                        lines.push({points: segment.map(latlngToPagePixel), color: self.trackPrintColors[track.color]});
+                        lines.push({
+                            points: segment.map(latlngToPagePixel),
+                            color: self.trackPrintColors[track.color],
+                            ticks: track.measureTicksShown ? track.measureTicks.map(function(tick) {
+                                return {
+                                    label: '\u2014 ' + Math.round((tick.distanceValue / 10)) / 100 + ' km',
+                                    position: latlngToPagePixel(tick.position),
+                                    transformMatrix: tick.transformMatrix
+                                };
+                            }) : []
+                        });
                     });
                 }
             });
             var lineWidthPixels = this.trackPrintWidth / 25.4 * this._printDpi;
-            drawLinesOnCanvas(canvas, lines, lineWidthPixels);
+            var ticksPixelSize = 2.5 / 25.4 * this._printDpi;
+
+            drawLinesOnCanvas(canvas, lines, lineWidthPixels, ticksPixelSize);
         },
 
         beforePdfBuild: function() {
-            this._tracksForPrint = this.trackList.exportTracks();
             this._printDpi = this.printPagesControl.printResolution();
+            this._tracksForPrint = this.trackList.exportTracks(1.5 * this.printPagesControl.mapScale());
         },
 
         setupMap: function(mapContainer) {

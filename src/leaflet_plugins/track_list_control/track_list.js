@@ -241,7 +241,7 @@
             this.tracks.remove(track);
         },
 
-        exportTracks: function() {
+        exportTracks: function(minTicksIntervalMeters) {
             return this.tracks().map(function(track) {
                 var capturedTrack = track.feature.getLayers().map(function(pl) {
                         return pl.getLatLngs().map(function(ll) {
@@ -254,10 +254,14 @@
                     color: track.color(),
                     visible: track.visible(),
                     segments: capturedTrack,
-                    bounds: capturedBounds
+                    bounds: capturedBounds,
+                    measureTicksShown: track.measureTicksShown(),
+                    measureTicks: [].concat.apply([], track.feature.getLayers().map(function(pl) {
+                       return pl.getTicksPositions(minTicksIntervalMeters);
+                    }))
                 };
             });
-        }
+        },
 
     });
 
