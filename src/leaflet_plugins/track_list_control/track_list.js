@@ -48,9 +48,9 @@
                     '<tr>' +
                         '<td><input type="checkbox" class="visibility-switch" data-bind="checked: track.visible"></td>' +
                         '<td><div class="color-sample" data-bind="style: {backgroundColor: $parent.colors[track.color()]}, click: $parent.onColorSelectorClicked.bind($parent)"></div></td>' +
-                        '<td><div class="track-name"><span data-bind="text: track.name, attr: {title: track.name}, click: $parent.setViewToTrack.bind($parent)"></span></div></td>' +
+                        '<td><div class="track-name-wrapper"><div class="track-name" data-bind="text: track.name, attr: {title: track.name}, click: $parent.setViewToTrack.bind($parent)"></div></div></td>' +
                         '<td><div class="button-length" data-bind="text: track.length, css: {\'ticks-enabled\': track.measureTicksShown}, click: $parent.setTrackMeasureTicksVisibility.bind($parent)"></div></td>' +
-                        '<td><a class="delete-button" title="Remove track" data-bind="click: $parent.removeTrack.bind($parent)">X</a></td>' +
+                        '<td><a class="track-text-button" title="Remove track" data-bind="click: $parent.removeTrack.bind($parent)">X</a></td>' +
                     '</tr>' +
                 '</table>'
              );

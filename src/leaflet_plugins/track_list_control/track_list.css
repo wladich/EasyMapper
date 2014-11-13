@@ -29,22 +29,26 @@
     vertical-align: middle;
 }
 
+.leaflet-control-tracklist .button:hover {
+    background-color: #f4f4f4;
+}
+
 .leaflet-control-tracklist .input-url {
     display: inline-block;
-    width: 180px;
+    width: 150px;
     height: 26px;
     line-height: 26px;
     padding: 0 3px;
     border: 1px solid #ccc;
     border-radius: 3px 0 0 3px;
     vertical-align: middle;
-    margin-left: 6px;
     margin-right: -1px;
 }
 
 .leaflet-control-tracklist .open-file {
     background-image: url("images/folder_open.png");
 }
+
 
 .leaflet-control-tracklist .download-url {
     background-image: url("images/arrow_bottom.png");
@@ -71,29 +75,30 @@
     border-style: solid;
 }
 
-.leaflet-control-tracklist .track-name {
-    font-size: 11px;
-    line-height: 16px;
+.leaflet-control-tracklist .track-name-wrapper {
     display: block;
-    color: #333;
-    cursor: pointer;
-    white-space:nowrap;
-    text-overflow: ellipsis;
-    overflow: hidden;
-    width: 150px;
+    width: 140px;
     margin-left: 2px;
 }
 
-.leaflet-control-tracklist .track-name span{
-    border-bottom: 1px dashed #999;
+.leaflet-control-tracklist .track-name {
     display: inline-block;
-    padding-bottom: 1px;
+    font-size: 11px;
+    color: #333;
+    cursor: pointer;
+    border-bottom: 1px dashed #999;
+    max-width: 140px;
+    white-space:nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    vertical-align: text-bottom;
 }
 
-.leaflet-control-tracklist .delete-button {
+.leaflet-control-tracklist .track-text-button {
     font-weight: bold;
     color: #333;
     cursor: pointer;
+    margin-left: 4px;
 }
 
 .leaflet-control-tracklist .button-length {
@@ -122,10 +127,11 @@
 }
 
 .leaflet-control-tracklist .tracks-rows td {
-    padding-top: 4px;
+    padding-top: 0;
 }
 
 .leaflet-control-tracklist .tracks-rows {
     border-collapse: collapse;
     width: 100%;
+    line-height: 20px;
 }
