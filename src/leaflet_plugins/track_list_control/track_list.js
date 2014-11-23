@@ -6,9 +6,52 @@
 //@require leaflet.contextmenu
 //@require knockout.progress
 //@require leaflet.measured_line
+//@require leaflet.edit_line
 
 (function() {
     "use strict";
+
+    function saveGpx(segments, name) {
+        var points,
+            gpx = [],
+            x, y,
+            filename;
+        if (!segments || segments.length === 0) {
+            return null;
+        }
+
+        segments.forEach(function(points) {
+            if (points.length > 1) {
+                gpx.push('\t\t<trkseg>');
+                points.forEach(function(p) {
+                    x = p.lng.toFixed(6);
+                    y = p.lat.toFixed(6);
+                    gpx.push('\t\t\t<trkpt lat="'+ y +'" lon="' + x + '"></trkpt>');
+                });
+                gpx.push('\t\t</trkseg>');
+            }
+        });
+        if (gpx.length === 0) {
+            return null;
+        }
+        name = name || 'Track';
+        name = fileutils.encodeUTF8(name);
+        gpx.unshift(
+                    '<?xml version="1.0" encoding="UTF-8" standalone="no" ?>',
+                    '<gpx xmlns="http://www.topografix.com/GPX/1/1" creator="http://nakarte.tk" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">',
+                    '\t<trk>',
+                    '\t\t<name>' + name + '</name>'
+        );
+        gpx.push('\t</trk>', '</gpx>');
+        gpx = gpx.join('\n');
+        filename = name.replace(' ', '_') + '.gpx';
+        fileutils.saveStringToFile(filename, 'application/download', gpx);
+        return true;
+    }
+
+    var MeasuredEditableLine = L.MeasuredLine.extend({});
+    MeasuredEditableLine.include(L.Polyline.EditMixin);
+
     L.Control.TrackList = L.Control.extend({
         options: {position: 'bottomright'},
 
@@ -33,7 +76,7 @@
                     'GPX Ozi GoogleEarth ZIP YandexMaps' +
                 '</div>' +
                 '<div class="inputs-row" data-bind="visible: !readingFiles()">' +
-                    '<a class="button add-track" title="New track" data-bind="click: addNewTrack"></a>' +
+                    '<a class="button add-track" title="New track" data-bind="click: function(){this.addNewTrack()}"></a>' +
                     '<a class="button open-file" title="Open file" data-bind="click: loadFilesFromDisk"></a>' +
                     '<input type="text" class="input-url" placeholder="Track URL" data-bind="textInput: url, event: {keypress: onEnterPressedInInput}">' +
                     '<a class="button download-url" title="Download URL" data-bind="click: loadFilesFromUrl"></a>' +
@@ -46,13 +89,12 @@
                     'visible: readingFiles"></div>' +
                 '</div>' +
                 '<table class="tracks-rows" data-bind="foreach: {data: tracks, as: \'track\'}">' +
-                    '<tr>' +
+                    '<tr data-bind="event: {contextmenu: $parent.showTrackMenu.bind($parent)}">' +
                         '<td><input type="checkbox" class="visibility-switch" data-bind="checked: track.visible"></td>' +
                         '<td><div class="color-sample" data-bind="style: {backgroundColor: $parent.colors[track.color()]}, click: $parent.onColorSelectorClicked.bind($parent)"></div></td>' +
                         '<td><div class="track-name-wrapper"><div class="track-name" data-bind="text: track.name, attr: {title: track.name}, click: $parent.setViewToTrack.bind($parent)"></div></div></td>' +
-                        '<td><div class="button-length" data-bind="text: track.length, css: {\'ticks-enabled\': track.measureTicksShown}, click: $parent.setTrackMeasureTicksVisibility.bind($parent)"></div></td>' +
-                        '<td><a class="track-text-button" title="Remove track" data-bind="click: $parent.removeTrack.bind($parent)">X</a></td>' +
-                        '<td><a class="track-text-button" title="Add segment" data-bind="click: $parent.removeTrack.bind($parent)">+</a></td>' +
+                        '<td><div class="button-length" data-bind="text: track.length, css: {\'ticks-enabled\': track.measureTicksShown}, click: $parent.switchMeasureTicksVisibility.bind($parent)"></div></td>' +
+                        '<td><a class="track-text-button" title="Actions" data-bind="click: $parent.showTrackMenu.bind($parent)">&hellip;</a></td>' +
                     '</tr>' +
                 '</table>'
              );
@@ -71,8 +113,20 @@
             }
         },
 
-        addNewTrack: function() {
-            this.addTrack({name: 'New track'});
+        addNewTrack: function(name) {
+            if (!name) {
+                name = this.url().slice(0, 50);
+                if (!name.length) {
+                    name = 'New track';
+                } else {
+                    this.url('');
+                }
+            }
+            var track = this.addTrack({name: name}),
+                line = this.addTrackSegment(track);
+            this.startEditTrackSegement(track, line);
+            line.startDrawingLine();
+            return track;
         },
 
         loadFilesFromDisk: function() {
@@ -189,11 +243,15 @@
         },
 
         setTrackMeasureTicksVisibility: function(track) {
-            track.measureTicksShown(!track.measureTicksShown());
-            var lines = track.feature.getLayers();
+            var visible = track.measureTicksShown(),
+                lines = track.feature.getLayers();
             for (var i in lines) {
-                lines[i].setMeasureTicksVisible(track.measureTicksShown());
+                lines[i].setMeasureTicksVisible(visible);
             }
+        },
+
+        switchMeasureTicksVisibility: function(track) {
+            track.measureTicksShown(!(track.measureTicksShown()));
         },
 
         onColorSelectorClicked: function(track, e) {
@@ -209,7 +267,6 @@
         attachColorSelector: function(track) {
             var items = this.colors.map(function(color, index) {
                 return {
-                    //text: '<div style="display: inline-block; vertical-align: middle; width: 50px; height: 4px; background-color: ' + color + '"></div>',
                     text: '<div style="display: inline-block; vertical-align: middle; width: 50px; height: 0; border-top: 4px solid ' + color + '"></div>',
                     callback: track.color.bind(null, index)
                 };
@@ -217,31 +274,115 @@
             track._contextmenu = new L.Contextmenu(items);
         },
 
+        attachActionsMenu: function(track) {
+            var items = [
+                function() {return {text: track.name(), disabled: true};},
+                '-',
+                {text: 'Delete', callback: this.removeTrack.bind(this, track)},
+                {text: 'Add segment', callback: function() {
+                    var polyline = this.addTrackSegment(track, []);
+                    this.startEditTrackSegement(track, polyline);
+                    polyline.startDrawingLine(1);
+                }.bind(this)},
+                {text: 'Rename', callback: this.renameTrack.bind(this, track)},
+                {text: 'Download GPX', callback: this.exportTrackGpx.bind(this, track)}
+            ];
+            track._actionsMenu = new L.Contextmenu(items);
+        },
+        
+        exportTrackGpx: function(track) {
+            this.stopActiveDraw();
+            var lines = track.feature.getLayers()
+                .map(function(line) {
+                    return line.getLatLngs();
+                });
+            var name = track.name(),
+                i=name.lastIndexOf('.');
+            if (i >= name.length - 5) {
+                name = name.slice(0, i-1);
+            }
+            if (!saveGpx(lines, name)) {
+                alert('Track is empty, nothing to save');
+            }
+        },
+
+        renameTrack: function(track) {
+            var newName = prompt('Enter new name', track.name());
+            if (newName && newName.length) {
+                track.name(newName);
+            }
+        },
+
+        showTrackMenu: function(track, e) {
+            track._actionsMenu.showOnMouseEvent(e);
+        },
+
+        stopActiveDraw: function() {
+            if (this._editedLine) {
+                this._editedLine.stopDrawingLine();
+            }
+        },
+
+        startEditTrackSegement: function(track, polyline) {
+            //FIXME: move this check to edit_line module, events can be assigned in handler for startedit event
+            if (this._editedLine && this._editedLine !== polyline) {
+                this._editedLine.stopEdit();
+            }
+            polyline.startEdit();
+            this._editedLine = polyline;
+            polyline.once('editend', this.onLineEditEnd.bind(this, track, polyline));
+        },
+
+        
+        onLineEditEnd: function(track, polyline) {
+            if (polyline.getLatLngs() < 2) {
+                track.feature.removeLayer(polyline);
+            }
+            this.onTrackLengthChanged(track);
+            this._editedLine = null;
+        },
+
+        addTrackSegment: function(track, sourcePoints) {
+            var polyline = new MeasuredEditableLine(sourcePoints || [], {
+                weight: 6,
+                color: this.colors[track.color()],
+                lineCap: 'butt',
+                className: 'leaflet-editable-line'
+            });
+            polyline.setMeasureTicksVisible(track.measureTicksShown());
+            polyline.on('click', this.startEditTrackSegement.bind(this, track, polyline));
+            polyline.on('nodeschanged', this.onTrackLengthChanged.bind(this, track));
+            //polyline.on('editingstart', polyline.setMeasureTicksVisible.bind(polyline, false));
+            //polyline.on('editingend', this.setTrackMeasureTicksVisibility.bind(this, track));
+            track.feature.addLayer(polyline);
+            return polyline;
+        },
+
         addTrack: function(geodata) {
             this._lastTrackColor = ((this._lastTrackColor | 0) + 1) % this.colors.length;
-            var polylines = [];
-            for (var i in geodata.tracks) {
-                var points = geodata.tracks[i],
-                    polyline = L.measuredLine(points);
-                polyline.on('lengthchanged', this.onTrackLengthChanged, this);
-                polylines.push(polyline);
-            }
-
+            //var polylines = [];
             var track = {
-                name: geodata.name,
-                feature: L.featureGroup(polylines),
+                name: ko.observable(geodata.name),
                 color: ko.observable(this._lastTrackColor),
                 visible: ko.observable(true),
                 length: ko.observable('empty'),
-                measureTicksShown: ko.observable(false)
+                measureTicksShown: ko.observable(false),
+                feature: L.featureGroup([])
             };
+            (geodata.tracks || []).forEach(this.addTrackSegment.bind(this, track));
+
             this.tracks.push(track);
+
             track.visible.subscribe(this.onTrackVisibilityChanged.bind(this, track));
+            track.measureTicksShown.subscribe(this.setTrackMeasureTicksVisibility.bind(this, track));
             track.color.subscribe(this.onTrackColorChanged.bind(this, track));
-            this.onTrackColorChanged(track);
+            
+            //this.onTrackColorChanged(track);
             this.onTrackVisibilityChanged(track);
             this.attachColorSelector(track);
+            this.attachActionsMenu(track);
             this.onTrackLengthChanged(track);
+            return track;
         },
 
         removeTrack: function(track) {
@@ -251,26 +392,26 @@
 
         exportTracks: function(minTicksIntervalMeters) {
             return this.tracks()
-            .filter(function(track) {return track.feature.getLayers().length;})
-            .map(function(track) {
-                var capturedTrack = track.feature.getLayers().map(function(pl) {
-                        return pl.getLatLngs().map(function(ll) {
-                            return [ll.lat, ll.lng];
+                .filter(function(track) {return track.feature.getLayers().length;})
+                .map(function(track) {
+                    var capturedTrack = track.feature.getLayers().map(function(pl) {
+                            return pl.getLatLngs().map(function(ll) {
+                                return [ll.lat, ll.lng];
+                            });
                         });
-                    });
-                var bounds = track.feature.getBounds();
-                var capturedBounds = [[bounds.getSouth(), bounds.getWest()], [bounds.getNorth(), bounds.getEast()]];
-                return {
-                    color: track.color(),
-                    visible: track.visible(),
-                    segments: capturedTrack,
-                    bounds: capturedBounds,
-                    measureTicksShown: track.measureTicksShown(),
-                    measureTicks: [].concat.apply([], track.feature.getLayers().map(function(pl) {
-                       return pl.getTicksPositions(minTicksIntervalMeters);
-                    }))
-                };
-            });
+                    var bounds = track.feature.getBounds();
+                    var capturedBounds = [[bounds.getSouth(), bounds.getWest()], [bounds.getNorth(), bounds.getEast()]];
+                    return {
+                        color: track.color(),
+                        visible: track.visible(),
+                        segments: capturedTrack,
+                        bounds: capturedBounds,
+                        measureTicksShown: track.measureTicksShown(),
+                        measureTicks: [].concat.apply([], track.feature.getLayers().map(function(pl) {
+                           return pl.getTicksPositions(minTicksIntervalMeters);
+                        }))
+                    };
+                });
         },
 
     });

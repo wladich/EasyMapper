@@ -12,3 +12,14 @@ body {
     height: 100%;
  }
 
+.leaflet-mapper-button-ruler {
+    width: 18px;
+    height: 26px;
+    background-position: 50% 50%;
+    background-repeat: no-repeat;
+    background-image: url('images/Very-Basic-Ruler-icon.png');
+}
+
+.leaflet-line-editing  .paper-sheet-label {
+    pointer-events: none;
+}

@@ -6,6 +6,8 @@
 //@require leaflet.track_list
 //@require leaflet.print_pages
 //@require lib/draw_utils.js
+//@require leaflet.buttons
+
 (function(){
     "use strict";
 
@@ -53,8 +55,13 @@
         },
 
         beforePdfBuild: function() {
+            this.trackList.stopActiveDraw();
             this._printDpi = this.printPagesControl.printResolution();
             this._tracksForPrint = this.trackList.exportTracks(1.5 * this.printPagesControl.mapScale());
+        },
+
+        startRuler: function() {
+            this.trackList.addNewTrack('Ruler').measureTicksShown(true);
         },
 
         setupMap: function(mapContainer) {
@@ -69,6 +76,9 @@
             this.printPagesControl.enableHashState('p');
             this.trackList = new L.Control.TrackList()
                 .addTo(map);
+            var btn = L.functionButtons([{content: '<div title="Measure distance" class="leaflet-mapper-button-ruler"></div>'}], {position: 'topleft'})
+            .addTo(map)
+            .on('clicked', this.startRuler, this);
 
             this.printPagesControl.on('pdfstart', this.beforePdfBuild, this);
         }

@@ -57,6 +57,9 @@
             }
             for (var i = 0; i < items.length; i++) {
                 itemOptions = items[i];
+                if (typeof itemOptions === 'function') {
+                    itemOptions = itemOptions();
+                }
                 if (itemOptions === '-' || itemOptions.separator) {
                     this._createSeparator(itemOptions);
                 } else {
@@ -76,6 +79,7 @@
                 L.DomEvent.addListener(el, 'mousedown', function(e) {
                     callback();
                     L.DomEvent.stopPropagation(e);
+                    L.DomEvent.preventDefault(e);
                     this.hide();
                 }, this);
             }

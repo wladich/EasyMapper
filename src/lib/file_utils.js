@@ -151,11 +151,16 @@ var fileutils = (function() {
         return decodeURIComponent(escape(s));
     }
 
+    function encodeUTF8(s){
+        return unescape(encodeURIComponent(s));
+    }
+
     return {
         get: get,
         arrayBufferToString: arrayBufferToString,
         saveStringToFile: saveStringToFile,
         openFiles: openFiles,
-        decodeUTF8: decodeUTF8
+        decodeUTF8: decodeUTF8,
+        encodeUTF8: encodeUTF8
     };
 })();

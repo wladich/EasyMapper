@@ -5,21 +5,12 @@
     "use strict";
 
     function pointOnSegmentAtDistance(p1, p2, dist) {
-        var q = dist / distance(p1, p2),
+        //FIXME: we should place markers along projected line to avoid transformation distortions
+        var q = dist / p1.distanceTo(p2),
             x = p1.lng + (p2.lng - p1.lng) * q,
             y = p1.lat + (p2.lat - p1.lat) * q;
         return L.latLng(y, x);
 
-    }
-
-    function distance(p1, p2) {
-        var rad = Math.PI / 180,
-            x1 = p1.lng * rad, y1 = p1.lat * rad,
-            x2 = p2.lng * rad, y2 = p2.lat * rad,
-            dy = y2 - y1,
-            dx = (x2 - x1) * Math.cos(y1 + dy / 2),
-            dist = Math.sqrt(dx * dx + dy * dy) * 6371009;
-            return dist;
     }
 
     function sinCosFromSegment(segment) {
@@ -44,12 +35,14 @@
             this.updateTicks();
             this._map.on('zoomend', this.updateTicks, this);
             this._map.on('dragend', this.updateTicks, this);
+            this.on('nodeschanged', this.updateTicks, this);
 
         },
 
         onRemove: function(map) {
             this._map.off('zoomend', this.updateTicks, this);
             this._map.off('dragend', this.updateTicks, this);
+            this.off('nodeschanged', this.updateTicks, this);
             this._clearTicks();
             L.Polyline.prototype.onRemove.call(this, map);
         },
@@ -119,7 +112,7 @@
             }
 
             for (var i=1; i < points_n; i++) {
-                segmentLength = distance(points[i], points[i-1]);
+                segmentLength = points[i].distanceTo(points[i-1]);
                 nextPointMeasure = lastPointMeasure + segmentLength;
                 if (nextPointMeasure >= lastTickMeasure + step) {
                     while (lastTickMeasure + step <= nextPointMeasure) {
@@ -148,7 +141,8 @@
                 rad = Math.PI / 180,
                 dpi = 96,
                 mercatorMetersPerPixel = 20003931 / (this._map.project([180, 0]).x),
-                realMetersPerPixel = mercatorMetersPerPixel * Math.cos(this.getBounds().getCenter().lat * rad),
+                referencePoint = this.getLatLngs().length ? this.getBounds().getCenter() : this._map.getCenter(),
+                realMetersPerPixel = mercatorMetersPerPixel * Math.cos(referencePoint.lat * rad),
                 mapScale = 1 / dpi * 2.54 / 100 / realMetersPerPixel,
                 minTicksIntervalMeters = this.options.minTicksIntervalMm / mapScale / 1000,
                 ticks = this.getTicksPositions(minTicksIntervalMeters, bounds);
@@ -161,7 +155,7 @@
                 length = 0;
 
             for (var i=1; i<points_n; i++) {
-                length += distance(points[i], points[i-1]);
+                length += points[i].distanceTo(points[i-1]);
             }
             return length;
         }

@@ -2,6 +2,8 @@
     line-height: 0;
     margin-left: 0 !important;
     margin-top: 0 !important;
+    opacity: 0.85;
+    pointer-events: none;
 }
 
 .measure-tick-icon-text {
