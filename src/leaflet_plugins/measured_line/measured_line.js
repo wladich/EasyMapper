@@ -35,8 +35,11 @@
             this.updateTicks();
             this._map.on('zoomend', this.updateTicks, this);
             this._map.on('dragend', this.updateTicks, this);
-            this.on('nodeschanged', this.updateTicks, this);
+            this.on('nodeschanged', this.updateTicksLater, this);
+        },
 
+        updateTicksLater: function() {
+            setTimeout(this.updateTicks.bind(this), 0);
         },
 
         onRemove: function(map) {
@@ -52,7 +55,6 @@
                 this._ticks.forEach(this._map.removeLayer.bind(this._map));
                 this._ticks = [];
             }
-
         },
 
         _addTick: function(tick) {
