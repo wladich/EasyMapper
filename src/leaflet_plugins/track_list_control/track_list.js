@@ -3,6 +3,7 @@
 //@require fileutils
 //@require knockout
 //@require lib/geo_file_formats.js
+//@require lib/geo_file_exporters.js
 //@require leaflet.contextmenu
 //@require knockout.progress
 //@require leaflet.measured_line
@@ -10,44 +11,6 @@
 
 (function() {
     "use strict";
-
-    function saveGpx(segments, name) {
-        var points,
-            gpx = [],
-            x, y,
-            filename;
-        if (!segments || segments.length === 0) {
-            return null;
-        }
-
-        segments.forEach(function(points) {
-            if (points.length > 1) {
-                gpx.push('\t\t<trkseg>');
-                points.forEach(function(p) {
-                    x = p.lng.toFixed(6);
-                    y = p.lat.toFixed(6);
-                    gpx.push('\t\t\t<trkpt lat="'+ y +'" lon="' + x + '"></trkpt>');
-                });
-                gpx.push('\t\t</trkseg>');
-            }
-        });
-        if (gpx.length === 0) {
-            return null;
-        }
-        name = name || 'Track';
-        name = fileutils.encodeUTF8(name);
-        gpx.unshift(
-                    '<?xml version="1.0" encoding="UTF-8" standalone="no" ?>',
-                    '<gpx xmlns="http://www.topografix.com/GPX/1/1" creator="http://nakarte.tk" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">',
-                    '\t<trk>',
-                    '\t\t<name>' + name + '</name>'
-        );
-        gpx.push('\t</trk>', '</gpx>');
-        gpx = gpx.join('\n');
-        filename = name.replace(' ', '_') + '.gpx';
-        fileutils.saveStringToFile(filename, 'application/download', gpx);
-        return true;
-    }
 
     var MeasuredEditableLine = L.MeasuredLine.extend({});
     MeasuredEditableLine.include(L.Polyline.EditMixin);
@@ -285,26 +248,32 @@
                     polyline.startDrawingLine(1);
                 }.bind(this)},
                 {text: 'Rename', callback: this.renameTrack.bind(this, track)},
-                {text: 'Download GPX', callback: this.exportTrackGpx.bind(this, track)}
+                {text: 'Download GPX', callback: this.saveTrackAsFile.bind(this, track, geoExporters.saveGpx, '.gpx')},
+                {text: 'Download KML', callback: this.saveTrackAsFile.bind(this, track, geoExporters.saveKml, '.kml')}
             ];
             track._actionsMenu = new L.Contextmenu(items);
         },
         
-        exportTrackGpx: function(track) {
+        saveTrackAsFile: function(track, exporter, extension) {
             this.stopActiveDraw();
             var lines = track.feature.getLayers()
                 .map(function(line) {
                     return line.getLatLngs();
                 });
             var name = track.name(),
-                i=name.lastIndexOf('.');
-            if (i >= name.length - 5) {
-                name = name.slice(0, i-1);
+                i = name.lastIndexOf('.');
+            if (i > -1 && i >= name.length - 5) {
+                name = name.slice(0, i);
             }
-            if (!saveGpx(lines, name)) {
+
+            var fileText = exporter(lines, name);
+            if (!fileText) {
                 alert('Track is empty, nothing to save');
+                return;
             }
-        },
+            var filename = name + extension;
+            fileutils.saveStringToFile(filename, 'application/download', fileText);
+          },
 
         renameTrack: function(track) {
             var newName = prompt('Enter new name', track.name());
