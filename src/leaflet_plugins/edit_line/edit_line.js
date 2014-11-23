@@ -43,8 +43,8 @@
                     .off('click', this.onMapClick, this)
                     .off('dragend', this.onMapEndDrag, this);
                 this.setStyle(this._storedStyle);
-                this.fire('editend', {target: this});
                 L.DomUtil.removeClass(this._map._container, 'leaflet-line-editing');
+                this.fire('editend', {target: this});
             }
         },
 

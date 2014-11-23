@@ -65,7 +65,6 @@
             L.DomEvent.disableClickPropagation(container);
             ko.applyBindings(this, container);
             return container;
-            
         },
 
         onEnterPressedInInput: function(this_, e) {
@@ -293,18 +292,20 @@
         },
 
         startEditTrackSegement: function(track, polyline) {
-            //FIXME: move this check to edit_line module, events can be assigned in handler for startedit event
             if (this._editedLine && this._editedLine !== polyline) {
                 this._editedLine.stopEdit();
             }
             polyline.startEdit();
             this._editedLine = polyline;
-            polyline.once('editend', this.onLineEditEnd.bind(this, track, polyline));
+            polyline.once('editend', function() {
+                setTimeout(this.onLineEditEnd.bind(this, track, polyline), 0);
+            }.bind(this));
+                
         },
 
         
         onLineEditEnd: function(track, polyline) {
-            if (polyline.getLatLngs() < 2) {
+            if (polyline.getLatLngs().length < 2) {
                 track.feature.removeLayer(polyline);
             }
             this.onTrackLengthChanged(track);
@@ -382,8 +383,5 @@
                     };
                 });
         },
-
     });
-
-
 })();
