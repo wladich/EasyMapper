@@ -127,7 +127,7 @@
                 }
                 lastPointMeasure = nextPointMeasure;
             }
-            if (lastPointMeasure > step/2) {
+            if (lastPointMeasure > minTicksIntervalMeters / 2) {
                 addTick(points[0], [points[0], points[1]], 0);
                 addTick(points[points_n-1], [points[points_n-2], points[points_n-1]], lastPointMeasure);
             }
