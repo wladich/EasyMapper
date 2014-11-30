@@ -31,7 +31,7 @@
 
         onAdd: function (map) {
             L.Polyline.prototype.onAdd.call(this, map);
-            this._ticks = [];
+            this._ticks = {};
             this.updateTicks();
             this._map.on('zoomend', this.updateTicks, this);
             this._map.on('dragend', this.updateTicks, this);
@@ -52,20 +52,28 @@
 
         _clearTicks: function() {
             if (this._map) {
-                this._ticks.forEach(this._map.removeLayer.bind(this._map));
-                this._ticks = [];
+                for (var k in this._ticks) {
+                    this._map.removeLayer(this._ticks[k]);
+                }
+                this._ticks = {};
             }
         },
 
-        _addTick: function(tick) {
-            var transformMatrixString = 'matrix(' + tick.transformMatrix.join(',') + ')',
-                labelText = '&mdash;' + Math.round((tick.distanceValue / 10)) / 100 + ' km',
-                icon = L.divIcon(
+        _addTick: function(tick, marker) {
+            var transformMatrixString = 'matrix(' + tick.transformMatrix.join(',') + ')';
+            if (marker) {
+                marker._icon.childNodes[0].style.transform = transformMatrixString;
+                marker.setLatLng(tick.position);
+            } else {
+                var labelText = '&mdash;' + Math.round((tick.distanceValue / 10)) / 100 + ' km',
+                    icon = L.divIcon(
                                  {html: '<div class="measure-tick-icon-text" style="transform:' + transformMatrixString + '">'+labelText+'</div>',
-                                 className: 'measure-tick-icon'}),
+                                 className: 'measure-tick-icon'}
+                    );
                 marker = L.marker(tick.position, {icon: icon, clickable: false, keyboard: false});
-            this._ticks.push(marker);
-            marker.addTo(this._map);
+                marker.addTo(this._map);
+            }
+            this._ticks[tick.distanceValue.toString()] = marker;
         },
 
         setMeasureTicksVisible: function(visible) {
@@ -135,10 +143,13 @@
         },
 
         updateTicks: function() {
-            this._clearTicks();
-            if (!this._map || !this.options.measureTicksShown) {
+            if (!this._map) {
                 return;
             }
+             if (!this.options.measureTicksShown) {
+                this._clearTicks();
+                return;
+             }
             var bounds = this._map.getBounds().pad(1),
                 rad = Math.PI / 180,
                 dpi = 96,
@@ -147,8 +158,19 @@
                 realMetersPerPixel = mercatorMetersPerPixel * Math.cos(referencePoint.lat * rad),
                 mapScale = 1 / dpi * 2.54 / 100 / realMetersPerPixel,
                 minTicksIntervalMeters = this.options.minTicksIntervalMm / mapScale / 1000,
-                ticks = this.getTicksPositions(minTicksIntervalMeters, bounds);
-            ticks.forEach(this._addTick.bind(this));
+                ticks = this.getTicksPositions(minTicksIntervalMeters, bounds),
+                oldTicks = this._ticks;
+            this._ticks = {};
+            ticks.forEach(function(tick) {
+                var oldMarker = oldTicks[tick.distanceValue.toString()];
+                this._addTick(tick, oldMarker);
+                if (oldMarker) {
+                    delete oldTicks[tick.distanceValue.toString()];
+                }
+            }.bind(this));
+            for (var k in oldTicks) {
+                this._map.removeLayer(oldTicks[k]);
+            }
         },
 
         getLength: function() {
