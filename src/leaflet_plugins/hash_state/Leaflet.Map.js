@@ -10,7 +10,7 @@
         _serializeState: function() {
             var center = this.getCenter();
             var zoom = this.getZoom();
-            var precision = Math.max(0, Math.ceil(Math.log(zoom) / Math.LN2));
+            var precision = 5;
             var state = [
                 zoom,
                 center.lat.toFixed(precision),
