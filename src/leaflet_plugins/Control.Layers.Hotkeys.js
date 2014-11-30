@@ -21,27 +21,24 @@
 
         onAdd: function(map) {
             var result = originalOnAdd.call(this, map);
-            L.DomEvent.on(document, 'keypress', this._onHotkeyPress, this);
-            //L.DomEvent.on(map._container, 'keypress', this._onHotkeyPress, this);
-            //document.addEventListener('keypress', this._onHotkeyPress.bind(this));
-            //map.on('keypress', this._onHotkeyPress, this);
+            L.DomEvent.on(document, 'keyup', this._onHotkeyUp, this);
             return result;
         },
 
         onRemove: function(map) {
-            L.DomEvent.off(document, 'keypress', this._onHotkeyPress, this);
+            L.DomEvent.off(document, 'keyup', this._onHotkeyUp, this);
             originalOnRemove.call(this, map);
 
         },
 
-        _onHotkeyPress: function(e) {
+        _onHotkeyUp: function(e) {
             if ('input' == e.target.tagName.toLowerCase()) {
                 return;
             }
-            var key = String.fromCharCode(e.charCode);
+            var key = String.fromCharCode(e.keyCode);
             for (var layerId in this._layers) {
                 var layer = this._layers[layerId];
-                if (layer.layer.options.code.toLowerCase() === key) {
+                if (layer.layer.options.code.toUpperCase() === key) {
                     var inputs = this._form.getElementsByTagName('input');
                     for (var j in inputs) {
                         var input = inputs[j];
