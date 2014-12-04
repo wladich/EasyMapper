@@ -87,11 +87,6 @@
                 this.fire('nodeschanged');
         },
 
-
-        onMapMouseDown: function(e) {
-            this._mapMousDownPosition = e.containerPoint;
-        },
-
         onMapClick: function(e) {
             if (this._drawingDirection) {
                 this.setupMarkers();
