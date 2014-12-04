@@ -24,20 +24,20 @@ window.layers.getBaseMaps = function getBaseMaps() {
 
 window.layers.getOverlays = function getOverlays() {
     return {
-        "Poehali 10km": new L.TileLayer("http://tiles.wladich.tk/poehali001m/{z}/{x}/{y}",
+        "Poehali 10km": new L.TileLayer("http://tiles.nakarte.tk/poehali001m/{z}/{x}/{y}",
                                         {code: 'D', tms: true, maxNativeZoom: 9}),
-        "ArbaletMO": new L.TileLayer("http://tiles.wladich.tk/ArbaletMO/{z}/{x}/{y}",
+        "ArbaletMO": new L.TileLayer("http://tiles.nakarte.tk/ArbaletMO/{z}/{x}/{y}",
                                      {code: 'A', tms: true, maxNativeZoom: 13}),
-        "Topo 1km": new L.TileLayer("http://tiles.wladich.tk/topo1000/{z}/{x}/{y}",
+        "Topo 1km": new L.TileLayer("http://tiles.nakarte.tk/topo1000/{z}/{x}/{y}",
                                     {code: 'C', tms: true, maxNativeZoom: 13}),
-        "GGC 500m": new L.TileLayer("http://tiles.wladich.tk/ggc500/{z}/{x}/{y}",
+        "GGC 500m": new L.TileLayer("http://tiles.nakarte.tk/ggc500/{z}/{x}/{y}",
                                    {code: 'F', tms: true, maxNativeZoom: 14}),
-        "Topo 500m": new L.TileLayer("http://tiles.wladich.tk/topo500/{z}/{x}/{y}",
+        "Topo 500m": new L.TileLayer("http://tiles.nakarte.tk/topo500/{z}/{x}/{y}",
                                    {code: 'B', tms: true, maxNativeZoom: 14}),
-        "Slazav map": new L.TileLayer("http://tiles.wladich.tk/map_podm/{z}/{x}/{y}",
+        "Slazav map": new L.TileLayer("http://tiles.nakarte.tk/map_podm/{z}/{x}/{y}",
                                       {code: 'Z', tms: true, maxNativeZoom: 14}),
-        "O-sport": new L.TileLayer("http://tiles.wladich.tk/osport/{z}/{x}/{y}",
-                                   {code: 'R', tms: true, maxNativeZoom: 18}),
+        "O-sport": new L.TileLayer("http://tiles.nakarte.tk/osport/{z}/{x}/{y}",
+                                   {code: 'R', tms: true, maxNativeZoom: 17}),
     };
 };
 
