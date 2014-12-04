@@ -65,7 +65,7 @@
                 marker._icon.childNodes[0].style.transform = transformMatrixString;
                 marker.setLatLng(tick.position);
             } else {
-                var labelText = '&mdash;' + Math.round((tick.distanceValue / 10)) / 100 + ' km',
+                var labelText = Math.round((tick.distanceValue / 10)) / 100 + ' km',
                     icon = L.divIcon(
                                  {html: '<div class="measure-tick-icon-text" style="transform:' + transformMatrixString + '">'+labelText+'</div>',
                                  className: 'measure-tick-icon'}
