@@ -309,7 +309,9 @@
                 track.feature.removeLayer(polyline);
             }
             this.onTrackLengthChanged(track);
-            this._editedLine = null;
+            if (this._editedLine === polyline) {
+                this._editedLine = null;
+            }
         },
 
         addTrackSegment: function(track, sourcePoints) {
