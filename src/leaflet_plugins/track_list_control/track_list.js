@@ -8,6 +8,7 @@
 //@require knockout.progress
 //@require leaflet.measured_line
 //@require leaflet.edit_line
+//@require leaflet.simplify_latlngs
 
 (function() {
     "use strict";
@@ -141,6 +142,9 @@
                 var data_empty = !((geodata.tracks  && geodata.tracks.length) || (geodata.points && geodata.points.length));
                 
                 if (!data_empty) {
+                    geodata.tracks = geodata.tracks.map(function(line) {
+                        return L.LineUtil.simplifyLatlngs(line, 360 / (1<<24));
+                    });
                     this.addTrack(geodata);
                 }
 
@@ -247,12 +251,30 @@
                     polyline.startDrawingLine(1);
                 }.bind(this)},
                 {text: 'Rename', callback: this.renameTrack.bind(this, track)},
+                '-',
                 {text: 'Download GPX', callback: this.saveTrackAsFile.bind(this, track, geoExporters.saveGpx, '.gpx')},
-                {text: 'Download KML', callback: this.saveTrackAsFile.bind(this, track, geoExporters.saveKml, '.kml')}
+                {text: 'Download KML', callback: this.saveTrackAsFile.bind(this, track, geoExporters.saveKml, '.kml')},
+                {text: 'Copy to clipboard', callback: this.copyStringifiedToClipboard.bind(this, track)}
             ];
             track._actionsMenu = new L.Contextmenu(items);
         },
         
+        copyStringifiedToClipboard: function(track) {
+            this.stopActiveDraw();
+            var lines = track.feature.getLayers()
+                .map(function(line) {
+                    var points = line.getLatLngs();
+                    points = L.LineUtil.simplifyLatlngs(points, 360 / (1<<24));
+                    return points;
+                });
+            var s = geoExporters.saveToString(lines, track.name());
+            if (!s) {
+                alert('Track is empty, nothing to save');
+                return;
+            }
+            prompt("Copy to clipboard: Ctrl+C, Enter", s);
+        },
+
         saveTrackAsFile: function(track, exporter, extension) {
             this.stopActiveDraw();
             var lines = track.feature.getLayers()

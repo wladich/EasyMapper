@@ -317,8 +317,122 @@
         return [{name: name, error: error, tracks: segments}];
     }
 
+    function decodeUrlSafeBase64(s) {
+        var decoded;
+        s = s
+            .replace(/[\n\r \t]/g, '')
+            .replace(/-/g, '+')
+            .replace(/_/g, '/');
+        try {
+            decoded = atob(s);
+        } catch (e) {}
+        if (decoded && decoded.length) {
+            return decoded;
+        }
+        return null;
+    }
+
+    function unpackNumber(s, position) {
+        var x,
+            n = 0;
+            position = position | 0;
+            x = s.charCodeAt(position);
+            if (isNaN(x)) {
+                throw new Error('Unexpected end of line while unpacking number');
+            }
+            if (x < 128) {
+                n = x - 64;
+                return [n, 1];
+            }
+            n = x & 0x7f;
+            x = s.charCodeAt(position + 1);
+            if (isNaN(x)) {
+                throw new Error('Unexpected end of line while unpacking number');
+            }
+            if (x < 128) {
+                n |= x << 7;
+                n -= 8192;
+                return [n, 2];
+            }
+            n |= (x & 0x7f) << 7;
+            x = s.charCodeAt(position + 2);
+            if (isNaN(x)) {
+                throw new Error('Unexpected end of line while unpacking number');
+            }
+            if (x < 128) {
+                n |= x  << 14;
+                n -= 1048576;
+                return [n, 3];
+            }
+            n |= (x & 0x7f) << 14;
+            x = s.charCodeAt(position + 3);
+            if (isNaN(x)) {
+                throw new Error('Unexpected end of line while unpacking number');
+            }
+            n |= x << 21;
+            n -= 268435456;
+            return [n, 4];
+    }
+
+    function PackedStreamReader(s) {
+        this._string = s;
+        this.position = 0;
+    }
+    
+    PackedStreamReader.prototype.readNumber = function() {
+        var  n = unpackNumber(this._string, this.position);
+        this.position += n[1];
+        return n[0];
+    };
+
+    PackedStreamReader.prototype.readString = function(size) {
+        var s = this._string.slice(this.position, this.position + size);
+        this.position += size;
+        return s;
+    };
+
+    function loadFromString(s) {
+        var name,
+            n,
+            segments = [],
+            segment,
+            magick = 'track://',
+            segmentsCount,
+            pointsCount,
+            arcUnit = ((1 << 24) - 1) / 360,
+            x, y;
+        if (s.slice(0, magick.length) != magick) {
+            return null;
+        }
+        s = s.slice(magick.length);
+        s = decodeUrlSafeBase64(s);
+        if (!s) {
+            return [{name: 'Text encoded track', error: ['CORRUPT']}];
+        }
+        s = new PackedStreamReader(s);
+
+        n = s.readNumber();
+        name = s.readString(n);
+        name = fileutils.decodeUTF8(name);
+        segmentsCount = s.readNumber();
+        for (; segmentsCount--; ) {
+            segment = [];
+            pointsCount = s.readNumber();
+            x = 0;
+            y = 0;
+            for (; pointsCount--; ) {
+                x += s.readNumber();
+                y += s.readNumber();
+                segment.push({lng: x / arcUnit, lat: y / arcUnit});
+            }
+            segments.push(segment);
+        }
+        return [{name: name, tracks: segments}];
+    }
+
     function parseGeoFile(name, data) {
         var parsers = [
+            loadFromString,
             parseKmz,
             parseZip,
             parseGpx,
