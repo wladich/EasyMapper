@@ -20,6 +20,6 @@ body {
     background-image: url('images/Very-Basic-Ruler-icon.png');
 }
 
-.leaflet-line-editing  .paper-sheet-label {
+.leaflet-line-drawing  .paper-sheet-label {
     pointer-events: none;
 }
