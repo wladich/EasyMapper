@@ -69,7 +69,6 @@
         },
 
         onEnterPressedInInput: function(this_, e) {
-            console.log(e);
             if (e.keyCode == 13) {
                 this_.loadFilesFromUrl();
             } else {
