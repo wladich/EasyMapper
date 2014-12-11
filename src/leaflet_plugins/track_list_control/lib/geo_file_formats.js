@@ -380,7 +380,7 @@
     }
     
     PackedStreamReader.prototype.readNumber = function() {
-        var  n = unpackNumber(this._string, this.position);
+        var n = unpackNumber(this._string, this.position);
         this.position += n[1];
         return n[0];
     };
@@ -400,7 +400,8 @@
             segmentsCount,
             pointsCount,
             arcUnit = ((1 << 24) - 1) / 360,
-            x, y;
+            x, y,
+            error;
         if (s.slice(0, magick.length) != magick) {
             return null;
         }
@@ -410,24 +411,35 @@
             return [{name: 'Text encoded track', error: ['CORRUPT']}];
         }
         s = new PackedStreamReader(s);
-
-        n = s.readNumber();
-        name = s.readString(n);
-        name = fileutils.decodeUTF8(name);
-        segmentsCount = s.readNumber();
-        for (; segmentsCount--; ) {
-            segment = [];
-            pointsCount = s.readNumber();
-            x = 0;
-            y = 0;
-            for (; pointsCount--; ) {
-                x += s.readNumber();
-                y += s.readNumber();
-                segment.push({lng: x / arcUnit, lat: y / arcUnit});
+        try {
+            n = s.readNumber();
+            name = s.readString(n);
+            name = fileutils.decodeUTF8(name);
+            segmentsCount = s.readNumber();
+            for (; segmentsCount--; ) {
+                segment = [];
+                pointsCount = s.readNumber();
+                x = 0;
+                y = 0;
+                for (; pointsCount--; ) {
+                    x += s.readNumber();
+                    y += s.readNumber();
+                    segment.push({lng: x / arcUnit, lat: y / arcUnit});
+                }
+                segments.push(segment);
+                segment = null;
             }
-            segments.push(segment);
+        } catch (e) {
+            if (e.message.match('Unexpected end of line while unpacking number')) {
+                error = ['CORRUPT'];
+                if (segment) {
+                    segments.push(segment);
+                }
+            } else {
+                throw e;
+            }
         }
-        return [{name: name, tracks: segments}];
+        return [{name: name, tracks: segments, error: error}];
     }
 
     function parseGeoFile(name, data) {
