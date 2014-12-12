@@ -100,9 +100,6 @@ var fileutils = (function() {
             fileInput.onchange = function() {
                 resolve(fileInput.files);
             };
-        }).then(function(files) {
-            files = Array.prototype.slice.apply(files);
-            return Promise.all(files.map(readFile));
         });
         setTimeout(fileInput.click.bind(fileInput), 0);
         return result;
@@ -119,6 +116,11 @@ var fileutils = (function() {
             };
             reader.readAsArrayBuffer(file);
         });
+    }
+
+    function readFiles(files) {
+        files = Array.prototype.slice.apply(files);
+        return Promise.all(files.map(readFile));
     }
 
     function intArrayToString(arr) {
@@ -160,6 +162,7 @@ var fileutils = (function() {
         arrayBufferToString: arrayBufferToString,
         saveStringToFile: saveStringToFile,
         openFiles: openFiles,
+        readFiles: readFiles,
         decodeUTF8: decodeUTF8,
         encodeUTF8: encodeUTF8
     };

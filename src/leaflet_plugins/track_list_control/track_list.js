@@ -65,7 +65,22 @@
 
             L.DomEvent.disableClickPropagation(container);
             ko.applyBindings(this, container);
+            // FIXME: add onRemove method and unsubscribe
+            L.DomEvent.addListener(map.getContainer(), 'drop', this.onFileDragDrop, this);
+            L.DomEvent.addListener(map.getContainer(), 'dragover', this.onFileDraging, this);
             return container;
+        },
+
+        onFileDraging: function(e) {
+            L.DomEvent.stopPropagation(e);
+            L.DomEvent.preventDefault(e);
+            e.dataTransfer.dropEffect = 'copy';
+        },
+
+        onFileDragDrop: function(e) {
+            L.DomEvent.stopPropagation(e);
+            L.DomEvent.preventDefault(e);
+            this.loadFilesFromFilesObject(e.dataTransfer.files);
         },
 
         onEnterPressedInInput: function(this_, e) {
@@ -92,15 +107,20 @@
             return track;
         },
 
-        loadFilesFromDisk: function() {
-            fileutils.openFiles(true).then(function(files) {
-                return files.map(function(file) {
-                    return parseGeoFile(file.filename, file.data);
+        loadFilesFromFilesObject: function(files) {
+            fileutils.readFiles(files).done(function(fileDataArray) {
+                var geodataArray = fileDataArray.map(function(fileData) {
+                    return parseGeoFile(fileData.filename, fileData.data);
                 }).reduce(function(prev, next) {
                     Array.prototype.push.apply(prev, next);
                     return prev;
                 }, []);
-            }).done(this.addTracksFromGeodataArray.bind(this));
+                this.addTracksFromGeodataArray(geodataArray);
+            }.bind(this));
+        },
+
+        loadFilesFromDisk: function() {
+            fileutils.openFiles(true).done(this.loadFilesFromFilesObject.bind(this));
         },
 
         loadFilesFromUrl: function() {
