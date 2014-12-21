@@ -40,7 +40,7 @@ var fileutils = (function() {
             xhr.timeout = timeout;
             xhr.open('GET', url);
             xhr.responseType = responseType;
-            xhr.onreadystatechange = function(e){
+            xhr.onreadystatechange = function(e) {
                 if (this.readyState == 4) {
                     activeDownloads -= 1;
                     if (task.responseType == 'binarystring') {
