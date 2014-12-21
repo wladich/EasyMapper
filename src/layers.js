@@ -1,9 +1,13 @@
 //@require leaflet
 //@require leaflet.yandex
 //@require leaflet.google
+//@require leaflet.bing
+
 window.layers = {};
 
+
 window.layers.getBaseMaps = function getBaseMaps() {
+    var bingKey = 'AhZy06XFi8uAADPQvWNyVseFx4NHYAOH-7OTMKDPctGtYo86kMfx2T0zUrF5AAaM';
     return {
         'OpenStreetMap': L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
                                      {code: 'O', scaleDependent: true}),
@@ -15,6 +19,7 @@ window.layers.getBaseMaps = function getBaseMaps() {
         'Google': new L.Google('ROADMAP', {code: 'G', scaleDependent: true}),
         'Google Sat': new L.Google('SATELLITE', {code: 'L'}),
         'Google Sat Hybrid': new L.Google('HYBRID', {code: 'H', scaleDependent: true}),
+        'Bing Sat': L.bingLayer(bingKey, {code: 'I'}),
         'marshruty.ru': L.tileLayer('http://maps.marshruty.ru/ml.ashx?x={x}&y={y}&z={z}&i=1&al=1',
                                       {code: 'M', maxNativeZoom: 18, noCors: true, scaleDependent: true}),
         'Topomapper 2km': L.tileLayer('http://maps.atlogis.com/cgi-bin/tilecache-2.11/tilecache.py/1.0.0/topomapper_gmerc/{z}/{x}/{y}.jpg',
