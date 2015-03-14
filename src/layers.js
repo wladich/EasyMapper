@@ -34,6 +34,8 @@ window.layers.getOverlays = function getOverlays() {
                                         {code: 'D', tms: true, maxNativeZoom: 9}),
         "ArbaletMO": new L.TileLayer("http://tiles.nakarte.tk/ArbaletMO/{z}/{x}/{y}",
                                      {code: 'A', tms: true, maxNativeZoom: 13}),
+        "GGC 1km": new L.TileLayer("http://tiles.nakarte.tk/ggc1000/{z}/{x}/{y}",
+                                   {code: 'J', tms: true, maxNativeZoom: 13}),
         "Topo 1km": new L.TileLayer("http://tiles.nakarte.tk/topo1000/{z}/{x}/{y}",
                                     {code: 'C', tms: true, maxNativeZoom: 13}),
         "GGC 500m": new L.TileLayer("http://tiles.nakarte.tk/ggc500/{z}/{x}/{y}",
