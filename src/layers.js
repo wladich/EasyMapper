@@ -2,6 +2,7 @@
 //@require leaflet.yandex
 //@require leaflet.google
 //@require leaflet.bing
+//@require leaflet_plugins/leaflet.soviet-topomaps-grid.js
 
 window.layers = {};
 
@@ -43,6 +44,7 @@ window.layers.getOverlays = function getOverlays() {
                                       {code: 'Z', tms: true, maxNativeZoom: 14}),
         "O-sport": new L.TileLayer("http://tiles.nakarte.tk/osport/{z}/{x}/{y}",
                                    {code: 'R', tms: true, maxNativeZoom: 17}),
+        "Soviet military grid": new L.SovietTopoGrid()
     };
 };
 
