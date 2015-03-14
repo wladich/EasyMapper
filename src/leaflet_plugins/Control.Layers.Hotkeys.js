@@ -11,8 +11,8 @@
             var label = originalAddItem.call(this, obj);
             var layerId = label.getElementsByTagName('input')[0].layerId;
             var layer = this._layers[layerId].layer;
-            var code = layer.options.code;
-            if (code.length === 1) {
+            var code;
+            if (layer.options && (code=layer.options.code) && code.length == 1) {
                 var hotkeySpan = L.DomUtil.create('span', 'layers-control-hotkey', label);
                 hotkeySpan.innerHTML = ' (' + code +')';
             }
