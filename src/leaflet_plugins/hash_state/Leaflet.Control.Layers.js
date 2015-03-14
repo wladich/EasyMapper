@@ -15,7 +15,7 @@
                 var isControlled = layer_id in this._layers;
                 var isOverlay = isControlled && this._layers[layer_id].overlay;
                 var isStale = isControlled && e && e.type == 'baselayerchange' && !isOverlay && layer != e.layer;
-                if (isControlled && !isStale) {
+                if (isControlled && !isStale && layer.options && layer.options.code) {
                     layer_id = layer.options.code || layer_id;
                     state.push(layer_id);
                 }
