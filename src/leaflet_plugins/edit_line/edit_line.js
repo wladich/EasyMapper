@@ -49,50 +49,53 @@
         },
 
         removeMarkers: function() {
-            if (this._nodeMarkers) {
-                this._nodeMarkers.forEach(function(marker) {
-                    this._map.removeLayer(marker);
-                }.bind(this));
-            }
-
-            if (this._segmentOverlays) {
-                this._segmentOverlays.forEach(function(segment) {
-                    this._map.removeLayer(segment);
-                }.bind(this));
-            }
-
-            this._nodeMarkers = null;
-            this._segmentOverlays = null;
+            this.getLatLngs().forEach(function(node) {
+                if (node._nodeMarker) {
+                    this._map.removeLayer(node._nodeMarker);
+                    delete node._nodeMarker._lineNode;
+                    delete node._nodeMarker;
+                }
+                if (node._segmentOverlay) {
+                    this._map.removeLayer(node._segmentOverlay);
+                    delete node._segmentOverlay._lineNode;
+                    delete node._segmentOverlay;
+                }
+            }.bind(this));
         },
 
         onNodeMarkerDragEnd: function(e) {
-            this.onNodeMarkerMovedChangeNode(e);
-            this.setupMarkers();
+            var marker = e.target,
+                nodeIndex = this.getLatLngs().indexOf(marker._lineNode);
+            this.replaceNode(nodeIndex, marker.getLatLng());
         },
 
         onNodeMarkerMovedChangeNode: function(e) {
             var marker = e.target,
-                nodeIndex = this.getLatLngs().indexOf(marker._lineNode),
-                newNode = cloneLatLng(marker.getLatLng());
-            this.spliceLatLngs(nodeIndex, 1, newNode);
-            marker._lineNode = newNode;
+                latlng = marker.getLatLng(),
+                //nodeIndex = this.getLatLngs().indexOf(marker._lineNode);
+                node = marker._lineNode;
+            node.lat = latlng.lat;
+            node.lng = latlng.lng;
+            this.redraw();
             this.fire('nodeschanged');
         },
         
         onNodeMarkerDblClickedRemoveNode: function(e) {
             var marker = e.target,
                 nodeIndex = this.getLatLngs().indexOf(marker._lineNode);
-                this.spliceLatLngs(nodeIndex, 1);
-                this.setupMarkers();
+                this.removeNode(nodeIndex);
+                //this.spliceLatLngs(nodeIndex, 1);
+                //this.setupMarkers();
                 this.fire('nodeschanged');
         },
 
         onMapClick: function(e) {
             if (this._drawingDirection) {
+                var newNodeIndex = this._drawingDirection === -1 ? 1 : this.getLatLngs().length - 1;
+                /*this.spliceLatLngs(newNodeIndex, 0, e.latlng);
                 this.setupMarkers();
-                var newNodeIndex = this._drawingDirection === -1 ? 0 : this.getLatLngs().length;
-                this.spliceLatLngs(newNodeIndex, 0, e.latlng);
-                this.setupMarkers();
+                */
+                this.addNode(newNodeIndex, e.latlng);
             } else {
                 this.stopEdit();
             }
@@ -115,7 +118,6 @@
             if (direction === undefined) {
                 direction = 1;
             }
-
             if (this._drawingDirection == direction) {
                 return;
             }
@@ -182,15 +184,15 @@
                     draggable: true,
                     zIndexOffset: this._nodeMarkersZOffset
                 });
-                marker
-                    .on('drag', this.onNodeMarkerMovedChangeNode, this)
-                    //.on('dragstart', this.fire.bind(this, 'editingstart'))
-                    .on('dragend', this.onNodeMarkerDragEnd, this)
-                    .on('dblclick', this.onNodeMarkerDblClickedRemoveNode, this)
-                    .on('click', this.onNodeMarkerClickStartStopDrawing, this);
-                marker._lineNode = node;
-                node._nodeMarker = marker;
-            return marker;
+            marker
+                .on('drag', this.onNodeMarkerMovedChangeNode, this)
+                //.on('dragstart', this.fire.bind(this, 'editingstart'))
+                .on('dragend', this.onNodeMarkerDragEnd, this)
+                .on('dblclick', this.onNodeMarkerDblClickedRemoveNode, this)
+                .on('click', this.onNodeMarkerClickStartStopDrawing, this);
+            marker._lineNode = node;
+            node._nodeMarker = marker;
+            marker.addTo(this._map);
 
         },
 
@@ -212,11 +214,11 @@
             var latlngs = this.getLatLngs(),
                 p1 = latlngs[nodeIndex],
                 p2 = latlngs[nodeIndex + 1],
-                segment = L.polyline([p1, p2], {weight: 10, opacity: 0});
-                segment.on('mousedown', this.onSegmentMouseDownAddNode, this);
-                segment._lineNode = p1;
-                p1._overlay = segment;
-            return segment;
+                segmentOverlay = L.polyline([p1, p2], {weight: 10, opacity: 0.0});
+            segmentOverlay.on('mousedown', this.onSegmentMouseDownAddNode, this);
+            segmentOverlay._lineNode = p1;
+            p1._segmentOverlay = segmentOverlay;
+            segmentOverlay.addTo(this._map);
         },
 
         onSegmentMouseDownAddNode: function(e) {
@@ -225,19 +227,85 @@
             }
             var segmentOverlay = e.target,
                 latlngs = this.getLatLngs(),
-                nodeIndex = latlngs.indexOf(segmentOverlay._lineNode),
-                latlng = cloneLatLng(e.latlng);
-            this.spliceLatLngs(nodeIndex+1, 0, latlng);
-            this.setupMarkers();
+                nodeIndex = latlngs.indexOf(segmentOverlay._lineNode) + 1;
+            this.addNode(nodeIndex, e.latlng);
             // TODO: hack, may be replace with sending mouse event
-            latlng._nodeMarker.dragging._draggable._onDown(e.originalEvent);
+            latlngs[nodeIndex]._nodeMarker.dragging._draggable._onDown(e.originalEvent);
             this.fire('nodeschanged');
+        },
+
+        addNode: function(index, latlng) {
+            var nodes = this.getLatLngs(),
+                isAddingLeft = (index == 1 && this._drawingDirection == -1),
+                isAddingRight = (index == nodes.length - 1 && this._drawingDirection == 1);
+            latlng = cloneLatLng(latlng);
+            this.spliceLatLngs(index, 0, latlng);
+            this.makeNodeMarker(index);
+            if (!isAddingLeft && (index >= 1)) {
+                if (!isAddingRight) {
+                    var prevNode = nodes[index-1];
+                    this._map.removeLayer(prevNode._segmentOverlay);
+                    delete prevNode._segmentOverlay._lineNode;
+                    delete prevNode._segmentOverlay;
+                }
+                this.makeSegmentOverlay(index-1);
+            }
+            if (!isAddingRight) {
+                this.makeSegmentOverlay(index);
+            }
+        },
+
+        removeNode: function(index) {
+            var nodes = this.getLatLngs(),
+                node = nodes[index],
+                marker = node._nodeMarker;
+            delete node._nodeMarker;
+            delete marker._lineNode;
+            this.spliceLatLngs(index, 1);
+            this._map.removeLayer(marker);
+            if (node._segmentOverlay) {
+                this._map.removeLayer(node._segmentOverlay);
+                delete node._segmentOverlay._lineNode;
+                delete node._segmentOverlay;
+            }
+            var prevNode = nodes[index - 1];
+            if (prevNode && prevNode._segmentOverlay) {
+                this._map.removeLayer(prevNode._segmentOverlay);
+                delete prevNode._segmentOverlay._lineNode;
+                delete prevNode._segmentOverlay;
+                if ((index < nodes.length-1) || (index < nodes.length && this._drawingDirection != 1)) {
+                    this.makeSegmentOverlay(index-1);
+                }
+            }
+        },
+
+        replaceNode: function(index, latlng) {
+            var nodes = this.getLatLngs(),
+                oldNode = nodes[index],
+                oldMarker = oldNode._nodeMarker;
+            this._map.removeLayer(oldNode._nodeMarker);
+            delete oldNode._nodeMarker;
+            delete oldMarker._lineNode;
+            latlng = cloneLatLng(latlng);
+            this.spliceLatLngs(index, 1, latlng);
+            this.makeNodeMarker(index);
+            if (oldNode._segmentOverlay) {
+                this._map.removeLayer(oldNode._segmentOverlay);
+                delete oldNode._segmentOverlay._lineNode;
+                delete oldNode._segmentOverlay;
+                this.makeSegmentOverlay(index);
+            }
+            var prevNode = nodes[index - 1];
+            if (prevNode && prevNode._segmentOverlay) {
+                this._map.removeLayer(prevNode._segmentOverlay);
+                delete prevNode._segmentOverlay._lineNode;
+                delete prevNode._segmentOverlay;
+                this.makeSegmentOverlay(index - 1);
+            }
         },
 
         setupMarkers: function() {
             this.removeMarkers();
-            this._nodeMarkers = [];
-            this._segmentOverlays = [];
             var latlngs = this.getLatLngs(),
                 marker,
                 segment,
@@ -250,13 +318,9 @@
                 endNode -= 1;
             }
             for (var i=startNode; i <= endNode; i++) {
-                marker = this.makeNodeMarker(i);
-                this._nodeMarkers.push(marker);
-                marker.addTo(this._map);
+                this.makeNodeMarker(i);
                 if (i < endNode) {
-                    segment = this.makeSegmentOverlay(i);
-                    this._segmentOverlays.push(segment);
-                    segment.addTo(this._map);
+                    this.makeSegmentOverlay(i);
                 }
             }
         }
