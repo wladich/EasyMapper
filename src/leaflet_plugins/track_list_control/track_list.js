@@ -125,6 +125,9 @@
 
         loadFilesFromUrl: function() {
             var url = this.url().trim();
+            try {
+                url = decodeURIComponent(url);
+            } catch (e) {}
             var geodata;
             if (url.length > 0) {
                 this.readingFiles(true);
