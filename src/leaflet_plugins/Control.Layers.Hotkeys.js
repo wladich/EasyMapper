@@ -38,7 +38,7 @@
             var key = String.fromCharCode(e.keyCode);
             for (var layerId in this._layers) {
                 var layer = this._layers[layerId];
-                if (layer.layer.options.code.toUpperCase() === key) {
+                if (layer.layer.options && layer.layer.options.code &&  layer.layer.options.code.toUpperCase() === key) {
                     var inputs = this._form.getElementsByTagName('input');
                     for (var j in inputs) {
                         var input = inputs[j];
