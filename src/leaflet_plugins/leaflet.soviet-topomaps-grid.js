@@ -1,3 +1,5 @@
+//@require leaflet
+
 (function(){
 	"use strict";
 	function zeroPad(num, size) {

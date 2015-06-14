@@ -19,6 +19,8 @@ provides:
         - src/leaflet_plugins/Yandex.js
     leaflet.bing:
         - src/lib/vendor/shramov/Bing.js
+    leaflet.hash_state:
+        - src/leaflet_plugins/hash_state/leaflet.hash_state.js
     leaflet.hash_state.Map:
         - src/leaflet_plugins/hash_state/Leaflet.Map.js
     leaflet.hash_state.Control.Layers:

@@ -7,6 +7,7 @@
 //@require lib/pdf.js
 //@require fileutils
 //@require knockout.progress
+//@require leaflet.hash_state
 
 (function(){
     "use strict";
