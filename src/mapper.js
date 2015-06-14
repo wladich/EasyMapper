@@ -7,6 +7,7 @@
 //@require leaflet.print_pages
 //@require lib/draw_utils.js
 //@require leaflet.buttons
+//@require leaflet.jnx
 
 (function(){
     "use strict";
@@ -79,6 +80,8 @@
             var btn = L.functionButtons([{content: '<div title="Measure distance" class="leaflet-mapper-button-ruler"></div>'}], {position: 'topleft'})
             .addTo(map)
             .on('clicked', this.startRuler, this);
+            var jnx = new L.Control.JNX();
+            jnx.addTo(map);
 
             this.printPagesControl.on('pdfstart', this.beforePdfBuild, this);
         }

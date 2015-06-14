@@ -67,6 +67,8 @@ provides:
         - src/lib/vendor/js-unzip.js
     zip-inflate:
         - src/lib/vendor/rawinflate.js
+    leaflet.jnx:
+        - src/leaflet_plugins/jnx/jnx_control.js
 depends:
     filesaver:
         - blob
