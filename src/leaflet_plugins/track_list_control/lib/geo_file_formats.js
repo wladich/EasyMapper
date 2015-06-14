@@ -284,7 +284,7 @@
             var mapName = ('' + (map_data.vpage.data.name || '')).trim();
             if (mapName.length > 3) {
                 name = '';
-            } else {
+            } else if (mapName.length) {
                 name += ': ';
             }
             name += fileutils.decodeUTF8(mapName);
