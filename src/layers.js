@@ -42,6 +42,8 @@ window.layers.getOverlays = function getOverlays() {
                                    {code: 'F', tms: true, maxNativeZoom: 14}),
         "Topo 500m": new L.TileLayer("http://tiles.nakarte.tk/topo500/{z}/{x}/{y}",
                                    {code: 'B', tms: true, maxNativeZoom: 14}),
+        "GGC 250m": new L.TileLayer("http://tiles.nakarte.tk/ggc250/{z}/{x}/{y}",
+                                   {code: 'K', tms: true, maxNativeZoom: 15}),
         "Slazav map": new L.TileLayer("http://tiles.nakarte.tk/map_podm/{z}/{x}/{y}",
                                       {code: 'Z', tms: true, maxNativeZoom: 14}),
         "O-sport": new L.TileLayer("http://tiles.nakarte.tk/osport/{z}/{x}/{y}",
