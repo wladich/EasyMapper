@@ -12,7 +12,11 @@ L.BingLayer = L.TileLayer.extend({
 		this._key = key;
 		this._url = null;
 		this.meta = {};
+	},
+
+	onAdd: function(map) {
 		this.loadMetadata();
+		L.TileLayer.prototype.onAdd.call(this, map);
 	},
 
 	tile2quad: function(x, y, z) {
