@@ -1,0 +1,22 @@
+.leaflet-control-jnx .ko-progress{
+    width: 200px;
+    background-color: white;
+}
+
+.leaflet-control-jnx .button {
+    display: inline-block;
+    background-color: white;
+    height: 26px;
+    border-radius: 4px 4px 4px 4px;
+    border: 1px solid #ccc;
+    cursor: pointer;
+    margin-right: 6px;
+    padding: 0 1em;
+    line-height: 26px;
+    font-weight: bold;
+    color: #333;
+}
+
+.leaflet-control-jnx .button:hover {
+    background-color: #f4f4f4;
+}

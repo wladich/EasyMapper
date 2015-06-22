@@ -65,25 +65,54 @@
             this.trackList.addNewTrack('Ruler').measureTicksShown(true);
         },
 
+        updateJnxLayer: function() {
+            var layers = this._map._layers,
+                layerId, layer, name;
+            var layersIds = Object.keys(layers).sort();
+            for (var i = layersIds.length - 1; i >= 0; i--) {
+                layerId = layersIds[i];
+                if (layers[layerId].getTilesInfo) {
+                    break;
+                }
+            }
+            layerId = layersIds[i];
+            layer = layers[layerId];
+            layers = this.layersControl._layers;
+            for (layerId in layers) {
+                if (layers[layerId].layer == layer) {
+                    name = layers[layerId].name;
+                    break;
+                }
+            }
+            this.jnx.setSourceLayer(layer, name);
+        },
+
         setupMap: function(mapContainer) {
             var map = this._map = L.map(mapContainer, {fadeAnimation: false, attributionControl: false});
-            var baseMaps = layers.getBaseMaps();
-            var layersControl = L.control.layers(baseMaps, layers.getOverlays(), {collapsed: false, hotkeys: true})
-                .addTo(map);
-            layersControl.enableHashState('l', ['O']);
             map.enableHashState('m', [10, 55.7, 37.5]);
+
+            var baseMaps = layers.getBaseMaps();
+            this.layersControl = L.control.layers(baseMaps, layers.getOverlays(), {collapsed: false, hotkeys: true})
+                .addTo(map);
+
             this.printPagesControl = new L.Control.PrintPages({postprocess: this.postprocessPage.bind(this)})
                 .addTo(map);
-            this.printPagesControl.enableHashState('p');
+            this.jnx = new L.Control.JNX();
+            this.jnx.addTo(map);
             this.trackList = new L.Control.TrackList()
                 .addTo(map);
             var btn = L.functionButtons([{content: '<div title="Measure distance" class="leaflet-mapper-button-ruler"></div>'}], {position: 'topleft'})
-            .addTo(map)
-            .on('clicked', this.startRuler, this);
-            var jnx = new L.Control.JNX();
-            jnx.addTo(map);
+                .addTo(map);
+            
+            this.layersControl.enableHashState('l', ['O']);
+            this.printPagesControl.enableHashState('p');
 
+            btn.on('clicked', this.startRuler, this);
+            map.on('baselayerchange overlayadd overlayremove', function () {
+                setTimeout(this.updateJnxLayer.bind(this), 0);
+            }, this);
             this.printPagesControl.on('pdfstart', this.beforePdfBuild, this);
+            this.updateJnxLayer();
         }
 
     });
