@@ -78,10 +78,11 @@
     }
 
     var JnxWriter = L.Class.extend({
-        initialize: function(productName, productId) {
+        initialize: function(productName, productId, zOrder) {
             this.tiles = {};
             this.productName = productName || 'Raster map';
             this.productId = productId || 0;
+            this.zOrder = zOrder;
         },
 
         addTile: function(tileData, level, extents) {
@@ -92,8 +93,8 @@
 
         getJnx: function() {
             console.log('making jnx');
-            var HEADER_SIZE = 48,
-                LEVEL_INFO_SIZE = 12,
+            var HEADER_SIZE = 52,
+                LEVEL_INFO_SIZE = 17,
                 TILE_INFO_SIZE = 28;
 
             var west = 1e10,
@@ -104,7 +105,6 @@
                 levels_n = Object.keys(this.tiles).length,
                 level, tiles, extents,
                 i, tile;
-
             for (level in this.tiles) {
                 this.tiles[level].forEach(function(tile) {
                     west = (west < tile.extents.west) ? west : tile.extents.west;
@@ -115,7 +115,7 @@
             }
             var stream = new BinStream(1024, true);
             // header
-            stream.writeInt32(3); // version
+            stream.writeInt32(4); // version
             stream.writeInt32(0); // device id
             extents = jnxCoordinates({south: south, north: north, west: west, east: east});
             stream.writeInt32(extents[0]); // north
@@ -128,6 +128,7 @@
             stream.writeInt32(0); // tiles CRC32
             stream.writeInt32(0); // signature version
             stream.writeUint32(0); // signature offset
+            stream.writeInt32(this.zOrder);
             stream.seek(HEADER_SIZE + LEVEL_INFO_SIZE * levels_n);
             // map description
             stream.writeInt32(9); // section version
@@ -155,6 +156,8 @@
                 //jnxScale = JnxScales[level + 3];
                 jnxScale = 34115555 / (Math.pow(2, level)) * Math.cos((north + south) / 2 / 180 * Math.PI) / 1.1;
                 stream.writeInt32(jnxScale);
+                stream.writeInt32(2);
+                stream.writeUint8(0);
                 tileDescriptorOffset += TILE_INFO_SIZE * this.tiles[level].length;
             }
             // tiles descriptors
@@ -268,10 +271,10 @@
 
     }
 
-    function layerToJnx(layer, layerName, map, bounds, zoomLevels, jnxProductId, setProgressRange, incProgress) {
+    function layerToJnx(layer, layerName, map, bounds, zoomLevels, jnxProductId, zOrder, setProgressRange, incProgress) {
         var zoomLevel,
             topLeft, bottomRight, x1, y1, x2, y2, center,
-            jnx = new JnxWriter(layerName, jnxProductId),
+            jnx = new JnxWriter(layerName, jnxProductId, zOrder),
             tiles = {}, q;
         var regionsN = 0;
         setProgressRange(undefined);
@@ -437,7 +440,6 @@
         },
 
         setSourceLayer: function(layer, layerName, layerUid) {
-            console.log(layerName, layer);
             this.sourceLayer = layer;
             this.sourceLayerName = layerName;
             this.jnxProductId = layerUid;
@@ -457,7 +459,8 @@
             self.downloadProgressDone(0);
             var incProgress = function(d) {self.downloadProgressDone(self.downloadProgressDone() + d);};
             var filename = 'nakarte.tk_' + this.sourceLayerName.toLowerCase().replace(/[ ()]+/, '_') + '.jnx';
-            layerToJnx(layer, this.sourceLayerName, this._map, region, zooms, this.jnxProductId, this.downloadProgressRange, incProgress)
+            var zOrder = 30 + this.jnxProductId;
+            layerToJnx(layer, this.sourceLayerName, this._map, region, zooms, this.jnxProductId, zOrder, this.downloadProgressRange, incProgress)
                 .then(function (jnxData) {
                     console.log('saving');
                     saveAs(jnxData, filename);
