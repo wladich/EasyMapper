@@ -77,31 +77,6 @@
         return [toJnx(extents.north), toJnx(extents.east), toJnx(extents.south), toJnx(extents.west)];
     }
 
-    var JnxScales = {
-        0: 156543033,
-        1: 78271516,
-        2: 39135758,
-        3: 19567879,
-        4: 9783939,
-        5: 4891969,
-        6: 2446184,
-        7: 1223072,
-        8: 611526,
-        9: 305758,
-        10: 152877,
-        11: 76437,
-        12: 38218,
-        13: 19109,
-        14: 9554,
-        15: 4777,
-        16: 2388,
-        17: 1194,
-        18: 597,
-        19: 298,
-        20: 149,
-        21: 75
-    };
-
     var JnxWriter = L.Class.extend({
         initialize: function() {
             this.tiles = {};
