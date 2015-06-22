@@ -84,7 +84,7 @@
                     break;
                 }
             }
-            this.jnx.setSourceLayer(layer, name);
+            this.jnx.setSourceLayer(layer, name, L.Util.stamp(layer));
         },
 
         setupMap: function(mapContainer) {

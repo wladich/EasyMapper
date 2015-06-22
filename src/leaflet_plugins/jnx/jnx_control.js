@@ -78,8 +78,10 @@
     }
 
     var JnxWriter = L.Class.extend({
-        initialize: function() {
+        initialize: function(productName, productId) {
             this.tiles = {};
+            this.productName = productName || 'Raster map';
+            this.productId = productId || 0;
         },
 
         addTile: function(tileData, level, extents) {
@@ -90,9 +92,6 @@
 
         getJnx: function() {
             console.log('making jnx');
-            var productId = 0,
-                mapName = 'nakarte.tk';
-
             var HEADER_SIZE = 48,
                 LEVEL_INFO_SIZE = 12,
                 TILE_INFO_SIZE = 28;
@@ -125,7 +124,7 @@
             stream.writeInt32(extents[3]); // east
             stream.writeInt32(levels_n); // number of zoom levels
             stream.writeInt32(0); //expiration date
-            stream.writeInt32(productId);
+            stream.writeInt32(this.productId);
             stream.writeInt32(0); // tiles CRC32
             stream.writeInt32(0); // signature version
             stream.writeUint32(0); // signature offset
@@ -133,10 +132,10 @@
             // map description
             stream.writeInt32(9); // section version
             stream.writeString('12345678-1234-1234-1234-123456789ABC', true); // GUID
-            stream.writeString(mapName, true);
+            stream.writeString(this.productName, true);
             stream.writeString('', true);
-            stream.writeInt16(productId);
-            stream.writeString(mapName, true);
+            stream.writeInt16(this.productId);
+            stream.writeString(this.productName, true);
             stream.writeInt32(levels_n);
             // levels descriptions
             for (level in this.tiles) {
@@ -269,10 +268,10 @@
 
     }
 
-    function layerToJnx(layer, map, bounds, zoomLevels, setProgressRange, incProgress) {
+    function layerToJnx(layer, layerName, map, bounds, zoomLevels, jnxProductId, setProgressRange, incProgress) {
         var zoomLevel,
             topLeft, bottomRight, x1, y1, x2, y2, center,
-            jnx = new JnxWriter(),
+            jnx = new JnxWriter(layerName, jnxProductId),
             tiles = {}, q;
         var regionsN = 0;
         setProgressRange(undefined);
@@ -354,8 +353,6 @@
     L.Control.JNX = L.Control.extend({
         options: {
             position: 'bottomleft',
-            JnxProductName: 'nakarte.tk',
-            JnxProductId: 0
         },
 
         initialize: function(options) {
@@ -439,14 +436,11 @@
             
         },
 
-        setJnxProductId: function(id) {
-            this.options.JnxProductId = Id;
-        },
-
-        setSourceLayer: function(layer, layerName) {
+        setSourceLayer: function(layer, layerName, layerUid) {
             console.log(layerName, layer);
             this.sourceLayer = layer;
             this.sourceLayerName = layerName;
+            this.jnxProductId = layerUid;
         },
 
         makeJnx: function(maxZoom) {
@@ -462,13 +456,15 @@
             var region = this._selector.getBounds();
             self.downloadProgressDone(0);
             var incProgress = function(d) {self.downloadProgressDone(self.downloadProgressDone() + d);};
-            layerToJnx(layer, this._map, region, zooms, this.downloadProgressRange, incProgress).then(function (jnxData) {
-                console.log('saving');
-                saveAs(jnxData, 'nakarte.jnx');
-                self.makingJnx(false);
-            }, function(err) {
+            var filename = 'nakarte.tk_' + this.sourceLayerName.toLowerCase().replace(/[ ()]+/, '_') + '.jnx';
+            layerToJnx(layer, this.sourceLayerName, this._map, region, zooms, this.jnxProductId, this.downloadProgressRange, incProgress)
+                .then(function (jnxData) {
+                    console.log('saving');
+                    saveAs(jnxData, filename);
+                    self.makingJnx(false);
+                }, function(err) {
                 alert('Failed to make JNX file: ' + err);
-            });
+                });
 
         }
 
