@@ -11,6 +11,7 @@
 //@require knockout
 //@require knockout.progress
 //@require leaflet.contextmenu
+//@require leaflet.hash_state
 
 (function(){
     "use strict";
@@ -18,6 +19,8 @@
     var MAX_MAP_SIZE = 4096;
 
     L.RectangleSelect = L.Rectangle.extend({
+        includes: [L.Mixin.Events],
+
         options: {
             opacity: 0
         },
@@ -30,6 +33,10 @@
                 var marker = L.marker(latlng, {draggable: true, icon: icon});
                 marker.addTo(self._map);
                 marker.on('drag', function() {self.onMarkerMoved(marker);}, self);
+                marker.on('dragend', function() {
+                        setTimeout(function() {
+                            self.fire('change');
+                        }, 0);});
                 return marker;
             });
             this.markers[0].i1 = 0;
@@ -354,6 +361,9 @@
     L.RectangleSelect.include(L.Mixin.Contextmenu);
 
     L.Control.JNX = L.Control.extend({
+        includes: [L.Mixin.Events, L.Mixin.HashState],
+        stateChangeEvents: ['selectionchange'],
+
         options: {
             position: 'bottomleft',
         },
@@ -386,19 +396,28 @@
             return this._container;
         },
 
+        makeSelector: function(bounds) {
+            this._selector = new L.RectangleSelect(bounds)
+                    .addTo(this._map);
+                this._selector.on('change', function() {
+                    this.fire('selectionchange');
+                }, this);
+                this.fire('selectionchange');
+        },
+
         onButtonClicked: function() {
             var self = this;
             if (this._selector) {
                 if (this._selector.getBounds().intersects(this._map.getBounds().pad(-0.05))) {
                     this._map.removeLayer(this._selector);
                     this._selector = null;
+                    this.fire('selectionchange');
                 } else {
                     this._selector.setBounds(this._map.getBounds().pad(-0.25));
                 }
 
             } else {
-                this._selector = new L.RectangleSelect(this._map.getBounds().pad(-0.25))
-                    .addTo(this._map);
+                this.makeSelector(this._map.getBounds().pad(-0.25));
                 var items = function() {
                     if (self.makingJnx()) {
                         return [];
@@ -469,6 +488,50 @@
                 alert('Failed to make JNX file: ' + err);
                 });
 
+        },
+
+        _serializeState: function() {
+            var state;
+            if (this._selector) {
+                var bounds = this._selector.getBounds();
+                state = [
+                    bounds.getSouth().toFixed(5),
+                    bounds.getWest().toFixed(5),
+                    bounds.getNorth().toFixed(5),
+                    bounds.getEast().toFixed(5)];
+            } else {
+                state = [];
+            }
+            return state;
+        },
+
+        _unserializeState: function(values) {
+            function validateFloat(value, min, max) {
+                value = parseFloat(value);
+                if (isNaN(value) || value < min || value > max) {
+                    throw 'INVALID VALUE';
+                }
+                return value;
+            }
+
+            if (values) {
+                try {
+                    var south = validateFloat(values[0], -86, 86),
+                        west = validateFloat(values[1], -180, 180),
+                        north = validateFloat(values[2], -86, 86),
+                        east = validateFloat(values[3], -180, 180);
+                } catch (e) {
+                    if (e == 'INVALID VALUE') {
+                        return false;
+                    }
+                    throw e;
+                }
+                this.makeSelector([[south, west], [north, east]]);
+                return true;
+            } else {
+                return false;
+            }
+            return true;
         }
 
     });

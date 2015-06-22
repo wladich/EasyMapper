@@ -106,6 +106,7 @@
             
             this.layersControl.enableHashState('l', ['O']);
             this.printPagesControl.enableHashState('p');
+            this.jnx.enableHashState('j');
 
             btn.on('clicked', this.startRuler, this);
             map.on('baselayerchange overlayadd overlayremove', function () {
