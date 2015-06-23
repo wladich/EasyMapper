@@ -397,27 +397,12 @@
         },
 
         makeSelector: function(bounds) {
+            var self = this;
             this._selector = new L.RectangleSelect(bounds)
                     .addTo(this._map);
                 this._selector.on('change', function() {
                     this.fire('selectionchange');
                 }, this);
-                this.fire('selectionchange');
-        },
-
-        onButtonClicked: function() {
-            var self = this;
-            if (this._selector) {
-                if (this._selector.getBounds().intersects(this._map.getBounds().pad(-0.05))) {
-                    this._map.removeLayer(this._selector);
-                    this._selector = null;
-                    this.fire('selectionchange');
-                } else {
-                    this._selector.setBounds(this._map.getBounds().pad(-0.25));
-                }
-
-            } else {
-                this.makeSelector(this._map.getBounds().pad(-0.25));
                 var items = function() {
                     if (self.makingJnx()) {
                         return [];
@@ -454,6 +439,21 @@
                     return items;
                 };
                 this._selector.bindContextmenu(items);
+                this.fire('selectionchange');
+        },
+
+        onButtonClicked: function() {
+            if (this._selector) {
+                if (this._selector.getBounds().intersects(this._map.getBounds().pad(-0.05))) {
+                    this._map.removeLayer(this._selector);
+                    this._selector = null;
+                    this.fire('selectionchange');
+                } else {
+                    this._selector.setBounds(this._map.getBounds().pad(-0.25));
+                }
+
+            } else {
+                this.makeSelector(this._map.getBounds().pad(-0.25));
             }
             
         },
