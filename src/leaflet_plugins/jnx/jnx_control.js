@@ -377,23 +377,23 @@
 
         onAdd: function(map) {
             this._map = map;
-            this._container = L.DomUtil.create('div', 'leaflet-control leaflet-control-jnx');
-            this._container.innerHTML = (
+            var container = this._container = L.DomUtil.create('div', 'leaflet-control leaflet-control-jnx');
+            container.innerHTML = (
                 '<a class="button" data-bind="visible: !makingJnx(), click: onButtonClicked">JNX</a>' +
                 '<div data-bind="component: ' +
                     '{name: \'progress-indicator\',' +
                     'params: {progressRange: downloadProgressRange, progressDone: downloadProgressDone}}, ' +
                     'visible: makingJnx()"></div>'
             );
-            ko.applyBindings(this, this._container);
+            ko.applyBindings(this, container);
             if (!L.Browser.touch) {
                 L.DomEvent
-                    .disableClickPropagation(this._container)
-                    .disableScrollPropagation(this._container);
+                    .disableClickPropagation(container)
+                    .disableScrollPropagation(container);
             } else {
-                L.DomEvent.on(dialogContainer, 'click', L.DomEvent.stopPropagation);
+                L.DomEvent.on(container, 'click', L.DomEvent.stopPropagation);
             }
-            return this._container;
+            return container;
         },
 
         makeSelector: function(bounds) {
