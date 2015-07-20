@@ -300,7 +300,7 @@
                 }
             }).then(function(xhr) {
                 var imageData;
-                if (xhr.response) {
+                if (xhr.response && xhr.status == 200) {
                     if (fileutils.arrayBufferToString(xhr.response.slice(0, 2)) == '\xff\xd8') {
                         imageData = Promise.resolve(xhr.response);
                     } else {
@@ -485,7 +485,8 @@
                     saveAs(jnxData, filename);
                     self.makingJnx(false);
                 }, function(err) {
-                alert('Failed to make JNX file: ' + err);
+                    self.makingJnx(false);
+                    alert('Failed to make JNX file: ' + err);
                 });
 
         },
