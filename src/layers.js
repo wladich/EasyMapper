@@ -3,6 +3,7 @@
 //@require leaflet.google
 //@require leaflet.bing
 //@require leaflet_plugins/leaflet.soviet-topomaps-grid.js
+//@require leaflet_plugins/leaflet.wikimapia.js
 
 window.layers = {};
 
@@ -49,6 +50,7 @@ window.layers.getOverlays = function getOverlays() {
         "O-sport": new L.TileLayer("http://tiles.nakarte.tk/osport/{z}/{x}/{y}",
                                    {code: 'R', tms: true, maxNativeZoom: 17}),
         "Soviet military grid": new L.SovietTopoGrid()
+        "Wikimapia": new L.Wikimapia({code: 'W'})
     };
 };
 
