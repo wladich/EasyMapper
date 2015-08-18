@@ -116,8 +116,11 @@
 	};
 
 	L.SovietTopoGrid = L.LayerGroup.extend({
+		options: {},
+
 		initialize: function(options) {
 			L.LayerGroup.prototype.initialize.call(this, options);
+			L.Util.setOptions(this, options);
 			this._updatePathViewport = L.Util.limitExecByInterval(this.__updatePathViewport, 100, this);
 			this._quads = {};
 		},

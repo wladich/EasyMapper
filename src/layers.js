@@ -49,7 +49,7 @@ window.layers.getOverlays = function getOverlays() {
                                       {code: 'Z', tms: true, maxNativeZoom: 14}),
         "O-sport": new L.TileLayer("http://tiles.nakarte.tk/osport/{z}/{x}/{y}",
                                    {code: 'R', tms: true, maxNativeZoom: 17}),
-        "Soviet military grid": new L.SovietTopoGrid()
+        "Soviet military grid": new L.SovietTopoGrid({code: 'Ng'}),
         "Wikimapia": new L.Wikimapia({code: 'W'})
     };
 };
