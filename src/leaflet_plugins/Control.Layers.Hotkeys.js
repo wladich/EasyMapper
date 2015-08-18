@@ -1,7 +1,7 @@
 //@require leaflet
 //@require Control.Layers.Hotkeys.css
 (function(){
-    "use strict";
+    'use strict';
     var originalOnAdd = L.Control.Layers.prototype.onAdd;
     var originalOnRemove = L.Control.Layers.prototype.onRemove;
     var originalAddItem = L.Control.Layers.prototype._addItem;
@@ -22,17 +22,25 @@
         onAdd: function(map) {
             var result = originalOnAdd.call(this, map);
             L.DomEvent.on(document, 'keyup', this._onHotkeyUp, this);
+            L.DomEvent.on(document, 'keydown', this.onKeyDown, this);
             return result;
         },
 
         onRemove: function(map) {
             L.DomEvent.off(document, 'keyup', this._onHotkeyUp, this);
+            L.DomEvent.off(document, 'keydown', this.onKeyDown, this);
             originalOnRemove.call(this, map);
 
         },
 
+        onKeyDown: function(e) {
+            this._keyDown = e.keyCode;
+        },
+
         _onHotkeyUp: function(e) {
-            if ('input' == e.target.tagName.toLowerCase()) {
+            var pressedKey = this._keyDown;
+            this._keyDown = null;
+            if ('input' == e.target.tagName.toLowerCase() || pressedKey != e.keyCode) {
                 return;
             }
             var key = String.fromCharCode(e.keyCode);
