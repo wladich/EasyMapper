@@ -12,7 +12,7 @@ provides:
     yandex-api:
         - http://api-maps.yandex.ru/2.0-stable/?load=package.standard&lang=ru-RU#.js
     google-api:
-        - https://maps.googleapis.com/maps/api/js?sensor=false#.js
+        - https://maps.googleapis.com/maps/api/js?v=3.21&sensor=false#.js
     leaflet.google:
         - src/lib/vendor/shramov/Google.js
     leaflet.yandex:
