@@ -13,6 +13,7 @@
         </script>        
     </head>
     <body>
+        <div id="street-view"></div>
         <div id="map"></div>
     </body>
 </html>

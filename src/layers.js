@@ -4,6 +4,7 @@
 //@require leaflet.bing
 //@require leaflet_plugins/leaflet.soviet-topomaps-grid.js
 //@require leaflet_plugins/leaflet.wikimapia.js
+//@require leaflet_plugins/google-street-view/leaflet.google-street-view.js
 
 window.layers = {};
 
@@ -47,10 +48,13 @@ window.layers.getOverlays = function getOverlays() {
                                    {code: 'K', tms: true, maxNativeZoom: 15}),
         "Slazav map": new L.TileLayer("http://tiles.nakarte.tk/map_podm/{z}/{x}/{y}",
                                       {code: 'Z', tms: true, maxNativeZoom: 14}),
+        "Slazav mountains": new L.TileLayer("http://tiles.nakarte.tk/map_hr/{z}/{x}/{y}",
+                                      {code: 'Q', tms: true, maxNativeZoom: 13}),
         "O-sport": new L.TileLayer("http://tiles.nakarte.tk/osport/{z}/{x}/{y}",
                                    {code: 'R', tms: true, maxNativeZoom: 17}),
         "Soviet military grid": new L.SovietTopoGrid({code: 'Ng'}),
-        "Wikimapia": new L.Wikimapia({code: 'W'})
+        "Wikimapia": new L.Wikimapia({code: 'W'}),
+        "Google Street View": new L.GoogleStreetView('street-view')
     };
 };
 

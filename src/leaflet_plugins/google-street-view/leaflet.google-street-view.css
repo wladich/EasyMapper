@@ -1,0 +1,15 @@
+.gsv-camera-container {
+    width: 0px !important;
+    height: 0px !important; 
+    margin: 0 !important;
+
+}
+
+.gsv-camera {
+    background-image: url("video-camera-icon-40.png");
+    width: 40px;
+    height: 40px; 
+    margin-left: -20px;
+    margin-top: -25px;
+    transform-origin: 20px 25px;
+}
