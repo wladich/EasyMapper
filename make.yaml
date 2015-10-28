@@ -9,6 +9,6 @@ root:
     -
         src: src/index.html.tpl
         filename: index.html
-        injectCss: false
-        injectJs: false
+        injectCss: no
+        injectJs: no
 
