@@ -1,0 +1,4 @@
+{
+	"predef": ["L", "alert", "console", "google"],
+	"sub": true
+}
