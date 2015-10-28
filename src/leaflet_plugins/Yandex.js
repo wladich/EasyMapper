@@ -171,12 +171,13 @@ L.Yandex = L.Class.extend({
 		this.fire('MapObjectInitialized', { mapObject: map });
 	},
 
-	_viewReset: function() {
+	_viewReset: function(e) {
 		//if (!this._zooming) {
 			var center = this._map.getCenter();
 			center = [center.lat, center.lng];
 			var zoom = this._map.getZoom();
-			this._yandex.setCenter(center, zoom, this._animated ? this.yandexAnimationOptions : {});
+			this._yandex.setCenter(center, zoom, (this._animated && this._zooming) ? this.yandexAnimationOptions : {});
+			//this._yandex.setCenter(center, zoom);
 		//}
 	},
 
