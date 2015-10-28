@@ -1,5 +1,4 @@
 //@require leaflet
-//@require leaflet.yandex
 //@require leaflet.google
 //@require leaflet.bing
 //@require leaflet_plugins/leaflet.soviet-topomaps-grid.js
@@ -16,8 +15,8 @@ window.layers.getBaseMaps = function getBaseMaps() {
                                      {code: 'O', scaleDependent: true}),
         'ESRI Sat': L.tileLayer('http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
                                 {code: 'E', maxNativeZoom: 17}),
-        'Yandex': new L.Yandex('map', {scaleDependent: true, code: 'Y', noCors: true}, {yandexMapAutoSwitch: false}),
-        'Yandex Sat': new L.Yandex('satellite', {code: 'S'}),
+//        'Yandex': new L.Yandex('map', {scaleDependent: true, code: 'Y', noCors: true}, {yandexMapAutoSwitch: false}),
+//        'Yandex Sat': new L.Yandex('satellite', {code: 'S'}),
         'Google': new L.Google('ROADMAP', {code: 'G', scaleDependent: true}),
         'Google Sat': new L.Google('SATELLITE', {code: 'L'}),
         'Google Sat Hybrid': new L.Google('HYBRID', {code: 'H', scaleDependent: true}),
