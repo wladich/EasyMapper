@@ -17,7 +17,6 @@ window.layers.getBaseMaps = function getBaseMaps() {
         'ESRI Sat': L.tileLayer('http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
                                 {code: 'E', maxNativeZoom: 17}),
         'Yandex': new L.Yandex('map', {scaleDependent: true, code: 'Y', noCors: true}, {yandexMapAutoSwitch: false}),
-        'Yandex Public': new L.Yandex('publicMap', {code: 'P', scaleDependent: true, noCors: true}),
         'Yandex Sat': new L.Yandex('satellite', {code: 'S'}),
         'Google': new L.Google('ROADMAP', {code: 'G', scaleDependent: true}),
         'Google Sat': new L.Google('SATELLITE', {code: 'L'}),
