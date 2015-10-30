@@ -3,10 +3,10 @@ provides:
         - src/mapper.js
         - src/style.css
     leaflet:
-        production:
-            - http://cdn.leafletjs.com/leaflet-0.7.7/leaflet.js
-            - http://cdn.leafletjs.com/leaflet-0.7.7/leaflet.css
-        develop:
+#        production:
+#            - http://cdn.leafletjs.com/leaflet-0.7.7/leaflet.js
+#            - http://cdn.leafletjs.com/leaflet-0.7.7/leaflet.css
+#        develop:
             - src/lib/vendor/leaflet-0.7.7/leaflet-src.js
             - src/lib/vendor/leaflet-0.7.7/leaflet.css
     yandex-api:
