@@ -4,7 +4,7 @@
 //@require leaflet_plugins/leaflet.soviet-topomaps-grid.js
 //@require leaflet_plugins/leaflet.wikimapia.js
 //@require leaflet_plugins/google-street-view/leaflet.google-street-view.js
-//@require leaflet_plugins/Yandex.js
+//@require leaflet.yandex
 window.layers = {};
 
 

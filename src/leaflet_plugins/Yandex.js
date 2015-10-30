@@ -13,6 +13,7 @@
 
         initialize: function(mapType, options) {
             var url;
+            this._mapType = mapType;
             if (mapType == 'sat') {
                 url = 'https://sat03.maps.yandex.net/tiles?l=sat&x={x}&y={y}&z={z}';
             } else {

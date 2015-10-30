@@ -71,7 +71,7 @@ var mapRender = (function() {
                 if (xhr.responseBytes) {
                     return imageFromString(xhr.responseBytes)
                     .then(function(image) {
-                        canvasCtx.drawImage(image, tile.left, tile.top, tile.size, tile.size);
+                        canvasCtx.drawImage(image, tile.left, tile.top, tile.width, tile.height);
                     });
                 }
             });

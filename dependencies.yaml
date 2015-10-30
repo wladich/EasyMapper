@@ -13,6 +13,8 @@ provides:
         - https://maps.googleapis.com/maps/api/js?v=3.21&sensor=false#.js
     leaflet.google:
         - src/lib/vendor/shramov/Google.js
+    leaflet.yandex:
+        - src/leaflet_plugins/Yandex.js
     leaflet.bing:
         - src/lib/vendor/shramov/Bing.js
     leaflet.hash_state:
@@ -33,6 +35,7 @@ provides:
         - src/leaflet_plugins/tile_layer_grabber/Google.js
         - src/leaflet_plugins/tile_layer_grabber/TileLayer.js
         - src/leaflet_plugins/tile_layer_grabber/Bing.js
+        - src/leaflet_plugins/tile_layer_grabber/Yandex.js
     leaflet.measured_line:
         - src/leaflet_plugins/measured_line/measured_line.js
     leaflet.edit_line:

@@ -25,7 +25,8 @@
                                 imgRelLeft = imgRect.left - mapRect.left,
                                 imgRelTop  = imgRect.top - mapRect.top;
                             //tiles_info.push([url, imgRelLeft, imgRelTop, 256]);
-                            tiles_info.push({url: img.src, left: imgRelLeft, top: imgRelTop, size: 256});
+                            tiles_info.push({url: img.src, left: imgRelLeft, top: imgRelTop, width: 256,
+                                height: 256});
                     }
                 }
                 return tiles_info;

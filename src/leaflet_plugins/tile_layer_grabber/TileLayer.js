@@ -13,8 +13,8 @@
                 var tiles_info = [];
                 for (var k in this_layer._tiles) {
                     var img = this_layer._tiles[k];
-                    //tiles_info.push([img.src, img._leaflet_pos.x, img._leaflet_pos.y, img.width]);
-                    tiles_info.push({url: img.src, left: img._leaflet_pos.x, top: img._leaflet_pos.y, size: img.width});
+                    tiles_info.push({url: img.src, left: img._leaflet_pos.x, top: img._leaflet_pos.y, width: img.width,
+                        height: img.height});
                 }
                 return tiles_info;
             }
