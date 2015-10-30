@@ -1,4 +1,4 @@
-//@require TileLayer.js
+//@require leaflet.bing
 
 (function() {
     "use strict";

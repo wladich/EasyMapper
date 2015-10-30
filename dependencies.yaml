@@ -9,8 +9,6 @@ provides:
 #        develop:
             - src/lib/vendor/leaflet-0.7.7/leaflet-src.js
             - src/lib/vendor/leaflet-0.7.7/leaflet.css
-    yandex-api:
-        - http://api-maps.yandex.ru/2.0-stable/?load=package.standard&lang=ru-RU#.js
     google-api:
         - https://maps.googleapis.com/maps/api/js?v=3.21&sensor=false#.js
     leaflet.google:
@@ -36,8 +34,8 @@ provides:
     leaflet.tile_layer_grabber:
         - src/leaflet_plugins/tile_layer_grabber/Google.js
         - src/leaflet_plugins/tile_layer_grabber/TileLayer.js
-        - src/leaflet_plugins/tile_layer_grabber/Yandex.js
         - src/leaflet_plugins/tile_layer_grabber/Bing.js
+        - src/leaflet_plugins/tile_layer_grabber/Yandex.js
     leaflet.measured_line:
         - src/leaflet_plugins/measured_line/measured_line.js
     leaflet.edit_line:

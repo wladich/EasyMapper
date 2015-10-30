@@ -236,7 +236,7 @@
             disposeMap(tmpMap);
             tiles.forEach(function(tile) {
                 var northWest = tmpMap.containerPointToLatLng([tile.left, tile.top]),
-                    southEast = tmpMap.containerPointToLatLng([tile.left + tile.size, tile.top + tile.size]);
+                    southEast = tmpMap.containerPointToLatLng([tile.left + tile.width, tile.top + tile.height]);
                 tile.south = southEast.lat;
                 tile.north = northWest.lat;
                 tile.west = northWest.lng;
@@ -484,7 +484,7 @@
                     console.log('saving');
                     saveAs(jnxData, filename);
                     self.makingJnx(false);
-                }, function(err) {
+                }).then(null, function(err) {
                     self.makingJnx(false);
                     alert('Failed to make JNX file: ' + err);
                 });
