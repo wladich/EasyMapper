@@ -484,10 +484,10 @@
                     console.log('saving');
                     saveAs(jnxData, filename);
                     self.makingJnx(false);
-                });//.then(null, function(err) {
-                    //self.makingJnx(false);
-                    //alert('Failed to make JNX file: ' + err);
-                //});
+                }).then(null, function(err) {
+                    self.makingJnx(false);
+                    alert('Failed to make JNX file: ' + err);
+                });
 
         },
 
