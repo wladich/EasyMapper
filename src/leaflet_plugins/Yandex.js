@@ -59,6 +59,11 @@
             var belowTilePoint = L.point(tilePoint.x, tilePoint.y + 1);
             var height = this._getYandexTilePos(belowTilePoint).y - this._getYandexTilePos(tilePoint).y;
             tile.style.height = height + 'px';
+        },
+
+        _addTilesFromCenterOut: function (bounds) {
+            bounds = L.bounds([[bounds.min.x, bounds.min.y - 1], [bounds.max.x, bounds.max.y + 1 ]]);
+            L.TileLayer.prototype._addTilesFromCenterOut.call(this, bounds);
         }
     });
 })();
