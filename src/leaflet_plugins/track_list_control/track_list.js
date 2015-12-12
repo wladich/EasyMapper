@@ -275,6 +275,7 @@
                 }.bind(this)},
                 {text: 'Rename', callback: this.renameTrack.bind(this, track)},
                 {text: 'Duplicate', callback: this.duplicateTrack.bind(this, track)},
+                {text: 'Reverse', callback: this.reverseTrack.bind(this, track)},
                 '-',
                 {text: 'Download GPX', callback: this.saveTrackAsFile.bind(this, track, geoExporters.saveGpx, '.gpx')},
                 {text: 'Download KML', callback: this.saveTrackAsFile.bind(this, track, geoExporters.saveKml, '.kml')},
@@ -296,6 +297,19 @@
                 segments.push(segment);
             }
             this.addTrack({name: track.name(), tracks: segments});
+        },
+
+        reverseTrack: function(track) {
+            var self = this;
+            track.feature.eachLayer(function(line) {
+                if (self._editedLine === line) {
+                    self._editedLine.stopDrawingLine();
+                }
+                var latLngs = line.getLatLngs();
+                latLngs.reverse();
+                line.setLatLngs(latLngs);
+                line.updateTicksLater();
+            });
         },
 
         copyStringifiedToClipboard: function(track) {
