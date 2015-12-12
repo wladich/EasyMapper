@@ -34,6 +34,9 @@
         },
 
         onKeyDown: function(e) {
+            if (e.altKey || e.ctrlKey || e.shiftKey) {
+                return;
+            }
             this._keyDown = e.keyCode;
         },
 
