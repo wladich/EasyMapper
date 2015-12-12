@@ -274,6 +274,7 @@
                     polyline.startDrawingLine(1);
                 }.bind(this)},
                 {text: 'Rename', callback: this.renameTrack.bind(this, track)},
+                {text: 'Duplicate', callback: this.duplicateTrack.bind(this, track)},
                 '-',
                 {text: 'Download GPX', callback: this.saveTrackAsFile.bind(this, track, geoExporters.saveGpx, '.gpx')},
                 {text: 'Download KML', callback: this.saveTrackAsFile.bind(this, track, geoExporters.saveKml, '.kml')},
@@ -282,6 +283,21 @@
             track._actionsMenu = new L.Contextmenu(items);
         },
         
+        duplicateTrack: function(track) {
+            var segments = [], segment,
+                line,
+                lines = track.feature.getLayers();
+            for (var i = 0; i < lines.length; i++) {
+                segment = [];
+                line = lines[i].getLatLngs();
+                for (var j = 0; j < line.length; j++) {
+                    segment.push([line[j].lat, line[j].lng]);
+                }
+                segments.push(segment);
+            }
+            this.addTrack({name: track.name(), tracks: segments});
+        },
+
         copyStringifiedToClipboard: function(track) {
             this.stopActiveDraw();
             var lines = track.feature.getLayers()
