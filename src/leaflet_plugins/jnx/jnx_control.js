@@ -442,14 +442,21 @@
                 this.fire('selectionchange');
         },
 
+        removeSelector: function() {
+            if (this._selector) {
+                this._map.removeLayer(this._selector);
+                this._selector = null;
+                this.fire('selectionchange');
+            }
+        },
+
         onButtonClicked: function() {
             if (this._selector) {
                 if (this._selector.getBounds().intersects(this._map.getBounds().pad(-0.05))) {
-                    this._map.removeLayer(this._selector);
-                    this._selector = null;
-                    this.fire('selectionchange');
+                    this.removeSelector();
                 } else {
-                    this._selector.setBounds(this._map.getBounds().pad(-0.25));
+                    this.removeSelector();
+                    this.makeSelector(this._map.getBounds().pad(-0.25));
                 }
 
             } else {
@@ -527,6 +534,7 @@
                     }
                     throw e;
                 }
+                this.removeSelector();
                 this.makeSelector([[south, west], [north, east]]);
                 return true;
             } else {
