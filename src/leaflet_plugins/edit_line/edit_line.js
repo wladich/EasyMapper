@@ -97,7 +97,9 @@
                 */
                 this.addNode(newNodeIndex, e.latlng);
             } else {
-                this.stopEdit();
+                if (!this.preventStopEdit) {
+                    this.stopEdit();
+                }
             }
         },
 
@@ -165,7 +167,9 @@
                     if (this._drawingDirection) {
                         this.stopDrawingLine();
                     } else {
-                        this.stopEdit();
+                        if (!this.preventStopEdit) {
+                           this.stopEdit();
+                        }
                     }
                     break;
             }

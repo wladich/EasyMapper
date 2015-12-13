@@ -375,6 +375,14 @@
             }
         },
 
+        onTrackSegmentClick: function(track, trackSegment) {
+            if (this._lineJoinCursor) {
+                this.joinTrackSegments(trackSegment);
+            } else {
+                this.startEditTrackSegement(track, trackSegment);
+            }
+        },
+
         startEditTrackSegement: function(track, polyline) {
             if (this._editedLine && this._editedLine !== polyline) {
                 this._editedLine.stopEdit();
@@ -384,9 +392,31 @@
             polyline.once('editend', function() {
                 setTimeout(this.onLineEditEnd.bind(this, track, polyline), 0);
             }.bind(this));
-                
         },
 
+        joinTrackSegments: function(newSegment) {
+            this.stopLineJoinSelection();
+            var originalSegment = this._editedLine;
+            var latlngs = originalSegment.getLatLngs(),
+                latngs2 = newSegment.getLatLngs();
+            if (this._lineJoinToStart == this._lineJoinFromStart) {
+                latngs2.reverse();
+            }
+            if (this._lineJoinFromStart) {
+                latlngs.unshift.apply(latlngs, latngs2);
+            } else {
+                latlngs.push.apply(latlngs, latngs2);
+            }
+            latlngs = latlngs.map(function(ll) {
+                return [ll.lat, ll.lng];
+            });
+            this.deleteTrackSegment(originalSegment);
+            if (originalSegment._parentTrack == newSegment._parentTrack) {
+                this.deleteTrackSegment(newSegment);
+            }
+            this.addTrackSegment(originalSegment._parentTrack, latlngs);
+
+        },
         
         onLineEditEnd: function(track, polyline) {
             if (polyline.getLatLngs().length < 2) {
@@ -407,21 +437,26 @@
             });
             polyline._parentTrack = track;
             polyline.setMeasureTicksVisible(track.measureTicksShown());
-            polyline.on('click', this.startEditTrackSegement.bind(this, track, polyline));
+            polyline.on('click', this.onTrackSegmentClick.bind(this, track, polyline));
             polyline.on('nodeschanged', this.onTrackLengthChanged.bind(this, track));
-            polyline.on('noderightclick', this.onNodeRightClick, this);
-            polyline.on('segmentrightclick', this.onSegmentRightClick, this);
+            polyline.on('noderightclick', this.onNodeRightClickShowMenu, this);
+            polyline.on('segmentrightclick', this.onSegmentRightClickShowMenu, this);
+            polyline.on('mousemove', this.onMouseMoveOnSegmentUpdateLineJoinCursor, this);
+
             //polyline.on('editingstart', polyline.setMeasureTicksVisible.bind(polyline, false));
             //polyline.on('editingend', this.setTrackMeasureTicksVisibility.bind(this, track));
             track.feature.addLayer(polyline);
             return polyline;
         },
 
-        onNodeRightClick: function(e) {
+        onNodeRightClickShowMenu: function(e) {
             var items = [];
             if (e.nodeIndex > 0 && e.nodeIndex < e.line.getLatLngs().length - 1) {
                 items.push({text: 'Cut',
                             callback: this.splitTrackSegment.bind(this, e.line, e.nodeIndex)});
+            }
+            if (e.nodeIndex === 0 || e.nodeIndex == e.line.getLatLngs().length - 1) {
+                items.push({text: 'Join', callback: this.startLineJoinSelection.bind(this, e)});
             }
             items.push({text: 'Reverse', callback: this.reverseTrackSegment.bind(this, e.line)});
             items.push({text: 'Delete segment', callback: this.deleteTrackSegment.bind(this, e.line)});
@@ -430,7 +465,7 @@
 
         },
 
-        onSegmentRightClick: function(e) {
+        onSegmentRightClickShowMenu: function(e) {
             var menu = new L.Contextmenu([
                                         {text: 'Cut',
                                          callback: this.splitTrackSegment.bind(this, e.line, e.nodeIndex, e.mouseEvent.latlng)},
@@ -438,6 +473,77 @@
                                         {text: 'Delete segment', callback: this.deleteTrackSegment.bind(this, e.line)}
                                         ]);
             menu.showOnMouseEvent(e.mouseEvent);
+        },
+
+        startLineJoinSelection: function(e) {
+            this.stopLineJoinSelection();
+            this._editedLine.stopDrawingLine();
+            this._lineJoinFromStart = (e.nodeIndex === 0);
+            var p = this._editedLine.getLatLngs()[e.nodeIndex];
+            p = [p.lat, p.lng];
+            this._lineJoinCursor = L.polyline([p, e.mouseEvent.latlng], {
+                clickable: false, 
+                color: 'red',
+                weight: 1.5,
+                opacity: 1,
+                dashArray: '7,7'
+                })
+            .addTo(this.map);
+            this.map.on('mousemove', this.onMouseMoveUpdateLineJoinCursor, this);
+            this.map.on('click', this.stopLineJoinSelection, this);
+            L.DomEvent.on(document, 'keyup', this.onEscPressedStopLineJoinSelection, this);
+            var self = this;
+            setTimeout(function() {
+                self._editedLine.preventStopEdit = true;
+            }, 0);
+        },
+
+        onMouseMoveUpdateLineJoinCursor: function(e) {
+            if (this._lineJoinCursor) {
+                this._lineJoinCursor.spliceLatLngs(1, 1, e.latlng);
+                this._lineJoinCursor.setStyle({color: 'red'});
+            }
+        },
+
+        onMouseMoveOnSegmentUpdateLineJoinCursor: function(e) {
+            if (!this._lineJoinCursor) {
+                return;
+            }
+            var trackSegment = e.target,
+                latlngs = trackSegment.getLatLngs(),
+                distToStart = e.latlng.distanceTo(latlngs[0]),
+                distToEnd = e.latlng.distanceTo(latlngs[latlngs.length - 1]);
+            this._lineJoinToStart = (distToStart < distToEnd);
+            var cursorEnd = this._lineJoinToStart ? latlngs[0] : latlngs[latlngs.length - 1];
+            this._lineJoinCursor.setStyle({color: 'green'});
+            this._lineJoinCursor.spliceLatLngs(1, 1, cursorEnd);
+            L.DomEvent.stopPropagation(e.originalEvent);
+        },
+
+        onEscPressedStopLineJoinSelection: function(e) {
+            if ('input' == e.target.tagName.toLowerCase()) {
+                return;
+            }
+            switch (e.keyCode) {
+                case 27:
+                case 13:
+                    this.stopLineJoinSelection();
+                    break;
+            }
+        },
+
+        stopLineJoinSelection: function() {
+            if (this._lineJoinCursor) {
+                this.map.off('mousemove', this.onMouseMoveUpdateLineJoinCursor, this);
+                this.map.off('click', this.stopLineJoinSelection, this);
+                L.DomEvent.off(document, 'keyup', this.onEscPressedStopLineJoinSelection, this);
+                this.map.removeLayer(this._lineJoinCursor);
+                this._lineJoinCursor = null;
+                var self = this;
+                setTimeout(function() {
+                    self._editedLine.preventStopEdit = false;
+                }, 0);
+            }
         },
 
         splitTrackSegment: function(trackSegment, nodeIndex, latlng) {
