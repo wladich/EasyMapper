@@ -396,13 +396,66 @@
                 lineCap: 'butt',
                 className: 'leaflet-editable-line'
             });
+            polyline._parentTrack = track;
             polyline.setMeasureTicksVisible(track.measureTicksShown());
             polyline.on('click', this.startEditTrackSegement.bind(this, track, polyline));
             polyline.on('nodeschanged', this.onTrackLengthChanged.bind(this, track));
+            polyline.on('noderightclick', this.onNodeRightClick, this);
+            polyline.on('segmentrightclick', this.onSegmentRightClick, this);
             //polyline.on('editingstart', polyline.setMeasureTicksVisible.bind(polyline, false));
             //polyline.on('editingend', this.setTrackMeasureTicksVisibility.bind(this, track));
             track.feature.addLayer(polyline);
             return polyline;
+        },
+
+        onNodeRightClick: function(e) {
+            var items = [];
+            if (e.nodeIndex > 0 && e.nodeIndex < e.line.getLatLngs().length - 1) {
+                items.push({text: 'Cut',
+                            callback: this.splitTrackSegment.bind(this, e.line, e.nodeIndex)});
+            }
+            items.push({text: 'Delete segment', callback: this.deleteTrackSegment.bind(this, e.line)});
+            var menu = new L.Contextmenu(items);
+            menu.showOnMouseEvent(e.mouseEvent);
+
+        },
+
+        onSegmentRightClick: function(e) {
+            var menu = new L.Contextmenu([
+                                        {text: 'Cut',
+                                         callback: this.splitTrackSegment.bind(this, e.line, e.nodeIndex, e.mouseEvent.latlng)},
+                                        {text: 'Delete segment', callback: this.deleteTrackSegment.bind(this, e.line)}
+                                        ]);
+            menu.showOnMouseEvent(e.mouseEvent);
+        },
+
+        splitTrackSegment: function(trackSegment, nodeIndex, latlng) {
+            var latlngs = trackSegment.getLatLngs();
+            latlngs = latlngs.map(function(ll) {
+                return [ll.lat, ll.lng];
+            });
+            var latlngs1 = latlngs.slice(0, nodeIndex + 1),
+                latlngs2 = latlngs.slice(nodeIndex + 1);
+            if (latlng) {
+                var p = this.map.project(latlng),
+                    p1 = this.map.project(latlngs[nodeIndex]),
+                    p2 = this.map.project(latlngs[nodeIndex + 1]),
+                    pnew = L.LineUtil.closestPointOnSegment(p, p1, p2);
+                latlng = this.map.unproject(pnew);
+                latlngs1.push(latlng);
+                latlng = [latlng.lat, latlng.lng];
+            } else {
+                latlng = latlngs[nodeIndex];
+            }
+            latlngs2.unshift(latlng);
+            this.deleteTrackSegment(trackSegment);
+            var segment1 = this.addTrackSegment(trackSegment._parentTrack, latlngs1);
+            this.addTrackSegment(trackSegment._parentTrack, latlngs2);
+            this.startEditTrackSegement(trackSegment._parentTrack, segment1);
+        },
+
+        deleteTrackSegment: function(trackSegment) {
+            trackSegment._parentTrack.feature.removeLayer(trackSegment);
         },
 
         addTrack: function(geodata) {

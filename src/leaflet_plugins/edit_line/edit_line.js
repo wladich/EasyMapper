@@ -189,7 +189,15 @@
                 //.on('dragstart', this.fire.bind(this, 'editingstart'))
                 .on('dragend', this.onNodeMarkerDragEnd, this)
                 .on('dblclick', this.onNodeMarkerDblClickedRemoveNode, this)
-                .on('click', this.onNodeMarkerClickStartStopDrawing, this);
+                .on('click', this.onNodeMarkerClickStartStopDrawing, this)
+                .on('contextmenu', function(e) {
+                    this.stopDrawingLine();
+                    this.fire('noderightclick', {
+                        nodeIndex: this.getLatLngs().indexOf(marker._lineNode),
+                        line: this,
+                        mouseEvent: e
+                    });
+                }, this);
             marker._lineNode = node;
             node._nodeMarker = marker;
             marker.addTo(this._map);
@@ -216,6 +224,14 @@
                 p2 = latlngs[nodeIndex + 1],
                 segmentOverlay = L.polyline([p1, p2], {weight: 10, opacity: 0.0});
             segmentOverlay.on('mousedown', this.onSegmentMouseDownAddNode, this);
+            segmentOverlay.on('contextmenu', function(e) {
+                this.stopDrawingLine();
+                this.fire('segmentrightclick', {
+                    nodeIndex: this.getLatLngs().indexOf(segmentOverlay._lineNode),
+                    mouseEvent: e,
+                    line: this
+                });
+            }, this);
             segmentOverlay._lineNode = p1;
             p1._segmentOverlay = segmentOverlay;
             segmentOverlay.addTo(this._map);
