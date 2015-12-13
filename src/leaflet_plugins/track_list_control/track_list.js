@@ -299,16 +299,25 @@
             this.addTrack({name: track.name(), tracks: segments});
         },
 
+        reverseTrackSegment: function(trackSegment) {
+            trackSegment.stopDrawingLine();
+            var latlngs = trackSegment.getLatLngs();
+            latlngs = latlngs.map(function(ll) {
+                return [ll.lat, ll.lng];
+            });
+            latlngs.reverse();
+            var isEdited = (this._editedLine === trackSegment);
+            this.deleteTrackSegment(trackSegment);
+            var newTrackSegment = this.addTrackSegment(trackSegment._parentTrack, latlngs);
+            if (isEdited) {
+                this.startEditTrackSegement(trackSegment._parentTrack, newTrackSegment);
+            }
+        },
+
         reverseTrack: function(track) {
             var self = this;
-            track.feature.eachLayer(function(line) {
-                if (self._editedLine === line) {
-                    self._editedLine.stopDrawingLine();
-                }
-                var latLngs = line.getLatLngs();
-                latLngs.reverse();
-                line.setLatLngs(latLngs);
-                line.updateTicksLater();
+            track.feature.getLayers().forEach(function(trackSegment) {
+                self.reverseTrackSegment(trackSegment);
             });
         },
 
@@ -414,6 +423,7 @@
                 items.push({text: 'Cut',
                             callback: this.splitTrackSegment.bind(this, e.line, e.nodeIndex)});
             }
+            items.push({text: 'Reverse', callback: this.reverseTrackSegment.bind(this, e.line)});
             items.push({text: 'Delete segment', callback: this.deleteTrackSegment.bind(this, e.line)});
             var menu = new L.Contextmenu(items);
             menu.showOnMouseEvent(e.mouseEvent);
@@ -424,6 +434,7 @@
             var menu = new L.Contextmenu([
                                         {text: 'Cut',
                                          callback: this.splitTrackSegment.bind(this, e.line, e.nodeIndex, e.mouseEvent.latlng)},
+                                        {text: 'Reverse', callback: this.reverseTrackSegment.bind(this, e.line)},
                                         {text: 'Delete segment', callback: this.deleteTrackSegment.bind(this, e.line)}
                                         ]);
             menu.showOnMouseEvent(e.mouseEvent);
