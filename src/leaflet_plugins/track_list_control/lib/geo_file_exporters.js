@@ -112,7 +112,7 @@ var geoExporters = (function() {
             bytes.push(((n >> 14) & 0x7f) | 0x80);
             bytes.push(n >> 21);
         } else {
-            throw new Error('Number ' + n + ' too big to pack in 22 bits');
+            throw new Error('Number ' + n + ' too big to pack in 29 bits');
         }
         return String.fromCharCode.apply(null, bytes);
     }
@@ -126,7 +126,7 @@ var geoExporters = (function() {
         );
     }
 
-    function saveToString(segments, name) {
+    function saveToString(segments, name, color, measureTicksShown) {
         var stringified = [];
         name = fileutils.encodeUTF8(name);
         stringified.push(packNumber(name.length));
@@ -161,7 +161,8 @@ var geoExporters = (function() {
                 lastY = y;
             }
         });
-        console.log(stringified.map(function(x){return x.length;}));
+        stringified.push(packNumber(+color || 0));
+        stringified.push(packNumber(measureTicksShown ? 1 : 0));
         return 'track://' + encodeUrlSafeBase64(stringified.join(''));
     }
 

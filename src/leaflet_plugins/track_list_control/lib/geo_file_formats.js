@@ -439,7 +439,18 @@
                 throw e;
             }
         }
-        return [{name: name, tracks: segments, error: error}];
+        var geoData = {name: name, tracks: segments, error: error};
+        try {
+            geoData.color = s.readNumber();
+            geoData.measureTicksShown = s.readNumber();
+        } catch (e) {
+            if (e.message.match('Unexpected end of line while unpacking number')) {
+
+            } else {
+                throw e;
+            }
+        }
+        return [geoData];
     }
 
     function parseGeoFile(name, data) {

@@ -29,6 +29,7 @@
             this.readingFiles = ko.observable(false);
             this.readProgressRange = ko.observable(10);
             this.readProgressDone = ko.observable(2);
+            this._lastTrackColor = 0;
         },
 
         onAdd: function(map){
@@ -329,7 +330,7 @@
                     points = L.LineUtil.simplifyLatlngs(points, 360 / (1<<24));
                     return points;
                 });
-            var s = geoExporters.saveToString(lines, track.name());
+            var s = geoExporters.saveToString(lines, track.name(), track.color(), track.measureTicksShown());
             if (!s) {
                 alert('Track is empty, nothing to save');
                 return;
@@ -576,14 +577,19 @@
         },
 
         addTrack: function(geodata) {
-            this._lastTrackColor = ((this._lastTrackColor | 0) + 1) % this.colors.length;
             //var polylines = [];
+            var color =  geodata.color;
+            if (color >= 0 && color < this.colors.length) {
+            } else {
+                color = this._lastTrackColor;
+                this._lastTrackColor = (this._lastTrackColor + 1) % this.colors.length;
+            }
             var track = {
                 name: ko.observable(geodata.name),
-                color: ko.observable(this._lastTrackColor),
+                color: ko.observable(color),
                 visible: ko.observable(true),
                 length: ko.observable('empty'),
-                measureTicksShown: ko.observable(false),
+                measureTicksShown: ko.observable(geodata.measureTicksShown || false),
                 feature: L.featureGroup([])
             };
             (geodata.tracks || []).forEach(this.addTrackSegment.bind(this, track));
