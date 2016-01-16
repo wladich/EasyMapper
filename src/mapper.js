@@ -8,9 +8,35 @@
 //@require lib/draw_utils.js
 //@require leaflet.buttons
 //@require leaflet.jnx
+//@require leaflet-search
 
 (function(){
     "use strict";
+
+    var geocoder = new google.maps.Geocoder();
+
+    function googleGeocoding(text, callResponse)
+    {
+        geocoder.geocode({address: text}, callResponse);
+    }
+
+    function formatJSON(rawjson)
+    {
+        var json = {},
+            key, loc, disp = [];
+
+        for(var i in rawjson)
+        {
+            key = rawjson[i].formatted_address;
+            
+            loc = L.latLng( rawjson[i].geometry.location.lat(), rawjson[i].geometry.location.lng() );
+            
+            json[ key ]= loc;   //key,value format
+        }
+
+        return json;
+    }
+
 
     var mapperApp = L.Class.extend({
         trackPrintColors: ['#77f', '#f95', '#0ff', '#f77', '#f7f', '#ee5'],
@@ -114,6 +140,17 @@
             }, this);
             this.printPagesControl.on('pdfstart', this.beforePdfBuild, this);
             this.updateJnxLayer();
+
+            map.addControl( new L.Control.Search({
+            sourceData: googleGeocoding,
+            formatData: formatJSON,
+            markerLocation: true,
+            autoType: false,
+            autoCollapse: true,
+            minLength: 2,
+            zoom: 10
+        }) );
+
         }
 
     });

@@ -69,6 +69,9 @@ provides:
         - src/leaflet_plugins/jnx/jnx_control.js
     binstream:
         - src/lib/binstream.js
+    leaflet-search:
+        - src/lib/vendor/leaflet-search/leaflet-search.src.js
+        - src/lib/vendor/leaflet-search/leaflet-search.src.css
 depends:
     filesaver:
         - blob
