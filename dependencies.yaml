@@ -42,6 +42,8 @@ provides:
         - src/leaflet_plugins/edit_line/edit_line.js
     leaflet.simplify_latlngs:
         - src/leaflet_plugins/LineUtil.simplifyLatngs.js
+    leaflet.layers_control.custom_layers:
+        - src/leaflet_plugins/custom_layers/custom_layers.js
     knockout:
         production:
             - src/lib/vendor/knockout/knockout-3.2.0.js

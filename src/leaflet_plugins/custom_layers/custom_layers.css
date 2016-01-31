@@ -1,0 +1,40 @@
+.custom-layers-dialog-container {
+    position: absolute;
+    left: 50%;
+    width: 9cm;
+    margin-left: -5cm;
+    margin-top: 2cm;
+    background-color: white;
+    border-radius: 5px 5px 5px 5px;
+    box-shadow: 0 1px 5px rgba(0, 0, 0, 0.4);
+    padding: 3mm 3mm;
+    color: #333;
+}
+
+.custom-layers-dialog-container input, .custom-layers-dialog-container select {
+    padding: 0.5mm 5px;
+    margin: 1mm 1mm 1mm 0;
+    border: 1px solid #777;
+    border-radius: 3px;
+    border: 1px solid #aaa;
+    vertical-align: middle;
+
+}
+
+.custom-layers-dialog-container .button {
+    display: inline-block;
+    height: 26px;
+    border-radius: 4px 4px 4px 4px;
+    border: 1px solid #ccc;
+    cursor: pointer;
+    margin-right: 6px;
+    padding: 0 1em;
+    line-height: 26px;
+    font-weight: bold;
+    color: #333;
+}
+
+.custom-layers-dialog-container .button:hover {
+    background-color: #f4f4f4;
+}
+

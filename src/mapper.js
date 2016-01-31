@@ -8,6 +8,7 @@
 //@require lib/draw_utils.js
 //@require leaflet.buttons
 //@require leaflet.jnx
+//@require leaflet.layers_control.custom_layers
 
 (function(){
     "use strict";
