@@ -82,7 +82,7 @@
         onPanoramaChangePosition: function() {
             var pos = this.panorama.getPosition();
             if (pos) {
-                pos = L.latLng([pos.G, pos.K]);
+                pos = L.latLng([pos.lat(), pos.lng()]);
                 this.marker.setLatLng(pos);
                 if (!this._map.getBounds().contains(pos)) {
                     this._map.panTo(pos);
