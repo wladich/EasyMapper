@@ -23,7 +23,7 @@ window.layers.getBaseMaps = function getBaseMaps() {
         'Bing Sat': L.bingLayer(bingKey, {code: 'I'}),
         'marshruty.ru': L.tileLayer('http://maps.marshruty.ru/ml.ashx?x={x}&y={y}&z={z}&i=1&al=1',
                                       {code: 'M', maxNativeZoom: 18, noCors: true, scaleDependent: true}),
-        'Topomapper 1km': L.tileLayer('http://144.76.234.108//cgi-bin/ta/tilecache.py/1.0.0/topomapper_v2/{z}/{x}/{y}.jpg',
+        'Topomapper 1km': L.tileLayer('http://144.76.234.107//cgi-bin/ta/tilecache.py/1.0.0/topomapper_v2/{z}/{x}/{y}.jpg',
                                       {code: 'T', maxNativeZoom: 13, noCors: true}),
     };
 };
