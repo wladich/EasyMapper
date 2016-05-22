@@ -368,7 +368,9 @@
                 }
                 top = window.screenY;
                 height = window.innerHeight;
-                window.open(url, 'wikimapia-details', 'width=' + width + ', height=' + height + ', left=' + left + ', top=' + top)
+                var features = 'width=' + width + ',height=' + height + ',left=' + left + ',top=' + top;
+                features += ',resizable,scrollbars';
+                window.open(url, 'wikimapia-details', features)
                     .focus();
             }
         },
