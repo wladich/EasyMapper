@@ -184,7 +184,9 @@
         makeNodeMarker: function(nodeIndex) {
             var node = this.getLatLngs()[nodeIndex],
                 marker = L.marker(cloneLatLng(node), {
-                    icon: L.divIcon({className: 'line-editor-node-marker'}),
+                    icon: L.divIcon(
+                        {className: 'line-editor-node-marker-halo', 'html': '<div class="line-editor-node-marker"></div>'}
+                    ),
                     draggable: true,
                     zIndexOffset: this._nodeMarkersZOffset
                 });
