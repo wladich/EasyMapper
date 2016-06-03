@@ -226,7 +226,7 @@
 
 
     function parseYandexRulerUrl(s) {
-        var re = /maps\.yandex\..+[?&]rl=([^&]+)/;
+        var re = /yandex\..+[?&]rl=([^&]+)/;
         var m = re.exec(s);
         if (!m) {
             return null;
