@@ -71,6 +71,10 @@ provides:
         - src/leaflet_plugins/jnx/jnx_control.js
     binstream:
         - src/lib/binstream.js
+    leaflet.markercluster:
+        - src/lib/vendor/markercluster/leaflet.markercluster-src.js
+        - src/lib/vendor/markercluster/MarkerCluster.css
+        - src/lib/vendor/markercluster/MarkerCluster.Default.css
 depends:
     filesaver:
         - blob
@@ -80,4 +84,6 @@ depends:
     leaflet.buttons:
         - leaflet
     leaflet.bing:
+        - leaflet
+    leaflet.markercluster:
         - leaflet

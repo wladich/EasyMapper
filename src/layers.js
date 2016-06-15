@@ -5,6 +5,7 @@
 //@require leaflet_plugins/leaflet.wikimapia.js
 //@require leaflet_plugins/google-street-view/leaflet.google-street-view.js
 //@require leaflet.yandex
+//@require leaflet_plugins/leaflet.layer.westra/westraPasses.js
 window.layers = {};
 
 
@@ -52,7 +53,8 @@ window.layers.getOverlays = function getOverlays() {
                                    {code: 'R', tms: true, maxNativeZoom: 17}),
         "Soviet military grid": new L.SovietTopoGrid({code: 'Ng'}),
         "Wikimapia": new L.Wikimapia({code: 'W'}),
-        "Google Street View": new L.GoogleStreetView('street-view')
+        "Google Street View": new L.GoogleStreetView('street-view'),
+        "Mountain passes (Westra)": new L.WestraPasses('/westraPasses/', {code: 'Wp'})
     };
 };
 
