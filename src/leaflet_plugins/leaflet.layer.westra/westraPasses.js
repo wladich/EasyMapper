@@ -349,6 +349,7 @@
             onRemove: function() {
                 this._map.removeLayer(this.markers);
                 this._map.removeLayer(this.regions1);
+                this._map.removeLayer(this.regions2);
                 this._map.off('zoomend', this.setLayersVisibility, this);
                 this._map.off('zoomend', this.placeLabels, this);
                 this._map.off('moveend', this.placeLabels, this);
