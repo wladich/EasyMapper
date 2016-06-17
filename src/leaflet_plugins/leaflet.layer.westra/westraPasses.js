@@ -67,9 +67,9 @@
                 }
                 this.isLoading = true;
                 var xhr = new XMLHttpRequest();
+                xhr.open('GET', this.url);
                 xhr.responseType = 'json';
                 xhr.timeout = this.options.timeout;
-                xhr.open('GET', this.url);
                 var self = this;
                 xhr.onreadystatechange = function() {
                     if (xhr.readyState == 4) {
