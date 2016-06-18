@@ -150,6 +150,7 @@
                 L.setOptions(this, options);
 
                 this.markers = new L.TileLayer.Markers();
+                this.markers.on('markerclick', this.showPassDescription, this);
                 this.passLoader = L.Util.ajaxLoader(baseUrl + this.options.filePasses,
                     this._loadMarkers.bind(this),
                     {responseType: 'json', timeout: 30000}
@@ -206,7 +207,7 @@
                             lat: feature.geometry.coordinates[1],
                             lng: feature.geometry.coordinates[0]
                         },
-                        label: feature.properties.name ,
+                        label: feature.properties.name,
                         icon: iconFromBackground.bind(null, className),
                         tooltip: this._makeTooltip.bind(this)
                     };
@@ -270,7 +271,6 @@
                 }
             },
 
-
             onAdd: function(map) {
                 this._map = map;
                 this.setLayersVisibility();
@@ -285,6 +285,97 @@
                 this._map.removeLayer(this.regions2);
                 this._map.off('zoomend', this.setLayersVisibility, this);
                 this._map = null;
+            },
+
+            showPassDescription: function(e) {
+                if (!this._map) {
+                    return
+                }
+                var properties = e.marker,
+                    latLng = properties.latlng,
+                    url;
+                var description = ['<table class="pass-details">'];
+                description.push('<tr><td>');
+                description.push(properties.is_summit ? 'Вершина ' : 'Перевал ');
+                description.push('</td><td>');
+                description.push(properties.name || "без названия");
+                description.push('</td></tr>');
+                if (properties.altnames) {
+                    description.push('<tr><td>');
+                    description.push('Другие названия');
+                    description.push('</td><td>');
+                    description.push(properties.altnames);
+                    description.push('</td></tr>');
+                }
+                description.push('<tr><td>');
+                description.push('Категория');
+                description.push('</td><td>');
+                description.push(properties.grade || "неизвестная");
+                description.push('</td></tr><tr><td>');
+                description.push('Высота');
+                description.push('</td><td>');
+                description.push(properties.elevation ? (properties.elevation + " м") : "неизвестная");
+                description.push('</td></tr>');
+                if (!properties.is_summit) {
+                    description.push('<tr><td>');
+                    description.push('Соединяет');
+                    description.push('</td><td>');
+                    description.push(properties.connects || "неизвестнo");
+                    description.push('</td></tr>');
+                }
+                description.push('<tr><td>');
+                description.push('Характеристика склонов');
+                description.push('</td><td>');
+                description.push(properties.slopes || "неизвестная");
+                description.push('</td></tr>');
+
+                description.push('<tr><td>');
+                description.push('Координаты');
+                description.push('</td><td>');
+                description.push('<table class="westra-passes-description-coords">' +
+                    '<tr><td>Широта</td><td>Долгота</td></tr>' +
+                    '<tr><td>' + latLng.lat.toFixed(5) + '</td><td>' + latLng.lng.toFixed(5) + '</td>' +
+                    '<td><a title="Сохранить" onclick="westraSaveGpx(properties); return false">gpx</a></td>' +
+                    '<td><a title="Сохранить" onclick="westraSaveKml(properties); return false">kml</a></td></tr></table>'
+                );
+                description.push('</td></tr>');
+
+                description.push('<tr><td>');
+                description.push('Подтверждено модератором');
+                description.push('</td><td>');
+                description.push(properties.notconfirmed ? 'нет' : 'да');
+                description.push('</td></tr>');
+
+                description.push('<tr><td>');
+                description.push('Координаты подтверждены модератором');
+                description.push('</td><td>');
+                // description.push(feature.properties.notconfirmed ? 'нет' : 'да');
+                description.push('пока неизвестно');
+                description.push('</td></tr>');
+
+                if (properties.comments || properties.addinfo) {
+                    description.push('<tr><td>');
+                    description.push('Комментарии');
+                    description.push('</td><td>');
+                    if (properties.addinfo) {
+                        description.push('<p>' + properties.addinfo + '</p>');
+                    }
+                    if (properties.comments && properties.addinfo != properties.comments) {
+                        description.push('<p>' + feature.properties.comments + '</p>');
+                    }
+                    description.push('</td></tr>');
+                }
+                description.push('<tr><td>');
+                description.push('На сайте Вестры');
+                description.push('</td><td>');
+                url = 'http://westra.ru/passes/Passes/' + properties.id;
+                description.push(
+                    '<a href="' + url + '" onclick="westraOpenDetailsWindow(this.href, 650); return false;">' + url + '</a>'
+                );
+                description.push('</td></tr>');
+                description.push('</table>');
+
+                var popUp = this._map.openPopup(description.join(''), latLng, {maxWidth: 400});
             }
 
         }

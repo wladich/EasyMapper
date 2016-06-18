@@ -95,6 +95,7 @@
 .westra-pass-marker-nograde {
     background-image: url("pass-nograde.png");
 }
+
 .westra-pass-marker-1a.westra-pass-notconfirmed {
     background-image: url("pass-1a-notconfirmed.png");
 }
@@ -173,4 +174,29 @@
 
 .pass-details tr:last-child td {
     border: none;
+}
+
+.westra-passes-description-coords {
+    border-collapse: collapse;
+}
+
+.pass-details .westra-passes-description-coords td {
+    border: none;
+    padding: 0 0 0 1em;
+}
+
+.pass-details .westra-passes-description-coords td:first-child {
+    padding: 0;
+}
+
+.westra-passes-description-coords a {
+    color: #000;
+    border-bottom: 1px dashed #000;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.westra-passes-description-coords tr:first-child td {
+    color: #999;
+    font-size: 9px;
 }
