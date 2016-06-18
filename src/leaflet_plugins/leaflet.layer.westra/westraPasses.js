@@ -167,6 +167,20 @@
                 );
             },
 
+            _makeTooltip: function(properties) {
+                var toolTip = properties.grade || '';
+                if (toolTip && properties.elevation) {
+                    toolTip += ', '
+                }
+                toolTip += properties.elevation || '';
+                if (toolTip) {
+                    toolTip = ' (' + toolTip + ')';
+                }
+                toolTip = properties.name + toolTip;
+                toolTip = (properties.is_summit ? 'Вершина ' : 'Перевал ') + toolTip;
+                return toolTip;
+            },
+
             _loadMarkers: function(xhr) {
                 console.timeEnd('passes load and parse json');
                 console.time('make markers array');
@@ -175,6 +189,7 @@
                     feature, i, marker, className;
                 for (i = 0; i < features.length; i++) {
                     feature = features[i];
+
 
                     className = 'westra-pass-marker ';
                     if (feature.properties.is_summit) {
@@ -191,8 +206,9 @@
                             lat: feature.geometry.coordinates[1],
                             lng: feature.geometry.coordinates[0]
                         },
-                        label: 'Hello',
-                        icon: iconFromBackground.bind(null, className)
+                        label: feature.properties.name ,
+                        icon: iconFromBackground.bind(null, className),
+                        tooltip: this._makeTooltip.bind(this)
                     };
                     L.extend(marker, feature.properties);
                     markers.push(marker);
@@ -224,20 +240,26 @@
                 this.markers.setZIndex(z);
             },
 
-            setLayersVisibility: function() {
+            setLayersVisibility: function(e) {
                 if (!this._map) {
                     return;
                 }
-                if (this._map.getZoom() < 2) {
+                var newZoom;
+                if (e && e.zoom !== undefined) {
+                    newZoom = e.zoom;
+                } else {
+                    newZoom = this._map.getZoom();
+                }
+                if (newZoom < 2) {
                     this._map.removeLayer(this.markers);
                     this._map.removeLayer(this.regions1);
                     this._map.removeLayer(this.regions2);
-                } else if (this._map.getZoom() < 7) {
+                } else if (newZoom < 7) {
                     this._map.removeLayer(this.markers);
                     this._map.addLayer(this.regions1);
                     this._map.removeLayer(this.regions2);
                 }
-                else if (this._map.getZoom() < 11) {
+                else if (newZoom < 11) {
                     this._map.removeLayer(this.regions1);
                     this._map.addLayer(this.regions2);
                     this._map.removeLayer(this.markers);
@@ -246,191 +268,13 @@
                     this._map.removeLayer(this.regions1);
                     this._map.removeLayer(this.regions2);
                 }
-                // this.placeLabels();
             },
 
-            _createMarker: function(feature, latLng) {
-                var className = 'westra-pass-marker ';
-                var url;
-                if (feature.properties.is_summit) {
-                    className += 'westra-pass-marker-summit';
-                } else {
-                    className += 'westra-pass-marker-' + feature.properties.grade_eng;
-                }
-                if (feature.properties.notconfirmed) {
-                    className += ' westra-pass-notconfirmed';
-                }
-                var toolTip = feature.properties.grade || '';
-                if (toolTip && feature.properties.elevation) {
-                    toolTip += ', '
-                }
-                toolTip += feature.properties.elevation || '';
-                if (toolTip) {
-                    toolTip = ' (' + toolTip + ')';
-                }
-                toolTip = feature.properties.name + toolTip;
-                toolTip = (feature.properties.is_summit ? 'Вершина ' : 'Перевал ') + toolTip;
-                var icon = L.divIcon(
-                    {
-                        className: 'westra-pass-container',
-                        html: '<div class="' + className + '"></div>' +
-                        '<div class="westra-pass-label">' + feature.properties.name + '</div>' +
-                        '<div class="westra-pass-tooltip"><div>' + toolTip + '</div></div>'
-                    }
-                );
-                var marker = L.marker(latLng, {icon: icon});
-                var description = ['<table class="pass-details">'];
-                description.push('<tr><td>');
-                description.push(feature.properties.is_summit ? 'Вершина ' : 'Перевал ');
-                description.push('</td><td>');
-                description.push(feature.properties.name || "без названия");
-                description.push('</td></tr>');
-                if (feature.properties.altnames) {
-                    description.push('<tr><td>');
-                    description.push('Другие названия');
-                    description.push('</td><td>');
-                    description.push(feature.properties.altnames);
-                    description.push('</td></tr>');
-                }
-                description.push('<tr><td>');
-                description.push('Категория');
-                description.push('</td><td>');
-                description.push(feature.properties.grade || "неизвестная");
-                description.push('</td></tr><tr><td>');
-                description.push('Высота');
-                description.push('</td><td>');
-                description.push(feature.properties.elevation ? (feature.properties.elevation + " м") : "неизвестная");
-                description.push('</td></tr>');
-                if (!feature.properties.is_summit) {
-                    description.push('<tr><td>');
-                    description.push('Соединяет');
-                    description.push('</td><td>');
-                    description.push(feature.properties.connects || "неизвестнo");
-                    description.push('</td></tr>');
-                }
-                description.push('<tr><td>');
-                description.push('Характеристика склонов');
-                description.push('</td><td>');
-                description.push(feature.properties.slopes || "неизвестная");
-                description.push('</td></tr>');
-
-                description.push('<tr><td>');
-                description.push('Подтверждено модератором');
-                description.push('</td><td>');
-                description.push(feature.properties.notconfirmed ? 'нет' : 'да');
-                description.push('</td></tr>');
-
-                description.push('<tr><td>');
-                description.push('Координаты подтверждены модератором');
-                description.push('</td><td>');
-                // description.push(feature.properties.notconfirmed ? 'нет' : 'да');
-                description.push('пока неизвестно');
-                description.push('</td></tr>');
-
-                if (feature.properties.comments || feature.properties.addinfo) {
-                    description.push('<tr><td>');
-                    description.push('Комментарии');
-                    description.push('</td><td>');
-                    if (feature.properties.addinfo) {
-                        description.push('<p>' + feature.properties.addinfo + '</p>');
-                    }
-                    if (feature.properties.comments && feature.properties.addinfo != feature.properties.comments) {
-                        description.push('<p>' + feature.properties.comments + '</p>');
-                    }
-                    description.push('</td></tr>');
-                }
-                description.push('<tr><td>');
-                description.push('На сайте Вестры');
-                description.push('</td><td>');
-                url = 'http://westra.ru/passes/Passes/' + feature.properties.id;
-                description.push(
-                    '<a href="' + url + '" onclick="mapperOpenDetailsWindow(this.href,650); return false;">' + url + '</a>'
-                );
-                description.push('</td></tr>');
-                description.push('</table>');
-                marker.bindPopup(description.join(''), {maxWidth: 400});
-                return marker;
-            },
-
-            placeLabels: function() {
-                var yOffsets = [-7, -12, -17, -2, 3],
-                    xOffsets,
-                    markers = [],
-                    rectangles = [],
-                    marker, i, j, k,
-                    center, icon, w, h, label,
-                    minIntersectionSum, bestOffsetX, bestOffsetY, offsetX, offsetY, testRect, s;
-                for (k in this.markers._featureGroup._layers) {
-                    markers.push(this.markers._featureGroup._layers[k]);
-                }
-                for (i = 0; i < markers.length; i++) {
-                    marker = markers[i];
-                    center = this._map.project(marker.getLatLng());
-                    icon = marker._icon.getElementsByClassName('westra-pass-marker')[0];
-                    w = icon.offsetWidth;
-                    h = icon.offsetHeight;
-                    rectangles.push([center.x - w / 2, center.y - h / 2, center.x + w / 2, center.y + h / 2]);
-                }
-
-                function calcIntersectionSum(rect) {
-                    var intersectionSum = 0,
-                        j, left, top, right, bottom, rect2;
-                    for (j = 0; j < rectangles.length; j++) {
-                        rect2 = rectangles[j];
-                        left = Math.max(rect[0], rect2[0]);
-                        right = Math.min(rect[2], rect2[2]);
-                        top = Math.max(rect[1], rect2[1]);
-                        bottom = Math.min(rect[3], rect2[3]);
-                        if (top < bottom && left < right) {
-                            intersectionSum += ((right - left) * (bottom - top));
-                        }
-                    }
-                    return intersectionSum;
-                }
-
-                for (i = 0; i < markers.length; i++) {
-                    marker = markers[i];
-                    center = this._map.project(marker.getLatLng());
-                    label = marker._icon.getElementsByClassName('westra-pass-label')[0];
-                    w = label.offsetWidth;
-                    h = label.offsetHeight;
-                    xOffsets = [10, -8 - w];
-                    minIntersectionSum = 1e100;
-                    for (j = 0; j < 2; j++) {
-                        offsetX = xOffsets[j];
-                        for (k = 0; k < yOffsets.length; k++) {
-                            offsetY = yOffsets[k];
-                            testRect = [center.x + offsetX - 2, center.y + offsetY - 2,
-                                center.x + offsetX + w + 2, center.y + offsetY + h + 2];
-                            s = calcIntersectionSum(testRect);
-                            if (s < minIntersectionSum) {
-                                minIntersectionSum = s;
-                                bestOffsetX = offsetX;
-                                bestOffsetY = offsetY;
-                                if (s === 0) {
-                                    break;
-                                }
-                            }
-                        }
-                        if (s === 0) {
-                            break;
-                        }
-                    }
-                    label.style.left = bestOffsetX + 'px';
-                    label.style.top = bestOffsetY + 'px';
-                    rectangles.push([center.x + bestOffsetX, center.y + bestOffsetY,
-                        center.x + bestOffsetX + w, center.y + bestOffsetY + h]
-                    )
-                }
-            },
 
             onAdd: function(map) {
                 this._map = map;
                 this.setLayersVisibility();
                 map.on('zoomend', this.setLayersVisibility, this);
-                // map.on('zoomend', this.placeLabels, this);
-                // map.on('moveend', this.placeLabels, this);
-                // map.on('viewreset', this.placeLabels, this);
                 console.time('passes load and parse json');
                 this.passLoader.tryLoad();
             },
@@ -440,9 +284,6 @@
                 this._map.removeLayer(this.regions1);
                 this._map.removeLayer(this.regions2);
                 this._map.off('zoomend', this.setLayersVisibility, this);
-                // this._map.off('zoomend', this.placeLabels, this);
-                // this._map.off('moveend', this.placeLabels, this);
-                // this._map.off('viewreset', this.placeLabels, this);
                 this._map = null;
             }
 
