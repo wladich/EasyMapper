@@ -1,6 +1,6 @@
 //@require leaflet
-//@require fileutils
 //@require leaflet.markercluster
+//@require leaflet.layer.canvas.markers
 //@require westraPasses.css
 
 (function() {
@@ -16,6 +16,31 @@
             }
         }
     );
+
+    function cached(f) {
+        var cache = {};
+        return function(arg) {
+            if (!(arg in cache)) {
+                cache[arg] = f(arg);
+            }
+            return cache[arg];
+        }
+    }
+
+    function _iconFromBackground(className) {
+        var container = L.DomUtil.create('div', '', document.body),
+            el = L.DomUtil.create('div', className, container),
+            st = window.getComputedStyle(el),
+            url = st.backgroundImage.replace(/^url\("?/, '').replace(/"?\)$/, ''),
+            icon;
+        container.style.position = 'absolute'
+        icon = {'url': url, 'center': [-el.offsetLeft, -el.offsetTop]};
+        document.body.removeChild(container);
+        container.removeChild(el);
+        return icon;
+    }
+
+    var iconFromBackground = cached(_iconFromBackground);
 
     window.mapperOpenDetailsWindow = function(url, width) {
         var left, top, height,
@@ -42,41 +67,30 @@
         // to open single instance replace null with some string
         window.open(url, null, features)
             .focus();
-    }
+    };
 
-    L.GeoJSONAjax = L.GeoJSON.extend({
-            options: {
-                requestTimeout: 10000,
-            },
-
-            initialize: function(url, options) {
-                L.GeoJSON.prototype.initialize.call(this, null, options);
+    L.Util.AjaxLoader = L.Class.extend({
+            initialize: function(url, callback, xhrOptions) {
                 this.isLoading = false;
                 this.hasLoaded = false;
                 this.url = url;
+                this.callback = callback;
+                this.options = xhrOptions;
             },
 
-            onAdd: function(map) {
-                L.GeoJSON.prototype.onAdd.call(this, map);
-                this.loadData();
-            },
-
-            loadData: function() {
+            tryLoad: function() {
                 if (this.isLoading || this.hasLoaded) {
                     return;
                 }
                 this.isLoading = true;
                 var xhr = new XMLHttpRequest();
                 xhr.open('GET', this.url);
-                xhr.responseType = 'json';
-                xhr.timeout = this.options.timeout;
+                L.extend(xhr, this.options);
                 var self = this;
                 xhr.onreadystatechange = function() {
                     if (xhr.readyState == 4) {
                         if (xhr.status == 200 && xhr.response) {
-                            self.addData(xhr.response);
-                            self.fireEvent('loaded');
-
+                            self.callback(xhr);
                             self.hasLoaded = true;
                         } else {
                             console.log('Failed getting data for geojson layer from url', self.url)
@@ -90,6 +104,41 @@
         }
     );
 
+    L.Util.ajaxLoader = function(url, callback, options) {
+        return new L.Util.AjaxLoader(url, callback, options);
+    };
+
+
+    L.GeoJSONAjax = L.GeoJSON.extend({
+            options: {
+                requestTimeout: 10000,
+            },
+
+            initialize: function(url, options) {
+                L.GeoJSON.prototype.initialize.call(this, null, options);
+                this.url = url;
+                this.loader = L.Util.ajaxLoader(url, this.onDataLoaded.bind(this), {
+                        responseType: 'json', timeout: this.options.requestTimeout
+                    }
+                );
+            },
+
+            onAdd: function(map) {
+                L.GeoJSON.prototype.onAdd.call(this, map);
+                this.loader.tryLoad();
+            },
+
+            loadData: function() {
+                this.loader.tryLoad();
+            },
+
+            onDataLoaded: function(xhr) {
+                this.addData(xhr.response);
+                this.fireEvent('loaded');
+            }
+        }
+    );
+
     var westraPases = L.Class.extend({
             options: {
                 filePasses: 'westra_passes.json',
@@ -99,13 +148,13 @@
 
             initialize: function(baseUrl, options) {
                 L.setOptions(this, options);
-                this.markers = new MyMarkerClusterGroup({disableClusteringAtZoom: 2});
-                this.geojson = new L.GeoJSONAjax(baseUrl + this.options.filePasses, {pointToLayer: this._createMarker});
-                this.geojson.on('loaded', function() {
-                        this.markers.addLayer(this.geojson);
-                        this.placeLabels();
-                    }.bind(this)
+
+                this.markers = new L.TileLayer.Markers();
+                this.passLoader = L.Util.ajaxLoader(baseUrl + this.options.filePasses,
+                    this._loadMarkers.bind(this),
+                    {responseType: 'json', timeout: 30000}
                 );
+
                 this.regions1 = new L.GeoJSONAjax(baseUrl + this.options.fileRegions1, {
                         className: 'westra-region-polygon',
                         onEachFeature: this._setRegionLabel.bind(this, 'regions1')
@@ -116,7 +165,42 @@
                         onEachFeature: this._setRegionLabel.bind(this, 'regions2')
                     }
                 );
+            },
 
+            _loadMarkers: function(xhr) {
+                console.timeEnd('passes load and parse json');
+                console.time('make markers array');
+                var markers = [],
+                    features = xhr.response.features,
+                    feature, i, marker, className;
+                for (i = 0; i < features.length; i++) {
+                    feature = features[i];
+
+                    className = 'westra-pass-marker ';
+                    if (feature.properties.is_summit) {
+                        className += 'westra-pass-marker-summit';
+                    } else {
+                        className += 'westra-pass-marker-' + feature.properties.grade_eng;
+                    }
+                    if (feature.properties.notconfirmed) {
+                        className += ' westra-pass-notconfirmed';
+                    }
+
+                    marker = {
+                        latlng: {
+                            lat: feature.geometry.coordinates[1],
+                            lng: feature.geometry.coordinates[0]
+                        },
+                        label: 'Hello',
+                        icon: iconFromBackground.bind(null, className)
+                    };
+                    L.extend(marker, feature.properties);
+                    markers.push(marker);
+                }
+                console.timeEnd('make markers array');
+                console.time('build tree');
+                this.markers.addMarkers(markers);
+                console.timeEnd('build tree');
             },
 
             _setRegionLabel: function(layerName, feature, layer) {
@@ -134,6 +218,10 @@
 
                 layer.on('click', zoomToRegion, this);
                 labelMarker.on('click', zoomToRegion, this);
+            },
+
+            setZIndex: function(z) {
+                this.markers.setZIndex(z);
             },
 
             setLayersVisibility: function() {
@@ -158,7 +246,7 @@
                     this._map.removeLayer(this.regions1);
                     this._map.removeLayer(this.regions2);
                 }
-                this.placeLabels();
+                // this.placeLabels();
             },
 
             _createMarker: function(feature, latLng) {
@@ -340,10 +428,11 @@
                 this._map = map;
                 this.setLayersVisibility();
                 map.on('zoomend', this.setLayersVisibility, this);
-                map.on('zoomend', this.placeLabels, this);
-                map.on('moveend', this.placeLabels, this);
-                map.on('viewreset', this.placeLabels, this);
-                this.geojson.loadData();
+                // map.on('zoomend', this.placeLabels, this);
+                // map.on('moveend', this.placeLabels, this);
+                // map.on('viewreset', this.placeLabels, this);
+                console.time('passes load and parse json');
+                this.passLoader.tryLoad();
             },
 
             onRemove: function() {
@@ -351,9 +440,9 @@
                 this._map.removeLayer(this.regions1);
                 this._map.removeLayer(this.regions2);
                 this._map.off('zoomend', this.setLayersVisibility, this);
-                this._map.off('zoomend', this.placeLabels, this);
-                this._map.off('moveend', this.placeLabels, this);
-                this._map.off('viewreset', this.placeLabels, this);
+                // this._map.off('zoomend', this.placeLabels, this);
+                // this._map.off('moveend', this.placeLabels, this);
+                // this._map.off('viewreset', this.placeLabels, this);
                 this._map = null;
             }
 
