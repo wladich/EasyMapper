@@ -112,7 +112,7 @@
 
     L.GeoJSONAjax = L.GeoJSON.extend({
             options: {
-                requestTimeout: 10000,
+                requestTimeout: 10000
             },
 
             initialize: function(url, options) {
@@ -151,7 +151,7 @@
                 L.setOptions(this, options);
 
                 this.markers = new L.TileLayer.Markers();
-                this.markers.on('markerclick', this.showPassDescription, this);
+                this.markers.on('markerclick', this.showPassDescription.bind(this));
                 this.passLoader = L.Util.ajaxLoader(baseUrl + this.options.filePasses,
                     this._loadMarkers.bind(this),
                     {responseType: 'json', timeout: 30000}
