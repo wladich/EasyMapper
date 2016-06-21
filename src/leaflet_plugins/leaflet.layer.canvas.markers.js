@@ -2,8 +2,6 @@
 //@require leaflet
 //@require leaflet.layer.canvas.markers.css
 
-//TODO: popup как из маркер
-//TODO: проверить структуру событий
 
 (function() {
     'use strict';
@@ -99,54 +97,6 @@
                 return [bestX, bestY];
             },
 
-            /*
-            drawIcon: function(ctx, tileOrigin, p, icon, marker) {
-                var img = this._images[icon.url],
-                    x = p.x - icon.center[0],
-                    y = p.y - icon.center[1],
-                    markerId;
-                x = Math.round(x);
-                y = Math.round(y);
-                ctx.drawImage(img, x - tileOrigin.x, y - tileOrigin.y);
-                markerId = L.stamp(marker);
-                if (!(markerId in this._markerHasRegion)) {
-                    this._regions.insert([x, y, x + img.width, y + img.height, marker]);
-                    this._markerHasRegion[markerId] = true;
-                }
-                return {
-                    iconCenter: [x + img.width / 2, y + img.height / 2],
-                    iconSize: [img.width, img.height]
-                }
-            },
-            */
-
-
-            /*
-            drawLabel: function(ctx, tileOrigin, iconCenter, iconSize, marker) {
-                var textWidth, markerId, labelPosition, x, y;
-                markerId = L.stamp(marker);
-                if (!marker.label) {
-                    return;
-                }
-                textWidth = ctx.measureText(marker.label).width;
-                if (markerId in this._labelPositions) {
-                    labelPosition = this._labelPositions[markerId];
-                    x = labelPosition[0];
-                    y = labelPosition[1];
-                } else {
-                    labelPosition = this.findLabelPosition(iconCenter, iconSize, textWidth, 10);
-                    x = labelPosition[0];
-                    y = labelPosition[1];
-                    this._labelPositions[markerId] = labelPosition;
-                    this._regions.insert([x, y, x + textWidth, y + 10, marker]);
-                }
-                ctx.shadowBlur = 2;
-                ctx.strokeText(marker.label, x - tileOrigin.x, y - tileOrigin.y);
-                ctx.shadowBlur = 0;
-                ctx.fillText(marker.label, x - tileOrigin.x, y - tileOrigin.y);
-            },
-            */
-
             _iconPreloadFinished: function() {
                 var url;
                 for (url in this._images) {
@@ -187,14 +137,12 @@
             },
 
             drawTile: function(canvas, tilePoint, zoom) {
-                console.time('draw tile ' + tilePoint.x + ',' + tilePoint.y);
                 var tileSize = this.options.tileSize,
                     tileN = tilePoint.y * tileSize,
                     tileW = tilePoint.x * tileSize,
                     tileS = tileN + tileSize,
                     tileE = tileW + tileSize,
 
-                    // tileBbounds = L.latLngBounds(this._map.unproject(tileSE, zoom), this._map.unproject(tileNW, zoom)),
                     iconsHorPad = 520,
                     iconsVertPad = 50,
                     labelsHorPad = 256,
@@ -308,51 +256,10 @@
                             ctx.drawImage(job.img, x, y);
                         }
                     }
-
-
-                    /*
-                    ctx = canvas.getContext('2d');
-                    for (i = 0; i < markers.length; i++) {
-                        marker = markers[i];
-                        p = self._map.project(marker.latlng, zoom);
-                        icon = marker.icon;
-                        if (typeof icon === 'function') {
-                            icon = icon(marker);
-                        }
-                        res = self.drawIcon(ctx, tileOrigin, p, icon, marker);
-                        labelJobs.push([res.iconCenter, res.iconSize, marker]);
-                    }
-                    ctx.font = "bold 10px Verdana, Arial, sans-serif";
-                    ctx.textBaseline = 'top';
-                    ctx.shadowColor = '#fff';
-                    ctx.strokeStyle = '#fff';
-                    ctx.lineWidth = 1;
-                    ctx.fillStyle = '#000';
-                    for (i = 0; i < labelJobs.length; i++) {
-                        marker = markers[i];
-                        self.drawLabel(ctx, tileOrigin, labelJobs[i][0], labelJobs[i][1], labelJobs[i][2]);
-                    }
-                    */
-                        self.tileDrawn(canvas);
-                        console.timeEnd('draw tile ' + tilePoint.x + ',' + tilePoint.y);
-                    }
-                );
+                    self.tileDrawn(canvas);
+                });
                 return this;
             },
-
-            // _getTileProjectedOrigin: function(tilePoint) {
-            //     return tilePoint.multiplyBy(this.options.tileSize);
-            // },
-
-            /*
-            _getTileBounds: function(tilePoint, zoom) {
-                var size = this.options.tileSize,
-                    nw = tilePoint.multiplyBy(size),
-                    se = nw.add([size, size]),
-                    bounds = L.latLngBounds(this._map.unproject(se, zoom), this._map.unproject(nw, zoom));
-                return bounds;
-            },
-            */
 
             resetLabels: function() {
                 console.log('RESET LABELS')
