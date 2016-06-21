@@ -75,6 +75,10 @@ provides:
         - src/lib/vendor/markercluster/leaflet.markercluster-src.js
         - src/lib/vendor/markercluster/MarkerCluster.css
         - src/lib/vendor/markercluster/MarkerCluster.Default.css
+    rbush:
+        - src/lib/vendor/rbush.js
+    leaflet.layer.canvas.markers:
+        - src/leaflet_plugins/leaflet.layer.canvas.markers.js
 depends:
     filesaver:
         - blob

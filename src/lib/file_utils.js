@@ -157,6 +157,10 @@ var fileutils = (function() {
         return unescape(encodeURIComponent(s));
     }
 
+    function escapeHtml(s) {
+        return s.replace('<', '&lt;').replace('>', '&gt;').replace('"', '&quot;');
+
+    }
     return {
         get: get,
         arrayBufferToString: arrayBufferToString,
@@ -164,6 +168,7 @@ var fileutils = (function() {
         openFiles: openFiles,
         readFiles: readFiles,
         decodeUTF8: decodeUTF8,
-        encodeUTF8: encodeUTF8
+        encodeUTF8: encodeUTF8,
+        escapeHtml: escapeHtml
     };
 })();
