@@ -270,9 +270,6 @@
                                 self._labelPositions[markerId] = p;
                                 x = p[0];
                                 y = p[1];
-                                if (!x || !y || !imgW || !imgH) {
-                                    debugger
-                                }
                                 self._regions.insert([x, y, x + textWidth, y + 10, job.marker, true]);
                             }
                         } else {
