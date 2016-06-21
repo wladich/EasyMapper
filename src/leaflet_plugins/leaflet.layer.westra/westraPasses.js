@@ -6,17 +6,6 @@
 
 (function() {
     "use strict";
-    var MyMarkerClusterGroup = L.MarkerClusterGroup.extend({
-            _getExpandedVisibleBounds: function() {
-                if (!this.options.removeOutsideVisibleBounds) {
-                    return this._mapBoundsInfinite;
-                } else if (L.Browser.mobile) {
-                    return this._checkBoundsMaxLat(this._map.getBounds());
-                }
-                return this._checkBoundsMaxLat(this._map.getBounds().pad(0.5)); // Padding expands the bounds by its own dimensions but scaled with the given factor.
-            }
-        }
-    );
 
     function cached(f) {
         var cache = {};
@@ -100,7 +89,6 @@
                     }
                 };
                 xhr.send();
-
             }
         }
     );
@@ -179,11 +167,56 @@
                 if (toolTip) {
                     toolTip = ' (' + toolTip + ')';
                 }
-                toolTip = properties.name + toolTip;
+                toolTip = (properties.name || '') + toolTip;
                 toolTip = (properties.is_summit ? 'Вершина ' : 'Перевал ') + toolTip;
                 return toolTip;
             },
-        
+
+            passToGpx: function(marker) {
+                var gpx = [],
+                    label = marker.tooltip;
+                if (typeof label === 'function') {
+                    label = label(marker);
+                }
+                label = fileutils.escapeHtml(label);
+                label = fileutils.encodeUTF8(label);
+                gpx.push('<?xml version="1.0" encoding="UTF-8" standalone="no" ?>');
+                gpx.push('<gpx xmlns="http://www.topografix.com/GPX/1/1" creator="http://nakarte.tk" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">');
+                gpx.push('<wpt lat="' + marker.latlng.lat.toFixed(6) + '" lon="' + marker.latlng.lng.toFixed(6) + '">');
+                gpx.push('<name>');
+                gpx.push(label);
+                gpx.push('</name>');
+                gpx.push('</wpt>');
+                gpx.push('</gpx>');
+                gpx = gpx.join('');
+                fileutils.saveStringToFile(marker.label + '.gpx', 'application/gpx+xml', gpx);
+            },
+
+            passToKml: function(marker) {
+                var kml = [],
+                    label = marker.tooltip;
+                if (typeof label === 'function') {
+                    label = label(marker);
+                }
+                label = fileutils.escapeHtml(label);
+                label = fileutils.encodeUTF8(label);
+                kml.push('<?xml version="1.0" encoding="UTF-8"?>');
+                kml.push('<kml xmlns="http://www.opengis.net/kml/2.2">');
+                kml.push('<Placemark>');
+                kml.push('<name>');
+                kml.push(label);
+                kml.push('</name>');
+                kml.push('<Point>');
+                kml.push('<coordinates>');
+                kml.push(marker.latlng.lng.toFixed(6) + ',' + marker.latlng.lat.toFixed(6) + ',0');
+                kml.push('</coordinates>');
+                kml.push('</Point>');
+                kml.push('</Placemark>');
+                kml.push('</kml>');
+                kml = kml.join('');
+                fileutils.saveStringToFile(marker.label + '.kml', 'application/vnd.google-earth.kml+xml', kml);
+            },
+
             _makeIcon: function(marker) {
                 var className;
                 className = 'westra-pass-marker ';
@@ -199,8 +232,6 @@
             },
 
             _loadMarkers: function(xhr) {
-                console.timeEnd('passes load and parse json');
-                console.time('make markers array');
                 var markers = [],
                     features = xhr.response.features,
                     feature, i, marker, className;
@@ -214,17 +245,14 @@
                             lat: feature.geometry.coordinates[1],
                             lng: feature.geometry.coordinates[0]
                         },
-                        label: feature.properties.name,
+                        label: feature.properties.name || "Нет названия",
                         icon: this._makeIcon,
                         tooltip: this._makeTooltip.bind(this),
                         properties: feature.properties
                     };
                     markers.push(marker);
                 }
-                console.timeEnd('make markers array');
-                console.time('build tree');
                 this.markers.addMarkers(markers);
-                console.timeEnd('build tree');
             },
 
             _setRegionLabel: function(layerName, feature, layer) {
@@ -282,7 +310,6 @@
                 this._map = map;
                 this.setLayersVisibility();
                 map.on('zoomend', this.setLayersVisibility, this);
-                console.time('passes load and parse json');
                 this.passLoader.tryLoad();
             },
 
@@ -342,8 +369,8 @@
                 description.push('<table class="westra-passes-description-coords">' +
                     '<tr><td>Широта</td><td>Долгота</td></tr>' +
                     '<tr><td>' + latLng.lat.toFixed(5) + '</td><td>' + latLng.lng.toFixed(5) + '</td>' +
-                    '<td><a title="Сохранить" onclick="westraSaveGpx(properties); return false">gpx</a></td>' +
-                    '<td><a title="Сохранить" onclick="westraSaveKml(properties); return false">kml</a></td></tr></table>'
+                    '<td><a id="westra-pass-gpx" title="Сохранить">gpx</a></td>' +
+                    '<td><a id="westra-pass-kml" title="Сохранить">kml</a></td></tr></table>'
                 );
                 description.push('</td></tr>');
 
@@ -377,14 +404,24 @@
                 description.push('</td><td>');
                 url = 'http://westra.ru/passes/Passes/' + properties.id;
                 description.push(
-                    '<a href="' + url + '" onclick="mapperOpenDetailsWindow(this.href, 650); return false;">' + url + '</a>'
+                    '<a id="westra-pass-link" href="' + url + '">' + url + '</a>'
                 );
                 description.push('</td></tr>');
                 description.push('</table>');
-
                 var popUp = this._map.openPopup(description.join(''), latLng, {maxWidth: 400});
+                document.getElementById('westra-pass-link').onclick = function() {
+                    mapperOpenDetailsWindow(url, 650);
+                    return false;
+                };
+                document.getElementById('westra-pass-gpx').onclick = function() {
+                    this.passToGpx(e.marker);
+                    return false;
+                }.bind(this);
+                document.getElementById('westra-pass-kml').onclick = function() {
+                    this.passToKml(e.marker);
+                    return false;
+                }.bind(this);
             }
-
         }
     );
 
