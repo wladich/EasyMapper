@@ -3,6 +3,7 @@
 //@require leaflet.layer.canvas.markers
 //@require westraPasses.css
 
+
 (function() {
     "use strict";
     var MyMarkerClusterGroup = L.MarkerClusterGroup.extend({
@@ -33,7 +34,7 @@
             st = window.getComputedStyle(el),
             url = st.backgroundImage.replace(/^url\("?/, '').replace(/"?\)$/, ''),
             icon;
-        container.style.position = 'absolute'
+        container.style.position = 'absolute';
         icon = {'url': url, 'center': [-el.offsetLeft, -el.offsetTop]};
         document.body.removeChild(container);
         container.removeChild(el);
@@ -168,8 +169,9 @@
                 );
             },
 
-            _makeTooltip: function(properties) {
-                var toolTip = properties.grade || '';
+            _makeTooltip: function(marker) {
+                var properties = marker.properties,
+                    toolTip = properties.grade || '';
                 if (toolTip && properties.elevation) {
                     toolTip += ', '
                 }
@@ -180,6 +182,20 @@
                 toolTip = properties.name + toolTip;
                 toolTip = (properties.is_summit ? 'Вершина ' : 'Перевал ') + toolTip;
                 return toolTip;
+            },
+        
+            _makeIcon: function(marker) {
+                var className;
+                className = 'westra-pass-marker ';
+                if (marker.properties.is_summit) {
+                    className += 'westra-pass-marker-summit';
+                } else {
+                    className += 'westra-pass-marker-' + marker.properties.grade_eng;
+                }
+                if (marker.properties.notconfirmed) {
+                    className += ' westra-pass-notconfirmed';
+                }
+                return iconFromBackground(className);
             },
 
             _loadMarkers: function(xhr) {
@@ -192,15 +208,6 @@
                     feature = features[i];
 
 
-                    className = 'westra-pass-marker ';
-                    if (feature.properties.is_summit) {
-                        className += 'westra-pass-marker-summit';
-                    } else {
-                        className += 'westra-pass-marker-' + feature.properties.grade_eng;
-                    }
-                    if (feature.properties.notconfirmed) {
-                        className += ' westra-pass-notconfirmed';
-                    }
 
                     marker = {
                         latlng: {
@@ -208,10 +215,10 @@
                             lng: feature.geometry.coordinates[0]
                         },
                         label: feature.properties.name,
-                        icon: iconFromBackground.bind(null, className),
-                        tooltip: this._makeTooltip.bind(this)
+                        icon: this._makeIcon,
+                        tooltip: this._makeTooltip.bind(this),
+                        properties: feature.properties
                     };
-                    L.extend(marker, feature.properties);
                     markers.push(marker);
                 }
                 console.timeEnd('make markers array');
@@ -291,8 +298,8 @@
                 if (!this._map) {
                     return
                 }
-                var properties = e.marker,
-                    latLng = properties.latlng,
+                var properties = e.marker.properties,
+                    latLng = e.marker.latlng,
                     url;
                 var description = ['<table class="pass-details">'];
                 description.push('<tr><td>');
@@ -361,7 +368,7 @@
                         description.push('<p>' + properties.addinfo + '</p>');
                     }
                     if (properties.comments && properties.addinfo != properties.comments) {
-                        description.push('<p>' + feature.properties.comments + '</p>');
+                        description.push('<p>' + properties.comments + '</p>');
                     }
                     description.push('</td></tr>');
                 }
@@ -370,7 +377,7 @@
                 description.push('</td><td>');
                 url = 'http://westra.ru/passes/Passes/' + properties.id;
                 description.push(
-                    '<a href="' + url + '" onclick="westraOpenDetailsWindow(this.href, 650); return false;">' + url + '</a>'
+                    '<a href="' + url + '" onclick="mapperOpenDetailsWindow(this.href, 650); return false;">' + url + '</a>'
                 );
                 description.push('</td></tr>');
                 description.push('</table>');
