@@ -225,7 +225,7 @@
                 } else {
                     className += 'westra-pass-marker-' + marker.properties.grade_eng;
                 }
-                if (marker.properties.notconfirmed) {
+                if (marker.properties.notconfirmed || !marker.properties.name) {
                     className += ' westra-pass-notconfirmed';
                 }
                 return iconFromBackground(className);
