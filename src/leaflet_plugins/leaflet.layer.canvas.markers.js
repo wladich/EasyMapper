@@ -171,10 +171,14 @@
                 }
                 var self = this;
                 this.preloadIcons(iconUrls, function() {
-                    var markerId, i, regionsInTile, isLabel, job, x, y, imgW, imgH,
-                        label, textWidth, textHeight, ctx, p;
                     if (!self._map) {
                         return;
+                    }
+                    var markerId, i, regionsInTile, isLabel, job, x, y, imgW, imgH,
+                        label, textWidth, textHeight, ctx, p;
+                    if (self._zoom != zoom) {
+                        self._zoom = zoom;
+                        self.resetLabels();
                     }
                     ctx = canvas.getContext('2d');
                     ctx.font = "bold 10px Verdana, Arial, sans-serif";
@@ -261,6 +265,7 @@
             },
 
             resetLabels: function() {
+                console.log('RESET LABELS');
                 this._iconPositions = {};
                 this._labelPositions = {};
                 this._regions.clear();
@@ -334,11 +339,7 @@
             },
 
             onAdd: function(map) {
-                if (this._lastZoom !== map.getZoom()) {
-                    this.resetLabels();
-                }
                 L.TileLayer.Canvas.prototype.onAdd.call(this, map);
-                map.on('viewreset', this.resetLabels, this);
                 map.on('mousemove', this.onMouseMove, this);
                 map.on('mouseout', this.onMouseOut, this);
                 map.on('click', this.onClick, this);
@@ -346,7 +347,6 @@
             },
 
             onRemove: function(map) {
-                this._map.off('viewreset', this.resetLabels, this);
                 this._map.off('mousemove', this.onMouseMove, this);
                 this._map.off('mouseout', this.onMouseOut, this);
                 this._map.off('click', this.onClick, this);
@@ -354,7 +354,6 @@
                     this._hoverMarker = null;
                     this.fire('markerleave', {marker: this._hoverMarker})
                 }
-                this._lastZoom = this._map.getZoom();
                 this._map.getPanes().markerPane.removeChild(this.toolTip);
                 L.TileLayer.Canvas.prototype.onRemove.call(this, map);
             }
