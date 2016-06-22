@@ -230,11 +230,11 @@
 
                     regionsInTile = self._regions.search([tileW, tileN, tileE, tileS]);
                     for (i = 0; i < regionsInTile.length; i++) {
-                        marker = regionsInTile[i][4];
                         isLabel = regionsInTile[i][5];
-                        markerId = L.stamp(marker);
-                        job = markerJobs[markerId];
                         if (isLabel) {
+                            marker = regionsInTile[i][4];
+                            markerId = L.stamp(marker);
+                            job = markerJobs[markerId];
                             p = self._labelPositions[markerId];
                             x = p[0] - tileW;
                             y = p[1] - tileN;
@@ -245,14 +245,17 @@
                             ctx.fillStyle = '#000';
                             ctx.lineWidth = 1;
                             ctx.shadowBlur = 2;
-
-                            ctx.strokeText(job.label, x , y);
+                            ctx.strokeText(job.label, x, y);
                             ctx.shadowBlur = 0;
                             ctx.fillText(job.label, x, y);
-                        } else {
-                            if (!job) {
-                                continue
-                            }
+                        }
+                    }
+                    for (i = 0; i < regionsInTile.length; i++) {
+                        isLabel = regionsInTile[i][5];
+                        if (!isLabel) {
+                            marker = regionsInTile[i][4];
+                            markerId = L.stamp(marker);
+                            job = markerJobs[markerId];
                             p = self._iconPositions[markerId];
                             x = p[0] - tileW;
                             y = p[1] - tileN;
