@@ -245,7 +245,7 @@
                             lat: feature.geometry.coordinates[1],
                             lng: feature.geometry.coordinates[0]
                         },
-                        label: feature.properties.name || "Нет названия",
+                        label: feature.properties.name || "Название неизвестно",
                         icon: this._makeIcon,
                         tooltip: this._makeTooltip.bind(this),
                         properties: feature.properties
