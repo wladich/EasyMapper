@@ -115,6 +115,13 @@
             }, this);
             this.printPagesControl.on('pdfstart', this.beforePdfBuild, this);
             this.updateJnxLayer();
+            //FIXME: remove after migratirng to leaflet 1.0
+            L.DomEvent.on(document, 'keydown', function(e) {
+                var key = e.keyCode;
+                if (key === 27) {
+                    map.closePopup();
+                }
+            })
         }
 
     });
