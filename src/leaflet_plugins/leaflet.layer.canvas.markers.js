@@ -127,7 +127,6 @@
                                 self._processTilesQueue();
                             }
                         };
-                        console.log('preloading ', url);
                         img.src = url;
                     }
                 }
@@ -262,7 +261,6 @@
             },
 
             resetLabels: function() {
-                console.log('RESET LABELS')
                 this._iconPositions = {};
                 this._labelPositions = {};
                 this._regions.clear();
