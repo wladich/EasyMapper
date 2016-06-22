@@ -54,7 +54,7 @@ window.layers.getOverlays = function getOverlays() {
         "Soviet military grid": new L.SovietTopoGrid({code: 'Ng'}),
         "Wikimapia": new L.Wikimapia({code: 'W'}),
         "Google Street View": new L.GoogleStreetView('street-view'),
-        "Mountain passes (Westra)": new L.WestraPasses('/westraPasses/')
+        "Mountain passes (Westra)": new L.WestraPasses('/westraPasses/', {code: 'Wp'})
     };
 };
 
