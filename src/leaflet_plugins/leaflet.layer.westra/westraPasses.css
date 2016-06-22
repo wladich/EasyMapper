@@ -89,7 +89,7 @@
 }
 
 .westra-pass-marker-unknown {
-    background-image: url("pass-unknown.png");
+    background-image: url("pass-unknown-notconfirmed.png");
 }
 
 .westra-pass-marker-nograde {
