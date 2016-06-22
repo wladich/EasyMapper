@@ -23,6 +23,8 @@
                 async: true
             },
 
+            getTilesInfo: undefined,
+
             initialize: function(markers) {
                 this.rtree = rbush(9, ['.latlng.lng', '.latlng.lat', '.latlng.lng', '.latlng.lat']);
                 this._regions = rbush();
