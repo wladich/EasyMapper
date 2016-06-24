@@ -176,6 +176,7 @@
                 return;
             }
             var newZoom;
+            var zoomFinished = e ? (e.type != 'zoomanim') : true;
             if (e && e.zoom !== undefined) {
                 newZoom = e.zoom;
             } else {
@@ -195,7 +196,9 @@
                 this._map.addLayer(this.regions2);
                 this._map.removeLayer(this.markers);
             } else {
-                this._map.addLayer(this.markers);
+                if (zoomFinished) {
+                    this._map.addLayer(this.markers);
+                }
                 this._map.removeLayer(this.regions1);
                 this._map.removeLayer(this.regions2);
             }
@@ -208,6 +211,7 @@
             this.markers.loadData();
             this.setLayersVisibility();
             map.on('zoomend', this.setLayersVisibility, this);
+            map.on('zoomanim', this.setLayersVisibility, this);
         },
 
         onRemove: function() {
@@ -215,6 +219,7 @@
             this._map.removeLayer(this.regions1);
             this._map.removeLayer(this.regions2);
             this._map.off('zoomend', this.setLayersVisibility, this);
+            this._map.off('zoomanim', this.setLayersVisibility, this);
             this._map = null;
         },
 
