@@ -234,6 +234,7 @@
                     for (i = 0; i < regionsInTile.length; i++) {
                         isLabel = regionsInTile[i][5];
                         if (isLabel) {
+                            //TODO: set font name ant size in options
                             marker = regionsInTile[i][4];
                             markerId = L.stamp(marker);
                             job = markerJobs[markerId];
@@ -241,15 +242,15 @@
                             x = p[0] - tileW;
                             y = p[1] - tileN;
                             ctx.font = "bold 10px Verdana, Arial, sans-serif";
-                            ctx.textBaseline = 'top';
+                            ctx.textBaseline = 'bottom';
                             ctx.shadowColor = '#fff';
                             ctx.strokeStyle = '#fff';
                             ctx.fillStyle = '#000';
                             ctx.lineWidth = 1;
                             ctx.shadowBlur = 2;
-                            ctx.strokeText(job.label, x, y);
+                            ctx.strokeText(job.label, x, y + 10);
                             ctx.shadowBlur = 0;
-                            ctx.fillText(job.label, x, y);
+                            ctx.fillText(job.label, x, y + 10);
                         }
                     }
                     for (i = 0; i < regionsInTile.length; i++) {
