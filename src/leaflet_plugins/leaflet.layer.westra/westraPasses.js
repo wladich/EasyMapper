@@ -275,7 +275,7 @@
                 if (toolTip) {
                     toolTip = ' (' + toolTip + ')';
                 }
-                toolTip = (properties.name || '') + toolTip;
+                toolTip = (properties.name || 'без названия') + toolTip;
                 toolTip = (properties.is_summit ? 'Вершина ' : 'Перевал ') + toolTip;
                 return toolTip;
             },
@@ -297,7 +297,8 @@
                 gpx.push('</wpt>');
                 gpx.push('</gpx>');
                 gpx = gpx.join('');
-                fileutils.saveStringToFile(marker.label + '.gpx', 'application/gpx+xml', gpx);
+                var filename = marker.properties.name || 'Без названия';
+                fileutils.saveStringToFile(filename + '.gpx', 'application/gpx+xml', gpx);
             },
 
             _passToKml: function(marker) {
@@ -322,7 +323,8 @@
                 kml.push('</Placemark>');
                 kml.push('</kml>');
                 kml = kml.join('');
-                fileutils.saveStringToFile(marker.label + '.kml', 'application/vnd.google-earth.kml+xml', kml);
+                var filename = marker.properties.name || 'Без названия';
+                fileutils.saveStringToFile(filename + '.kml', 'application/vnd.google-earth.kml+xml', kml);
             },
 
             _makeIcon: function(marker) {
@@ -350,7 +352,7 @@
                             lat: feature.geometry.coordinates[1],
                             lng: feature.geometry.coordinates[0]
                         },
-                        label: feature.properties.name || "Название неизвестно",
+                        label: feature.properties.name || "",
                         icon: this._makeIcon,
                         tooltip: this._makeTooltip.bind(this),
                         properties: feature.properties
@@ -373,7 +375,7 @@
                 description.push('<tr><td>');
                 description.push(properties.is_summit ? 'Вершина ' : 'Перевал ');
                 description.push('</td><td>');
-                description.push(properties.name || "без названия");
+                description.push(properties.name || "название неизвестно");
                 description.push('</td></tr>');
                 if (properties.altnames) {
                     description.push('<tr><td>');
