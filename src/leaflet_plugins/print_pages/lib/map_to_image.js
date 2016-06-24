@@ -57,24 +57,32 @@ var mapRender = (function() {
         }
 
         function drawTile(tile) {
-            var url = layer.options.noCors ? urlViaCorsProxy(tile.url) : tile.url;
-            return fileutils.get(url, {
-                responseType: 'binarystring',
-                maxTries: 3,
-                isResponseSuccessful: function(xhr) {
-                    return (xhr.status == 200 && checkImage(xhr.responseBytes)) || xhr.status == 404;
-                },
-                shouldRetry: function(xhr) {
-                    return xhr.status < 400 || xhr.status >= 500;
-                }
-            }).then(function(xhr) {
-                if (xhr.responseBytes) {
-                    return imageFromString(xhr.responseBytes)
-                    .then(function(image) {
-                        canvasCtx.drawImage(image, tile.left, tile.top, tile.width, tile.height);
-                    });
-                }
-            });
+            if ('img' in tile) {
+                canvasCtx.drawImage(tile.img, tile.left, tile.top, tile.width, tile.height);
+                return Promise.resolve(null);
+            } else {
+                var url = layer.options.noCors ? urlViaCorsProxy(tile.url) : tile.url;
+                return fileutils.get(url, {
+                        responseType: 'binarystring',
+                        maxTries: 3,
+                        isResponseSuccessful: function(xhr) {
+                            return (xhr.status == 200 && checkImage(xhr.responseBytes)) || xhr.status == 404;
+                        },
+                        shouldRetry: function(xhr) {
+                            return xhr.status < 400 || xhr.status >= 500;
+                        }
+                    }
+                ).then(function(xhr) {
+                        if (xhr.responseBytes) {
+                            return imageFromString(xhr.responseBytes)
+                                .then(function(image) {
+                                        canvasCtx.drawImage(image, tile.left, tile.top, tile.width, tile.height);
+                                    }
+                                );
+                        }
+                    }
+                );
+            }
         }
 
         canvas = L.DomUtil.create('canvas');
