@@ -23,8 +23,6 @@
                 async: true
             },
 
-            getTilesInfo: undefined,
-
             initialize: function(markers) {
                 this.rtree = rbush(9, ['.latlng.lng', '.latlng.lat', '.latlng.lng', '.latlng.lat']);
                 this._regions = rbush();
@@ -42,8 +40,8 @@
             addMarkers: function(markers) {
                 if (markers) {
                     this.rtree.load(markers);
+                    setTimeout(this.redraw.bind(this), 0);
                 }
-                this.redraw();
             },
 
             findLabelPosition: function(iconCenter, iconSize, textWidth, textHeight) {
@@ -271,7 +269,6 @@
             },
 
             resetLabels: function() {
-                console.log('RESET LABELS');
                 this._iconPositions = {};
                 this._labelPositions = {};
                 this._regions.clear();
@@ -363,7 +360,6 @@
                 this._map.getPanes().markerPane.removeChild(this.toolTip);
                 L.TileLayer.Canvas.prototype.onRemove.call(this, map);
             }
-
         }
     );
 })();

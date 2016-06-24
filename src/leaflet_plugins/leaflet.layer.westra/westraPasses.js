@@ -132,12 +132,13 @@
     L.WestraPasses = L.Class.extend({
         options: {
             fileRegions1: 'westra_regions_geo1.json',
-            fileRegions2: 'westra_regions_geo2.json'
+            fileRegions2: 'westra_regions_geo2.json',
+            scaleDependent: true
         },
 
         initialize: function(baseUrl, options) {
             L.setOptions(this, options);
-            this.markers = new westraPasesMarkers(baseUrl, {scaleDependent: true});
+            this.markers = new westraPasesMarkers(baseUrl);
             this.regions1 = new L.GeoJSONAjax(baseUrl + this.options.fileRegions1, {
                     className: 'westra-region-polygon',
                     onEachFeature: this._setRegionLabel.bind(this, 'regions1')
@@ -204,7 +205,7 @@
             this._map = map;
             this.regions1.loadData();
             this.regions2.loadData();
-            this.markers.loadData;
+            this.markers.loadData();
             this.setLayersVisibility();
             map.on('zoomend', this.setLayersVisibility, this);
         },
@@ -215,21 +216,38 @@
             this._map.removeLayer(this.regions2);
             this._map.off('zoomend', this.setLayersVisibility, this);
             this._map = null;
-        }
+        },
+
+        clone: function() {
+            return this.markers._clone();
+        },
+
+        getTilesInfo: 1
     });
 
     var westraPasesMarkers = L.TileLayer.Markers.extend({
             options: {
-                filePasses: 'westra_passes.json'
+                filePasses: 'westra_passes.json',
+                scaleDependent: true
             },
 
+            readyEvent: 'rendered',
+
             initialize: function(baseUrl, options) {
-                L.TileLayer.Markers.prototype.initialize.call(this);
+                L.TileLayer.Markers.prototype.initialize.call(this, options);
+                this._baseUrl = baseUrl;
                 this.on('markerclick', this.showPassDescription, this);
+                this.on('load', this._onLoad, this);
                 this.loader = L.Util.ajaxLoader(baseUrl + this.options.filePasses,
                     this._loadMarkers.bind(this),
                     {responseType: 'json', timeout: 30000}
                 );
+            },
+
+            clone: undefined,
+
+            _clone: function() {
+                return new westraPasesMarkers(this._baseUrl, this.options);
             },
 
             loadData: function() {
@@ -239,6 +257,12 @@
             onAdd: function(map) {
                 L.TileLayer.Markers.prototype.onAdd.call(this, map);
                 this.loadData();
+            },
+
+            _onLoad: function() {
+                if (this._loaded) {
+                    this.fire('rendered');
+                }
             },
 
             _makeTooltip: function(marker) {
@@ -334,6 +358,7 @@
                     markers.push(marker);
                 }
                 this.addMarkers(markers);
+                this._loaded = true;
             },
 
 

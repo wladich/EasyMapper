@@ -34,6 +34,7 @@ provides:
     leaflet.tile_layer_grabber:
         - src/leaflet_plugins/tile_layer_grabber/Google.js
         - src/leaflet_plugins/tile_layer_grabber/TileLayer.js
+        - src/leaflet_plugins/tile_layer_grabber/TileLayer.Canvas.js
         - src/leaflet_plugins/tile_layer_grabber/Bing.js
         - src/leaflet_plugins/tile_layer_grabber/Yandex.js
     leaflet.measured_line:
