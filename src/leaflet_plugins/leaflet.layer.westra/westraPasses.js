@@ -114,7 +114,7 @@
 
             onAdd: function(map) {
                 L.GeoJSON.prototype.onAdd.call(this, map);
-                this.loader.tryLoad();
+                this.loadData;
             },
 
             loadData: function() {
@@ -128,33 +128,117 @@
         }
     );
 
-    var westraPases = L.Class.extend({
+
+    L.WestraPasses = L.Class.extend({
+        options: {
+            fileRegions1: 'westra_regions_geo1.json',
+            fileRegions2: 'westra_regions_geo2.json'
+        },
+
+        initialize: function(baseUrl, options) {
+            L.setOptions(this, options);
+            this.markers = new westraPasesMarkers(baseUrl, {scaleDependent: true});
+            this.regions1 = new L.GeoJSONAjax(baseUrl + this.options.fileRegions1, {
+                    className: 'westra-region-polygon',
+                    onEachFeature: this._setRegionLabel.bind(this, 'regions1')
+                }
+            );
+            this.regions2 = new L.GeoJSONAjax(baseUrl + this.options.fileRegions2, {
+                    className: 'westra-region-polygon',
+                    onEachFeature: this._setRegionLabel.bind(this, 'regions2')
+                }
+            );
+        },
+        _setRegionLabel: function(layerName, feature, layer) {
+            var latlon = layer.getBounds().getCenter();
+            var icon = L.divIcon({
+                    className: 'westra-region-label',
+                    html: '<span>' + feature.properties.name + '</span>'
+                }
+            );
+            var labelMarker = L.marker(latlon, {icon: icon});
+            this[layerName].addLayer(labelMarker);
+            function zoomToRegion() {
+                this._map.fitBounds(layer.getBounds());
+            }
+
+            layer.on('click', zoomToRegion, this);
+            labelMarker.on('click', zoomToRegion, this);
+        },
+
+        setZIndex: function(z) {
+            this.markers.setZIndex(z);
+        },
+
+        setLayersVisibility: function(e) {
+            if (!this._map) {
+                return;
+            }
+            var newZoom;
+            if (e && e.zoom !== undefined) {
+                newZoom = e.zoom;
+            } else {
+                newZoom = this._map.getZoom();
+            }
+            if (newZoom < 2) {
+                this._map.removeLayer(this.markers);
+                this._map.removeLayer(this.regions1);
+                this._map.removeLayer(this.regions2);
+            } else if (newZoom < 7) {
+                this._map.removeLayer(this.markers);
+                this._map.addLayer(this.regions1);
+                this._map.removeLayer(this.regions2);
+            }
+            else if (newZoom < 11) {
+                this._map.removeLayer(this.regions1);
+                this._map.addLayer(this.regions2);
+                this._map.removeLayer(this.markers);
+            } else {
+                this._map.addLayer(this.markers);
+                this._map.removeLayer(this.regions1);
+                this._map.removeLayer(this.regions2);
+            }
+        },
+
+        onAdd: function(map) {
+            this._map = map;
+            this.regions1.loadData();
+            this.regions2.loadData();
+            this.markers.loadData;
+            this.setLayersVisibility();
+            map.on('zoomend', this.setLayersVisibility, this);
+        },
+
+        onRemove: function() {
+            this._map.removeLayer(this.markers);
+            this._map.removeLayer(this.regions1);
+            this._map.removeLayer(this.regions2);
+            this._map.off('zoomend', this.setLayersVisibility, this);
+            this._map = null;
+        }
+    });
+
+    var westraPasesMarkers = L.TileLayer.Markers.extend({
             options: {
-                filePasses: 'westra_passes.json',
-                fileRegions1: 'westra_regions_geo1.json',
-                fileRegions2: 'westra_regions_geo2.json'
+                filePasses: 'westra_passes.json'
             },
 
             initialize: function(baseUrl, options) {
-                L.setOptions(this, options);
-
-                this.markers = new L.TileLayer.Markers();
-                this.markers.on('markerclick', this.showPassDescription.bind(this));
-                this.passLoader = L.Util.ajaxLoader(baseUrl + this.options.filePasses,
+                L.TileLayer.Markers.prototype.initialize.call(this);
+                this.on('markerclick', this.showPassDescription, this);
+                this.loader = L.Util.ajaxLoader(baseUrl + this.options.filePasses,
                     this._loadMarkers.bind(this),
                     {responseType: 'json', timeout: 30000}
                 );
+            },
 
-                this.regions1 = new L.GeoJSONAjax(baseUrl + this.options.fileRegions1, {
-                        className: 'westra-region-polygon',
-                        onEachFeature: this._setRegionLabel.bind(this, 'regions1')
-                    }
-                );
-                this.regions2 = new L.GeoJSONAjax(baseUrl + this.options.fileRegions2, {
-                        className: 'westra-region-polygon',
-                        onEachFeature: this._setRegionLabel.bind(this, 'regions2')
-                    }
-                );
+            loadData: function() {
+                this.loader.tryLoad();
+            },
+
+            onAdd: function(map) {
+                L.TileLayer.Markers.prototype.onAdd.call(this, map);
+                this.loadData();
             },
 
             _makeTooltip: function(marker) {
@@ -172,7 +256,7 @@
                 return toolTip;
             },
 
-            passToGpx: function(marker) {
+            _passToGpx: function(marker) {
                 var gpx = [],
                     label = marker.tooltip;
                 if (typeof label === 'function') {
@@ -192,7 +276,7 @@
                 fileutils.saveStringToFile(marker.label + '.gpx', 'application/gpx+xml', gpx);
             },
 
-            passToKml: function(marker) {
+            _passToKml: function(marker) {
                 var kml = [],
                     label = marker.tooltip;
                 if (typeof label === 'function') {
@@ -237,9 +321,6 @@
                     feature, i, marker, className;
                 for (i = 0; i < features.length; i++) {
                     feature = features[i];
-
-
-
                     marker = {
                         latlng: {
                             lat: feature.geometry.coordinates[1],
@@ -252,76 +333,9 @@
                     };
                     markers.push(marker);
                 }
-                this.markers.addMarkers(markers);
+                this.addMarkers(markers);
             },
 
-            _setRegionLabel: function(layerName, feature, layer) {
-                var latlon = layer.getBounds().getCenter();
-                var icon = L.divIcon({
-                        className: 'westra-region-label',
-                        html: '<span>' + feature.properties.name + '</span>'
-                    }
-                );
-                var labelMarker = L.marker(latlon, {icon: icon});
-                this[layerName].addLayer(labelMarker);
-                function zoomToRegion() {
-                    this._map.fitBounds(layer.getBounds());
-                }
-
-                layer.on('click', zoomToRegion, this);
-                labelMarker.on('click', zoomToRegion, this);
-            },
-
-            setZIndex: function(z) {
-                this.markers.setZIndex(z);
-            },
-
-            setLayersVisibility: function(e) {
-                if (!this._map) {
-                    return;
-                }
-                var newZoom;
-                if (e && e.zoom !== undefined) {
-                    newZoom = e.zoom;
-                } else {
-                    newZoom = this._map.getZoom();
-                }
-                if (newZoom < 2) {
-                    this._map.removeLayer(this.markers);
-                    this._map.removeLayer(this.regions1);
-                    this._map.removeLayer(this.regions2);
-                } else if (newZoom < 7) {
-                    this._map.removeLayer(this.markers);
-                    this._map.addLayer(this.regions1);
-                    this._map.removeLayer(this.regions2);
-                }
-                else if (newZoom < 11) {
-                    this._map.removeLayer(this.regions1);
-                    this._map.addLayer(this.regions2);
-                    this._map.removeLayer(this.markers);
-                } else {
-                    this._map.addLayer(this.markers);
-                    this._map.removeLayer(this.regions1);
-                    this._map.removeLayer(this.regions2);
-                }
-            },
-
-            onAdd: function(map) {
-                this._map = map;
-                this.regions1.loadData();
-                this.regions2.loadData();
-                this.passLoader.tryLoad();
-                this.setLayersVisibility();
-                map.on('zoomend', this.setLayersVisibility, this);
-            },
-
-            onRemove: function() {
-                this._map.removeLayer(this.markers);
-                this._map.removeLayer(this.regions1);
-                this._map.removeLayer(this.regions2);
-                this._map.off('zoomend', this.setLayersVisibility, this);
-                this._map = null;
-            },
 
             showPassDescription: function(e) {
                 if (!this._map) {
@@ -416,16 +430,15 @@
                     return false;
                 };
                 document.getElementById('westra-pass-gpx').onclick = function() {
-                    this.passToGpx(e.marker);
+                    this._passToGpx(e.marker);
                     return false;
                 }.bind(this);
                 document.getElementById('westra-pass-kml').onclick = function() {
-                    this.passToKml(e.marker);
+                    this._passToKml(e.marker);
                     return false;
                 }.bind(this);
             }
         }
     );
 
-    L.WestraPasses = westraPases;
 }());
