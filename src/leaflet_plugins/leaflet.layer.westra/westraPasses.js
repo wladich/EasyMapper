@@ -308,9 +308,11 @@
 
             onAdd: function(map) {
                 this._map = map;
+                this.regions1.loadData();
+                this.regions2.loadData();
+                this.passLoader.tryLoad();
                 this.setLayersVisibility();
                 map.on('zoomend', this.setLayersVisibility, this);
-                this.passLoader.tryLoad();
             },
 
             onRemove: function() {
