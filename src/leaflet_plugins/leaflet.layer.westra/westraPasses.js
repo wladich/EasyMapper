@@ -348,19 +348,19 @@
 
             _loadMarkers: function(xhr) {
                 var markers = [],
-                    features = xhr.response.features,
+                    features = xhr.response,
                     feature, i, marker, className;
                 for (i = 0; i < features.length; i++) {
                     feature = features[i];
                     marker = {
                         latlng: {
-                            lat: feature.geometry.coordinates[1],
-                            lng: feature.geometry.coordinates[0]
+                            lat: feature.latlon[0],
+                            lng: feature.latlon[1],
                         },
-                        label: feature.properties.name || "",
+                        label: feature.name || "",
                         icon: this._makeIcon,
                         tooltip: this._makeTooltip.bind(this),
-                        properties: feature.properties
+                        properties: feature
                     };
                     markers.push(marker);
                 }
@@ -375,7 +375,7 @@
                 }
                 var properties = e.marker.properties,
                     latLng = e.marker.latlng,
-                    url;
+                    url, i, comment;
                 var description = ['<table class="pass-details">'];
                 description.push('<tr><td>');
                 description.push(properties.is_summit ? 'Вершина ' : 'Перевал ');
@@ -423,6 +423,22 @@
                 description.push('</td></tr>');
 
                 description.push('<tr><td>');
+                description.push('На сайте Вестры');
+                description.push('</td><td>');
+                url = 'http://westra.ru/passes/Passes/' + properties.id;
+                description.push(
+                    '<a id="westra-pass-link" href="' + url + '">' + url + '</a>'
+                );
+                description.push('</td></tr>');
+
+                description.push('<tr><td>');
+                description.push('Добавил');
+                description.push('</td><td>');
+                description.push(properties.author || "неизвестно");
+                description.push('</td></tr>');
+
+
+                description.push('<tr><td>');
                 description.push('Подтверждено модератором');
                 description.push('</td><td>');
                 description.push(properties.notconfirmed ? 'нет' : 'да');
@@ -431,32 +447,25 @@
                 description.push('<tr><td>');
                 description.push('Координаты подтверждены модератором');
                 description.push('</td><td>');
-                // description.push(feature.properties.notconfirmed ? 'нет' : 'да');
-                description.push('пока неизвестно');
+                description.push(properties.coords_notconfirmed ? 'нет' : 'да');
                 description.push('</td></tr>');
 
-                if (properties.comments || properties.addinfo) {
+                if (properties.comments) {
                     description.push('<tr><td>');
                     description.push('Комментарии');
                     description.push('</td><td>');
-                    if (properties.addinfo) {
-                        description.push('<p>' + properties.addinfo + '</p>');
-                    }
-                    if (properties.comments && properties.addinfo != properties.comments) {
-                        description.push('<p>' + properties.comments + '</p>');
+                    for (i=0; i < properties.comments.length; i++) {
+                        comment = properties.comments[i];
+                        description.push('<p class="westra-passes-description-comment">');
+                        if (comment.user) {
+                            description.push('<span class="westra-passes-description-comment-author">' + comment.user + ':</span>');
+                        }
+                        description.push(comment.content + '</p>');
                     }
                     description.push('</td></tr>');
                 }
-                description.push('<tr><td>');
-                description.push('На сайте Вестры');
-                description.push('</td><td>');
-                url = 'http://westra.ru/passes/Passes/' + properties.id;
-                description.push(
-                    '<a id="westra-pass-link" href="' + url + '">' + url + '</a>'
-                );
-                description.push('</td></tr>');
                 description.push('</table>');
-                var popUp = this._map.openPopup(description.join(''), latLng, {maxWidth: 400});
+                var popUp = this._map.openPopup(description.join(''), latLng, {maxWidth: 500});
                 document.getElementById('westra-pass-link').onclick = function() {
                     mapperOpenDetailsWindow(url, 650);
                     return false;

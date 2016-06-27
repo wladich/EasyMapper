@@ -172,6 +172,10 @@
     padding-left: 1em;
 }
 
+.pass-details td:first-child {
+    white-space: nowrap;
+}
+
 .pass-details tr:last-child td {
     border: none;
 }
@@ -184,6 +188,7 @@
     border: none;
     padding: 0 0 0 1em;
 }
+
 
 .pass-details .westra-passes-description-coords td:first-child {
     padding: 0;
@@ -199,4 +204,15 @@
 .westra-passes-description-coords tr:first-child td {
     color: #999;
     font-size: 9px;
+}
+
+
+.westra-passes-description-comment {
+    margin: 0 !important;
+}
+
+.westra-passes-description-comment-author {
+    font-weight: bold;
+    color: #777;
+    margin-right: 1em !important;
 }
