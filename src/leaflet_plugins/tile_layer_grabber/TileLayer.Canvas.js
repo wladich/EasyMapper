@@ -7,6 +7,8 @@
         // clone method must be defined in canvas descendant
         // clone: function() {},
 
+        clone: undefined,
+
         getTilesInfo: function() {
             var this_layer = this;
 
