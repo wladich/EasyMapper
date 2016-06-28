@@ -20,10 +20,14 @@
 
     L.TileLayer.Markers = L.TileLayer.Canvas.extend({
             options: {
-                async: true
+                async: true,
+                labelFontName: 'Verdana, Arial, sans-serif',
+                labelFontSize: 10,
+                iconScale: 1
             },
 
-            initialize: function(markers) {
+            initialize: function(markers, options) {
+                L.TileLayer.Canvas.prototype.initialize.call(this, options);
                 this.rtree = rbush(9, ['.latlng.lng', '.latlng.lat', '.latlng.lng', '.latlng.lat']);
                 this._regions = rbush();
                 this._iconPositions = {};
@@ -174,20 +178,23 @@
                     if (!self._map) {
                         return;
                     }
-                    var markerId, i, regionsInTile, isLabel, job, x, y, imgW, imgH,
-                        label, textWidth, textHeight, ctx, p;
+                    var textHeight = self.options.labelFontSize,
+                        markerId, i, regionsInTile, isLabel, job, x, y, imgW, imgH,
+                        label, textWidth, ctx, p;
                     if (self._zoom != zoom) {
                         self._zoom = zoom;
                         self.resetLabels();
                     }
                     ctx = canvas.getContext('2d');
-                    ctx.font = "bold 10px Verdana, Arial, sans-serif";
+                    ctx.font = L.Util.template('bold {size}px {name}',
+                        {'name': self.options.labelFontName, 'size': self.options.labelFontSize}
+                    );
                     for (markerId in markerJobs) {
                         job = markerJobs[markerId];
                         img = self._images[job.icon.url];
                         job.img = img;
-                        imgW = img.width;
-                        imgH = img.height;
+                        imgW = Math.round(img.width * self.options.iconScale);
+                        imgH = Math.round(img.height * self.options.iconScale);
                         if (!(markerId in self._iconPositions)) {
                             x = job.projectedXY.x - job.icon.center[0];
                             y = job.projectedXY.y - job.icon.center[1];
@@ -216,12 +223,11 @@
                             job.label = label;
                             if (!(markerId in self._labelPositions)) {
                                 textWidth = ctx.measureText(label).width;
-                                textHeight = 10;
                                 p = self.findLabelPosition(job.iconCenter, job.iconSize, textWidth, textHeight);
                                 self._labelPositions[markerId] = p;
                                 x = p[0];
                                 y = p[1];
-                                self._regions.insert([x, y, x + textWidth, y + 10, job.marker, true]);
+                                self._regions.insert([x, y, x + textWidth, y + textHeight, job.marker, true]);
                             }
                         } else {
                             self._labelPositions[markerId] = null;
@@ -239,16 +245,15 @@
                             p = self._labelPositions[markerId];
                             x = p[0] - tileW;
                             y = p[1] - tileN;
-                            ctx.font = "bold 10px Verdana, Arial, sans-serif";
                             ctx.textBaseline = 'bottom';
                             ctx.shadowColor = '#fff';
                             ctx.strokeStyle = '#fff';
                             ctx.fillStyle = '#000';
                             ctx.lineWidth = 1;
                             ctx.shadowBlur = 2;
-                            ctx.strokeText(job.label, x, y + 10);
+                            ctx.strokeText(job.label, x, y + textHeight);
                             ctx.shadowBlur = 0;
-                            ctx.fillText(job.label, x, y + 10);
+                            ctx.fillText(job.label, x, y + textHeight);
                         }
                     }
                     for (i = 0; i < regionsInTile.length; i++) {
@@ -260,7 +265,7 @@
                             p = self._iconPositions[markerId];
                             x = p[0] - tileW;
                             y = p[1] - tileN;
-                            ctx.drawImage(job.img, x, y);
+                            ctx.drawImage(job.img, x, y, job.iconSize[0], job.iconSize[1]);
                         }
                     }
                     self.tileDrawn(canvas);

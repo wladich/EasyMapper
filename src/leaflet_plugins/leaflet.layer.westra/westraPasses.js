@@ -239,7 +239,7 @@
             readyEvent: 'rendered',
 
             initialize: function(baseUrl, options) {
-                L.TileLayer.Markers.prototype.initialize.call(this, options);
+                L.TileLayer.Markers.prototype.initialize.call(this, null, options);
                 this._baseUrl = baseUrl;
                 this.on('markerclick', this.showPassDescription, this);
                 this.on('load', this._onLoad, this);
@@ -252,7 +252,9 @@
             clone: undefined,
 
             _clone: function() {
-                return new westraPasesMarkers(this._baseUrl, this.options);
+                var options = {};
+                L.extend(options, this.options, {iconScale: 1.2, labelFontSize: 12});
+                return new westraPasesMarkers(this._baseUrl, options);
             },
 
             loadData: function() {
