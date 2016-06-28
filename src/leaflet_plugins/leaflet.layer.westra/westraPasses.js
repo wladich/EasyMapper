@@ -191,7 +191,7 @@
                 this._map.addLayer(this.regions1);
                 this._map.removeLayer(this.regions2);
             }
-            else if (newZoom < 11) {
+            else if (newZoom < 10) {
                 this._map.removeLayer(this.regions1);
                 this._map.addLayer(this.regions2);
                 this._map.removeLayer(this.markers);
