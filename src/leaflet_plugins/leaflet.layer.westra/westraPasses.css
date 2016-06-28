@@ -97,6 +97,10 @@
     background-image: url("pass-nograde-notconfirmed.png");
 }
 
+.westra-pass-marker-summit.westra-pass-notconfirmed {
+    background-image: url("summit-notconfirmed.png");
+}
+
 .westra-region-label {
     white-space: nowrap;
     width: auto !important;
