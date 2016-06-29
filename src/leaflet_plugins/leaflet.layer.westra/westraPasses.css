@@ -148,7 +148,6 @@
 .pass-details td:first-child {
     /*white-space: nowrap;*/
 }
-}
 
 .pass-details tr:last-child td {
     border: none;

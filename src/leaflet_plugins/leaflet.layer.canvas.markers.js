@@ -312,7 +312,7 @@
                     }
                 }
                 this.toolTip.innerHTML = text;
-                var p = this._map.latLngToLayerPoint(e.marker.latlng)
+                var p = this._map.latLngToLayerPoint(e.marker.latlng);
                 L.DomUtil.setPosition(this.toolTip, p);
                 L.DomUtil.addClass(this.toolTip, 'canvas-marker-tooltip-on');
             },
