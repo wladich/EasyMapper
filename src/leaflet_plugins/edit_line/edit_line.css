@@ -23,7 +23,7 @@
 }
 
 .leaflet-line-drawing {
-    cursor: crosshair;
+    cursor: crosshair !important;
 }
 
 .leaflet-line-drawing .leaflet-editable-line {
