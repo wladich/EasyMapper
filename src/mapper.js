@@ -73,9 +73,13 @@
             var layersIds = Object.keys(layers).sort();
             for (var i = layersIds.length - 1; i >= 0; i--) {
                 layerId = layersIds[i];
-                if (layers[layerId].getTilesInfo) {
+                if (layers[layerId].options && layers[layerId].options.jnx) {
                     break;
                 }
+            }
+            if (i < 0) {
+                this.jnx.setSourceLayer(null);
+                return;
             }
             layerId = layersIds[i];
             layer = layers[layerId];

@@ -179,7 +179,7 @@ var mapRender = (function() {
             layer;
         for (var i=0; i<layer_ids.length; i++) {
             layer = map._layers[layer_ids[i]];
-            if (layer.getTilesInfo !== undefined && layer.clone !== undefined) {
+            if (layer.options && layer.options.print) {
                 layers.push(layer);
             }
         }

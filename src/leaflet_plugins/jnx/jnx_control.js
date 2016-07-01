@@ -407,6 +407,9 @@
                     if (self.makingJnx()) {
                         return [];
                     }
+                    if (!self.sourceLayer) {
+                        return [{text: 'Unsupported layer'}]
+                    }
                     var items = [{text: '<b>' + self.sourceLayerName + '</b>'}];
                     var maxZoom = self.sourceLayer.options.maxNativeZoom || self.sourceLayer.options.maxZoom || 18;
                     var zoom = maxZoom;

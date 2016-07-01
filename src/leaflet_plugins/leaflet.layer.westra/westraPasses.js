@@ -224,10 +224,9 @@
         },
 
         clone: function() {
-            return this.markers._clone();
-        },
+            return this.markers.clone();
+        }
 
-        getTilesInfo: 1
     });
 
     var westraPasesMarkers = L.TileLayer.Markers.extend({
@@ -249,9 +248,7 @@
                 );
             },
 
-            clone: undefined,
-
-            _clone: function() {
+            clone: function() {
                 var options = {};
                 L.extend(options, this.options, {iconScale: 1.2, labelFontSize: 12});
                 return new westraPasesMarkers(this._baseUrl, options);

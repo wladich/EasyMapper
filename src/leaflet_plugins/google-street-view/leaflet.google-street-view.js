@@ -6,9 +6,10 @@
     'use strict';
 
     L.GoogleStreetView = L.TileLayer.extend({
-        initialize: function(panoramaContainerId) {
+        initialize: function(panoramaContainerId, options) {
             L.TileLayer.prototype.initialize.call(this,
-                'https://mts1.googleapis.com/vt?lyrs=svv|cb_client:apiv3&style=40,18&x={x}&y={y}&z={z}');
+                'https://mts1.googleapis.com/vt?lyrs=svv|cb_client:apiv3&style=40,18&x={x}&y={y}&z={z}',
+                options);
             this.container = document.getElementById(panoramaContainerId);
             this.svService = new google.maps.StreetViewService();
             this.panorama = new google.maps.StreetViewPanorama(this.container, {
