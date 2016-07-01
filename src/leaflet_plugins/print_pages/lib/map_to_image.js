@@ -94,8 +94,8 @@ var mapRender = (function() {
             .then(function(tempMap_) {
                 tempMap = tempMap_;
                 var layerCopy = layer.clone();
-                var tilesInfo = layerCopy.getTilesInfo();
                 tempMap.addLayer(layerCopy);
+                var tilesInfo = layerCopy.getTilesInfo();
                 return tilesInfo;
             })
             .then(function(tiles) {
