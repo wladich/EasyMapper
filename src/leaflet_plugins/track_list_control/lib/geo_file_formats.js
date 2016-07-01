@@ -391,21 +391,16 @@
         return s;
     };
 
-    function loadFromString(s) {
+    function parseSringified(s) {
         var name,
             n,
             segments = [],
             segment,
-            magick = 'track://',
             segmentsCount,
             pointsCount,
             arcUnit = ((1 << 24) - 1) / 360,
             x, y,
-            error;
-        if (s.slice(0, magick.length) != magick) {
-            return null;
-        }
-        s = s.slice(magick.length);
+            error, version, i;
         s = decodeUrlSafeBase64(s);
         if (!s) {
             return [{name: 'Text encoded track', error: ['CORRUPT']}];
@@ -453,9 +448,37 @@
         return [geoData];
     }
 
+    function parseTrackUrl(s) {
+        var i = s.indexOf('track://');
+        if (i === -1 ) {
+            return null;
+        }
+        return parseSringified(s.substring(i + 8));
+    }
+
+    function parseNakarteUrl(s) {
+        var i = s.indexOf('#');
+        if (i === -1) {
+            return null;
+        }
+        i = s.indexOf('nktk=', i + 1);
+        if (i === -1) {
+            return null;
+        }
+        s = s.substring(i + 5).split('/');
+        var geodataArray = [];
+        for (i = 0; i < s.length; i++) {
+            if (s[i]) {
+                geodataArray.push.apply(geodataArray, parseSringified(s[i]));
+            }
+        }
+        return geodataArray;
+    }
+
     function parseGeoFile(name, data) {
         var parsers = [
-            loadFromString,
+            parseTrackUrl,
+            parseNakarteUrl,
             parseKmz,
             parseZip,
             parseGpx,

@@ -280,7 +280,7 @@
                 '-',
                 {text: 'Download GPX', callback: this.saveTrackAsFile.bind(this, track, geoExporters.saveGpx, '.gpx')},
                 {text: 'Download KML', callback: this.saveTrackAsFile.bind(this, track, geoExporters.saveKml, '.kml')},
-                {text: 'Copy to clipboard', callback: this.copyStringifiedToClipboard.bind(this, track)}
+                {text: 'Copy link to clipboard', callback: this.copyLinkToClipboard.bind(this, track)},
             ];
             track._actionsMenu = new L.Contextmenu(items);
         },
@@ -322,7 +322,7 @@
             });
         },
 
-        copyStringifiedToClipboard: function(track) {
+        copyLinkToClipboard: function(track) {
             this.stopActiveDraw();
             var lines = track.feature.getLayers()
                 .map(function(line) {
@@ -331,11 +331,12 @@
                     return points;
                 });
             var s = geoExporters.saveToString(lines, track.name(), track.color(), track.measureTicksShown());
+            var url = window.location + '&nktk=' + s;
             if (!s) {
                 alert('Track is empty, nothing to save');
                 return;
             }
-            prompt("Copy to clipboard: Ctrl+C, Enter", s);
+            prompt("Copy to clipboard: Ctrl+C, Enter", url);
         },
 
         saveTrackAsFile: function(track, exporter, extension) {

@@ -163,7 +163,7 @@ var geoExporters = (function() {
         });
         stringified.push(packNumber(+color || 0));
         stringified.push(packNumber(measureTicksShown ? 1 : 0));
-        return 'track://' + encodeUrlSafeBase64(stringified.join(''));
+        return encodeUrlSafeBase64(stringified.join(''));
     }
 
     return {
