@@ -29,6 +29,8 @@ provides:
         - src/leaflet_plugins/print_pages/print_pages_control.js
     leaflet.track_list:
         - src/leaflet_plugins/track_list_control/track_list.js
+    leaflet.track_list_hash_state:
+        - src/leaflet_plugins/track_list_control/track_list_hash_state.js
     leaflet.contextmenu:
         - src/leaflet_plugins/context_menu/leaflet.contextmenu.js
     leaflet.tile_layer_grabber:

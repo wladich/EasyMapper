@@ -4,6 +4,7 @@
 //@require leaflet.hash_state.Control.Layers
 //@require leaflet.layers_control.hotkeys
 //@require leaflet.track_list
+//@require leaflet.track_list_hash_state
 //@require leaflet.print_pages
 //@require lib/draw_utils.js
 //@require leaflet.buttons
@@ -108,6 +109,7 @@
             this.layersControl.enableHashState('l', ['O']);
             this.printPagesControl.enableHashState('p');
             this.jnx.enableHashState('j');
+            this.trackList.enableHashState('nktk');
 
             btn.on('clicked', this.startRuler, this);
             map.on('baselayerchange overlayadd overlayremove', function () {
