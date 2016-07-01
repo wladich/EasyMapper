@@ -336,7 +336,7 @@
                 alert('Track is empty, nothing to save');
                 return;
             }
-            prompt("Copy to clipboard: Ctrl+C, Enter", url);
+            fileutils.copyToClipboard(url);
         },
 
         saveTrackAsFile: function(track, exporter, extension) {

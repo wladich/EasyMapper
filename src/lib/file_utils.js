@@ -161,6 +161,19 @@ var fileutils = (function() {
         return s.replace('<', '&lt;').replace('>', '&gt;').replace('"', '&quot;');
 
     }
+
+    function copyToClipboard(s) {
+        try {
+            var ta = document.createElement('textarea');
+            ta.value = s;
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+        } catch (e) {
+            prompt("Copy to clipboard: Ctrl+C, Enter", s);
+        }
+    }
+
     return {
         get: get,
         arrayBufferToString: arrayBufferToString,
@@ -169,6 +182,7 @@ var fileutils = (function() {
         readFiles: readFiles,
         decodeUTF8: decodeUTF8,
         encodeUTF8: encodeUTF8,
-        escapeHtml: escapeHtml
+        escapeHtml: escapeHtml,
+        copyToClipboard: copyToClipboard
     };
 })();
