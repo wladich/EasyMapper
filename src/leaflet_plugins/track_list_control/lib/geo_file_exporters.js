@@ -137,10 +137,6 @@ var geoExporters = (function() {
             return segment.length > 1;
         });
 
-        if (segments.length === 0) {
-            return null;
-        }
-
         stringified.push(packNumber(segments.length));
         segments.forEach(function(points) {
             var lastX = 0,
