@@ -462,6 +462,8 @@
             }
             items.push({text: 'Reverse', callback: this.reverseTrackSegment.bind(this, e.line)});
             items.push({text: 'Delete segment', callback: this.deleteTrackSegment.bind(this, e.line)});
+            items.push({text: 'New track from segment', callback: this.newTrackFromSegment.bind(this, e.line)});
+
             var menu = new L.Contextmenu(items);
             menu.showOnMouseEvent(e.mouseEvent);
 
@@ -472,7 +474,8 @@
                                         {text: 'Cut',
                                          callback: this.splitTrackSegment.bind(this, e.line, e.nodeIndex, e.mouseEvent.latlng)},
                                         {text: 'Reverse', callback: this.reverseTrackSegment.bind(this, e.line)},
-                                        {text: 'Delete segment', callback: this.deleteTrackSegment.bind(this, e.line)}
+                                        {text: 'Delete segment', callback: this.deleteTrackSegment.bind(this, e.line)},
+                                        {text: 'New track from segment', callback: this.newTrackFromSegment.bind(this, e.line)}
                                         ]);
             menu.showOnMouseEvent(e.mouseEvent);
         },
@@ -575,6 +578,16 @@
 
         deleteTrackSegment: function(trackSegment) {
             trackSegment._parentTrack.feature.removeLayer(trackSegment);
+        },
+
+        newTrackFromSegment: function(trackSegment) {
+            var srcNodes = trackSegment.getLatLngs(),
+                newNodes =[],
+                i;
+            for (i=0; i < srcNodes.length; i++) {
+                newNodes.push([srcNodes[i].lat, srcNodes[i].lng]);
+            }
+            this.addTrack({name: "New track", tracks: [newNodes]});
         },
 
         addTrack: function(geodata) {
