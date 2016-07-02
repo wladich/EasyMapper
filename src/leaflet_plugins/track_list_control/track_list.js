@@ -135,7 +135,7 @@
                 this.readProgressDone(undefined);
                 this.readProgressRange(1);
                 geodata = parseGeoFile('', url);
-                if (geodata.length > 1 || geodata[0].error != 'UNSUPPORTED') {
+                if (geodata.length  === 0 || geodata.length > 1 || geodata[0].error != 'UNSUPPORTED') {
                     this.addTracksFromGeodataArray(geodata);
                 } else {
                     // FIXME: error if https and using proxy and with other schemas
@@ -162,9 +162,12 @@
 
         addTracksFromGeodataArray: function(geodata_array) {
             var messages = [];
+            if (geodata_array.length === 0) {
+                messages.push('No tracks loaded');
+            }
             geodata_array.forEach(function(geodata) {
                 var data_empty = !((geodata.tracks  && geodata.tracks.length) || (geodata.points && geodata.points.length));
-                
+
                 if (!data_empty) {
                     geodata.tracks = geodata.tracks.map(function(line) {
                         return L.LineUtil.simplifyLatlngs(line, 360 / (1<<24));
