@@ -10,6 +10,7 @@
 //@require leaflet.buttons
 //@require leaflet.jnx
 //@require leaflet.layers_control.custom_layers
+//@require leaflet.coordinates
 
 (function(){
     "use strict";
@@ -121,6 +122,7 @@
             }, this);
             this.printPagesControl.on('pdfstart', this.beforePdfBuild, this);
             this.updateJnxLayer();
+            this.coordinatesControl = new L.Control.Coordinates().addTo(map);
             //FIXME: remove after migratirng to leaflet 1.0
             L.DomEvent.on(document, 'keydown', function(e) {
                 var key = e.keyCode;

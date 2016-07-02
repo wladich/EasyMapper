@@ -72,6 +72,9 @@ provides:
         - src/lib/vendor/rawinflate.js
     leaflet.jnx:
         - src/leaflet_plugins/jnx/jnx_control.js
+    leaflet.coordinates:
+        - src/leaflet_plugins/coordinates_control/leaflet.control.coordinates.js
+        - src/leaflet_plugins/coordinates_control/leaflet.control.coordinates.css
     binstream:
         - src/lib/binstream.js
     leaflet.markercluster:
