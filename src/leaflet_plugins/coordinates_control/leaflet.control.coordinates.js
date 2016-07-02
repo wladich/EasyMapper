@@ -14,7 +14,9 @@
                 var container = this._container = L.DomUtil.create('div', 'leaflet-control leaflet-control-coordinates');
                 this._field_lat = L.DomUtil.create('div', 'leaflet-control-coordinates-text', container);
                 this._field_lon = L.DomUtil.create('div', 'leaflet-control-coordinates-text', container);
-                L.DomEvent.on(container, 'click', this.onClick, this);
+                L.DomEvent
+                    .on(container, 'dblclick', L.DomEvent.stop)
+                    .on(container, 'click', this.onClick, this);
                 map.on('mousemove', this.onMouseMove, this);
                 this.menu = new L.Contextmenu([
                         {text: 'ddd.ddddd&deg;', callback: this.onMenuSelect.bind(this, 'D')},
