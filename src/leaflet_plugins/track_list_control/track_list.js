@@ -21,7 +21,7 @@
 
         colors: ['#77f', '#f95', '#0ff', '#f77', '#f7f', '#ee5'],
 
-        
+
         initialize: function() {
             L.Control.prototype.initialize.call(this);
             this.tracks = ko.observableArray();
@@ -40,6 +40,7 @@
                 '<div class="hint">' +
                     'GPX Ozi GoogleEarth ZIP YandexMaps' +
                 '</div>' +
+                '<div class="tracks-menu-button" data-bind="click: function(_,e){this.showMenu(e)}">&hellip;</div>' +
                 '<div class="inputs-row" data-bind="visible: !readingFiles()">' +
                     '<a class="button add-track" title="New track" data-bind="click: function(){this.addNewTrack()}"></a>' +
                     '<a class="button open-file" title="Open file" data-bind="click: loadFilesFromDisk"></a>' +
@@ -69,6 +70,13 @@
             // FIXME: add onRemove method and unsubscribe
             L.DomEvent.addListener(map.getContainer(), 'drop', this.onFileDragDrop, this);
             L.DomEvent.addListener(map.getContainer(), 'dragover', this.onFileDraging, this);
+            this.menu = new L.Contextmenu([
+                {text:'Copy all tracks to clipboard', callback: this.copyAllTracks.bind(this)},
+                {text:'Copy visible tracks to clipboard', callback: this.copyVisibleTracks.bind(this)},
+                '-',
+                {text:'Delete all tracks', callback: this.deleteAllTracks.bind(this)},
+                {text:'Delete hidden tracks', callback: this.deleteHiddenTracks.bind(this)},
+            ]);
             return container;
         },
 
@@ -288,7 +296,7 @@
             ];
             track._actionsMenu = new L.Contextmenu(items);
         },
-        
+
         duplicateTrack: function(track) {
             var segments = [], segment,
                 line,
@@ -328,18 +336,8 @@
 
         copyLinkToClipboard: function(track) {
             this.stopActiveDraw();
-            var lines = track.feature.getLayers()
-                .map(function(line) {
-                    var points = line.getLatLngs();
-                    points = L.LineUtil.simplifyLatlngs(points, 360 / (1<<24));
-                    return points;
-                });
-            var s = geoExporters.saveToString(lines, track.name(), track.color(), track.measureTicksShown());
+            var s = this.trackToString(track);
             var url = window.location + '&nktk=' + s;
-            if (!s) {
-                alert('Track is empty, nothing to save');
-                return;
-            }
             fileutils.copyToClipboard(url);
         },
 
@@ -373,6 +371,10 @@
 
         showTrackMenu: function(track, e) {
             track._actionsMenu.showOnMouseEvent(e);
+        },
+
+        showMenu: function(e) {
+            this.menu.showOnMouseEvent(e);
         },
 
         stopActiveDraw: function() {
@@ -423,7 +425,7 @@
             this.addTrackSegment(originalSegment._parentTrack, latlngs);
 
         },
-        
+
         onLineEditEnd: function(track, polyline) {
             if (polyline.getLatLngs().length < 2) {
                 track.feature.removeLayer(polyline);
@@ -491,7 +493,7 @@
             var p = this._editedLine.getLatLngs()[e.nodeIndex];
             p = [p.lat, p.lng];
             this._lineJoinCursor = L.polyline([p, e.mouseEvent.latlng], {
-                clickable: false, 
+                clickable: false,
                 color: 'red',
                 weight: 1.5,
                 opacity: 1,
@@ -617,7 +619,7 @@
             track.visible.subscribe(this.onTrackVisibilityChanged.bind(this, track));
             track.measureTicksShown.subscribe(this.setTrackMeasureTicksVisibility.bind(this, track));
             track.color.subscribe(this.onTrackColorChanged.bind(this, track));
-            
+
             //this.onTrackColorChanged(track);
             this.onTrackVisibilityChanged(track);
             this.attachColorSelector(track);
@@ -629,6 +631,65 @@
         removeTrack: function(track) {
             track.visible(false);
             this.tracks.remove(track);
+        },
+
+        deleteAllTracks: function() {
+            var tracks = this.tracks().slice(0),
+                i;
+            for (i = 0; i < tracks.length; i++) {
+                this.removeTrack(tracks[i]);
+            }
+        },
+
+        deleteHiddenTracks: function() {
+            var tracks = this.tracks().slice(0),
+                i, track;
+            for (i = 0; i < tracks.length; i++) {
+                track = tracks[i];
+                if (!track.visible()) {
+                    this.removeTrack(tracks[i]);
+                }
+            }
+        },
+
+        trackToString: function(track) {
+            var lines = track.feature.getLayers().map(function(line) {
+                    var points = line.getLatLngs();
+                    points = L.LineUtil.simplifyLatlngs(points, 360 / (1 << 24));
+                    return points;
+                }
+            );
+            return geoExporters.saveToString(lines, track.name(), track.color(), track.measureTicksShown());
+        },
+
+        copyAllTracks: function() {
+            this.stopActiveDraw();
+            var tracks = this.tracks().slice(0),
+                serialized = [],
+                i, track, s;
+            for (i = 0; i < tracks.length; i++) {
+                track = tracks[i];
+                s = this.trackToString(track);
+                serialized.push(s);
+            }
+            var url = window.location + '&nktk=' + serialized.join('/');
+            fileutils.copyToClipboard(url);
+        },
+
+        copyVisibleTracks: function() {
+            this.stopActiveDraw();
+            var tracks = this.tracks().slice(0),
+                serialized = [],
+                i, track, s;
+            for (i = 0; i < tracks.length; i++) {
+                track = tracks[i];
+                if (track.visible()) {
+                    s = this.trackToString(track);
+                    serialized.push(s);
+                }
+            }
+            var url = window.location + '&nktk=' + serialized.join('/');
+            fileutils.copyToClipboard(url);
         },
 
         exportTracks: function(minTicksIntervalMeters) {
