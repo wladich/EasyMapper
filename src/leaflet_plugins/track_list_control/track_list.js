@@ -268,7 +268,6 @@
             var items = [
                 function() {return {text: track.name(), disabled: true};},
                 '-',
-                {text: 'Delete', callback: this.removeTrack.bind(this, track)},
                 {text: 'Add segment', callback: function() {
                     var polyline = this.addTrackSegment(track, []);
                     this.startEditTrackSegement(track, polyline);
@@ -277,6 +276,8 @@
                 {text: 'Rename', callback: this.renameTrack.bind(this, track)},
                 {text: 'Duplicate', callback: this.duplicateTrack.bind(this, track)},
                 {text: 'Reverse', callback: this.reverseTrack.bind(this, track)},
+                '-',
+                {text: 'Delete', callback: this.removeTrack.bind(this, track)},
                 '-',
                 {text: 'Download GPX', callback: this.saveTrackAsFile.bind(this, track, geoExporters.saveGpx, '.gpx')},
                 {text: 'Download KML', callback: this.saveTrackAsFile.bind(this, track, geoExporters.saveKml, '.kml')},
