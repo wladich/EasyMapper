@@ -132,9 +132,10 @@
                 return L.DomUtil.hasClass(this._container, 'expanded');
             },
 
-            onClick: function() {
+            onClick: function(e) {
                 this.setEnabled(!this.isEnabled());
                 this.saveStateToStorage();
+                this.onMouseMove();
             },
 
             onRightClick: function(e) {
