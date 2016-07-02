@@ -434,7 +434,7 @@
                 throw e;
             }
         }
-        var geoData = {name: name, tracks: segments, error: error};
+        var geoData = {name: name || "Text encoded track", tracks: segments, error: error};
         try {
             geoData.color = s.readNumber();
             geoData.measureTicksShown = s.readNumber();
