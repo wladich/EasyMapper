@@ -6,7 +6,7 @@
 
     L.Control.Coordinates = L.Control.extend({
             options: {
-                position: 'topleft'
+                position: 'bottomleft'
             },
 
             onAdd: function(map) {
