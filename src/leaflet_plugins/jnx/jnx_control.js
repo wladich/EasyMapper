@@ -487,7 +487,7 @@
             var region = this._selector.getBounds();
             self.downloadProgressDone(0);
             var incProgress = function(d) {self.downloadProgressDone(self.downloadProgressDone() + d);};
-            var filename = 'nakarte.tk_' + this.sourceLayerName.toLowerCase().replace(/[ ()]+/, '_') + '.jnx';
+            var filename = 'nakarte.tk_' + this.sourceLayerName.toLowerCase().replace(/[ ()]+/, '_') + '_z' + maxZoom + '.jnx';
             var zOrder = 30 + this.jnxProductId;
             layerToJnx(layer, this.sourceLayerName, this._map, region, zooms, this.jnxProductId, zOrder, this.downloadProgressRange, incProgress)
                 .then(function (jnxData) {
