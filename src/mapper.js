@@ -114,7 +114,11 @@
             this.layersControl.enableHashState('l', ['O']);
             this.printPagesControl.enableHashState('p');
             this.jnx.enableHashState('j');
+            if (!window.location.href.match(/[&#]nktk=/)) {
+                this.loadTracksFromStorage();
+            }
             this.trackList.enableHashState('nktk');
+            window.onbeforeunload = this.saveTracksToStorage.bind(this);
 
             btn.on('clicked', this.startRuler, this);
             map.on('baselayerchange overlayadd overlayremove', function () {
@@ -130,6 +134,85 @@
                     map.closePopup();
                 }
             })
+        },
+
+        loadTracksFromStorage: function() {
+            if (!(window.Storage && window.localStorage)) {
+                return;
+            }
+            var i, key, m, s,
+                geodata,
+                maxKey = -1;
+
+            for (i = 0; i < localStorage.length; i++) {
+                key = localStorage.key(i);
+                m = key.match(/^trackList_(\d+)$/);
+                if (m && m[1] !== undefined) {
+                    if (+m[1] > maxKey) {
+                        maxKey = +m[1];
+                    }
+                }
+            }
+            if (maxKey > -1) {
+                key = 'trackList_' + maxKey;
+                s = localStorage.getItem(key);
+                localStorage.removeItem(key);
+                geodata = parseGeoFile('', s);
+                this.trackList.addTracksFromGeodataArray(geodata);
+            }
+
+        },
+
+        saveTracksToStorage: function() {
+            if (!(window.Storage && window.localStorage)) {
+                return;
+            }
+            var tracks = this.trackList.tracks(),
+                serialized = [],
+                maxKey = -1,
+                i, track, s, key, m, keys = [];
+            if (tracks.length === 0) {
+                return;
+            }
+            for (i = 0; i < tracks.length; i++) {
+                track = tracks[i];
+                s = this.trackList.trackToString(track);
+                serialized.push(s);
+            }
+            if (serialized.length === 0) {
+                return;
+            }
+            s = '#nktk=' + serialized.join('/');
+
+            for (i = 0; i < localStorage.length; i++) {
+                key = localStorage.key(i);
+                m = key.match(/^trackList_(\d+)$/);
+                if (m && m[1] !== undefined) {
+                    if (+m[1] > maxKey) {
+                        maxKey = +m[1];
+                    }
+                }
+            }
+            key = 'trackList_' + (maxKey + 1);
+            localStorage.setItem(key, s);
+
+            //cleanup stale records
+            for (i = 0; i < localStorage.length; i++) {
+                key = localStorage.key(i);
+                m = key.match(/^trackList_(\d+)$/);
+                if (m && m[1] !== undefined) {
+                    keys.push(+m[1]);
+                }
+            }
+            if (keys.length > 10) {
+                keys.sort(function(a, b) {return a - b});
+                console.log(keys);
+                for (i = 0; i < keys.length - 10; i++) {
+                    key = 'trackList_' + keys[i];
+                    localStorage.removeItem(key);
+                }
+            }
+
         }
 
     });
