@@ -232,8 +232,6 @@
                     } else {
                         message += ', loaded data can be invalid or incomplete';
                     }
-                } else if (data_empty) {
-                    message = 'File "{name}" contains no data';
                 }
                 if (message) {
                     message = L.Util.template(message, {name: geodata.name});
