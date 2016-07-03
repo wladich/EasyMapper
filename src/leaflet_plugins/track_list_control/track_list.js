@@ -664,7 +664,7 @@
 
         copyAllTracks: function() {
             this.stopActiveDraw();
-            var tracks = this.tracks().slice(0),
+            var tracks = this.tracks(),
                 serialized = [],
                 i, track, s;
             for (i = 0; i < tracks.length; i++) {
@@ -678,7 +678,7 @@
 
         copyVisibleTracks: function() {
             this.stopActiveDraw();
-            var tracks = this.tracks().slice(0),
+            var tracks = this.tracks(),
                 serialized = [],
                 i, track, s;
             for (i = 0; i < tracks.length; i++) {
