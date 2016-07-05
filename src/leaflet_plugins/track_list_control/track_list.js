@@ -334,11 +334,11 @@
             });
         },
 
-        copyLinkToClipboard: function(track) {
+        copyLinkToClipboard: function(track, mouseEvent) {
             this.stopActiveDraw();
             var s = this.trackToString(track);
             var url = window.location + '&nktk=' + s;
-            fileutils.copyToClipboard(url);
+            fileutils.copyToClipboard(url, mouseEvent);
         },
 
         saveTrackAsFile: function(track, exporter, extension) {
@@ -662,7 +662,7 @@
             return geoExporters.saveToString(lines, track.name(), track.color(), track.measureTicksShown());
         },
 
-        copyAllTracks: function() {
+        copyAllTracks: function(mouseEvent) {
             this.stopActiveDraw();
             var tracks = this.tracks(),
                 serialized = [],
@@ -673,10 +673,10 @@
                 serialized.push(s);
             }
             var url = window.location + '&nktk=' + serialized.join('/');
-            fileutils.copyToClipboard(url);
+            fileutils.copyToClipboard(url, mouseEvent);
         },
 
-        copyVisibleTracks: function() {
+        copyVisibleTracks: function(mouseEvent) {
             this.stopActiveDraw();
             var tracks = this.tracks(),
                 serialized = [],
@@ -689,7 +689,7 @@
                 }
             }
             var url = window.location + '&nktk=' + serialized.join('/');
-            fileutils.copyToClipboard(url);
+            fileutils.copyToClipboard(url, mouseEvent);
         },
 
         exportTracks: function(minTicksIntervalMeters) {

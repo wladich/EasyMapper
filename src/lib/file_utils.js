@@ -162,13 +162,38 @@ var fileutils = (function() {
 
     }
 
-    function copyToClipboard(s) {
+    function showNotification(message, mouseEvent) {
+        var el = document.createElement('div');
+        el.innerHTML = message;
+        el.style = 'color: white; background-color: #333; border-radius: 4px; padding: 0.5em 0.7em; ' +
+            'position: absolute; z-index: 100000; font-family: Hevetica, arial; font-size: 11px';
+        document.body.appendChild(el);
+        var w = el.offsetWidth,
+            h = el.offsetHeight,
+            x = mouseEvent.clientX - w - 8,
+            y= mouseEvent.clientY - h / 2;
+        if (x < 0) {
+            x = 0
+        }
+        if (y < 0) {
+            y = 0
+        }
+        el.style.top = y + 'px';
+        el.style.left = x + 'px';
+        setTimeout(function() {
+            el.remove();
+        }, 1000);
+
+    }
+
+    function copyToClipboard(s, mouseEvent) {
         try {
             var ta = document.createElement('textarea');
             ta.value = s;
             document.body.appendChild(ta);
             ta.select();
             document.execCommand('copy');
+            showNotification('Copied', mouseEvent);
         } catch (e) {
             prompt("Copy to clipboard: Ctrl+C, Enter", s);
         }

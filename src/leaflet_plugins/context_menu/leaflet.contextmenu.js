@@ -77,7 +77,7 @@
             var callback = itemOptions.callback;
             if (callback && !itemOptions.disabled) {
                 L.DomEvent.addListener(el, 'mousedown', function(e) {
-                    callback();
+                    callback(e);
                     L.DomEvent.stopPropagation(e);
                     L.DomEvent.preventDefault(e);
                     this.hide();
