@@ -128,6 +128,7 @@ var geoExporters = (function() {
 
     function saveToString(segments, name, color, measureTicksShown) {
         var stringified = [];
+        stringified.push(packNumber(1));
         name = fileutils.encodeUTF8(name);
         stringified.push(packNumber(name.length));
         stringified.push(name);

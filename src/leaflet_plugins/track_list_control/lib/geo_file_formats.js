@@ -391,7 +391,7 @@
         return s;
     };
 
-    function parseSringified(s) {
+    function parseStringified(s, oldVersion) {
         var name,
             n,
             segments = [],
@@ -407,6 +407,14 @@
         }
         s = new PackedStreamReader(s);
         try {
+            if (oldVersion) {
+                version = 1;
+            } else {
+                version = s.readNumber();
+            }
+            if (version != 1) {
+                return [{name: 'Text encoded track', error: ['CORRUPT']}];
+            }
             n = s.readNumber();
             name = s.readString(n);
             name = fileutils.decodeUTF8(name);
@@ -453,7 +461,7 @@
         if (i === -1 ) {
             return null;
         }
-        return parseSringified(s.substring(i + 8));
+        return parseStringified(s.substring(i + 8), true);
     }
 
     function parseNakarteUrl(s) {
@@ -469,7 +477,7 @@
         var geodataArray = [];
         for (i = 0; i < s.length; i++) {
             if (s[i]) {
-                geodataArray.push.apply(geodataArray, parseSringified(s[i]));
+                geodataArray.push.apply(geodataArray, parseStringified(s[i]));
             }
         }
         return geodataArray;
