@@ -163,7 +163,7 @@
         if (dom.documentElement.nodeName == 'parsererror') {
             return null;
         }
-        if (dom.getElementsByTagName('Document').length === 0) {
+        if (dom.getElementsByTagName('kml').length === 0) {
             return null;
         }
 
