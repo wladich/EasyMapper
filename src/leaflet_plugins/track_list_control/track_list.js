@@ -60,6 +60,8 @@
                         '<td><div class="color-sample" data-bind="style: {backgroundColor: $parent.colors[track.color()]}, click: $parent.onColorSelectorClicked.bind($parent)"></div></td>' +
                         '<td><div class="track-name-wrapper"><div class="track-name" data-bind="text: track.name, attr: {title: track.name}, click: $parent.setViewToTrack.bind($parent)"></div></div></td>' +
                         '<td><div class="button-length" data-bind="text: track.length, css: {\'ticks-enabled\': track.measureTicksShown}, click: $parent.switchMeasureTicksVisibility.bind($parent)"></div></td>' +
+                        '<td><div class="button-add-track" title="Add track segment" data-bind="click: $parent.addSegmentAndEdit.bind($parent, track)"></div></td>' +
+                        '<td><div class="button-add-point" title="Add point" data-bind="click: $parent.placeNewPoint.bind($parent, track)"></div></td>' +
                         '<td><a class="track-text-button" title="Actions" data-bind="click: $parent.showTrackMenu.bind($parent)">&hellip;</a></td>' +
                     '</tr>' +
                 '</table>'
@@ -98,6 +100,18 @@
             } else {
                 return true;
             }
+        },
+
+        getTrackPolylines: function(track) {
+            return track.feature.getLayers().filter(function(layer) {
+                return layer instanceof L.Polyline;
+            })
+        },
+
+        getTrackPoints: function(track) {
+            return track.feature.getLayers().filter(function(layer) {
+                return layer instanceof L.Marker;
+            })
         },
 
         addNewTrack: function(name) {
@@ -177,12 +191,14 @@
                 var data_empty = !((geodata.tracks  && geodata.tracks.length) || (geodata.points && geodata.points.length));
 
                 if (!data_empty) {
-                    geodata.tracks = geodata.tracks.map(function(line) {
-                        return L.LineUtil.simplifyLatlngs(line, 360 / (1<<24));
-                    });
+                    if (geodata.tracks) {
+                        geodata.tracks = geodata.tracks.map(function(line) {
+                                return L.LineUtil.simplifyLatlngs(line, 360 / (1 << 24));
+                            }
+                        );
+                    }
                     this.addTrack(geodata);
                 }
-
                 var error_messages = {
                     'CORRUPT': 'File "{name}" is corrupt',
                     'UNSUPPORTED': 'File "{name}" has unsupported format or is badly corrupt',
@@ -213,10 +229,11 @@
 
         onTrackColorChanged: function(track) {
             var color = this.colors[track.color()];
-            track.feature.getLayers().forEach(
+            this.getTrackPolylines(track).forEach(
                 function(polyline) {
                     polyline.setStyle({color: color});
                 });
+            this.getTrackPoints(track).forEach(this.updateMarkerIcon.bind(this));
         },
 
         onTrackVisibilityChanged: function(track) {
@@ -224,11 +241,12 @@
                 this.map.addLayer(track.feature);
             } else {
                 this.map.removeLayer(track.feature);
+                this.stopPlacingPoint();
             }
         },
 
         onTrackLengthChanged: function(track) {
-            var lines = track.feature.getLayers(),
+            var lines = this.getTrackPolylines(track),
                 length = 0;
             for (var i in lines) {
                 length += lines[i].getLength();
@@ -245,7 +263,7 @@
 
         setTrackMeasureTicksVisibility: function(track) {
             var visible = track.measureTicksShown(),
-                lines = track.feature.getLayers();
+                lines = this.getTrackPolylines(track);
             for (var i in lines) {
                 lines[i].setMeasureTicksVisible(visible);
             }
@@ -279,11 +297,6 @@
             var items = [
                 function() {return {text: track.name(), disabled: true};},
                 '-',
-                {text: 'Add segment', callback: function() {
-                    var polyline = this.addTrackSegment(track, []);
-                    this.startEditTrackSegement(track, polyline);
-                    polyline.startDrawingLine(1);
-                }.bind(this)},
                 {text: 'Rename', callback: this.renameTrack.bind(this, track)},
                 {text: 'Duplicate', callback: this.duplicateTrack.bind(this, track)},
                 {text: 'Reverse', callback: this.reverseTrack.bind(this, track)},
@@ -297,10 +310,17 @@
             track._actionsMenu = new L.Contextmenu(items);
         },
 
+        addSegmentAndEdit: function(track) {
+            this.stopPlacingPoint();
+            var polyline = this.addTrackSegment(track, []);
+            this.startEditTrackSegement(track, polyline);
+            polyline.startDrawingLine(1);
+        },
+
         duplicateTrack: function(track) {
             var segments = [], segment,
                 line,
-                lines = track.feature.getLayers();
+                lines = this.getTrackPolylines(track);
             for (var i = 0; i < lines.length; i++) {
                 segment = [];
                 line = lines[i].getLatLngs();
@@ -329,7 +349,7 @@
 
         reverseTrack: function(track) {
             var self = this;
-            track.feature.getLayers().forEach(function(trackSegment) {
+            this.getTrackPolylines(track).forEach(function(trackSegment) {
                 self.reverseTrackSegment(trackSegment);
             });
         },
@@ -343,7 +363,7 @@
 
         saveTrackAsFile: function(track, exporter, extension) {
             this.stopActiveDraw();
-            var lines = track.feature.getLayers()
+            var lines = this.getTrackPolylines(track)
                 .map(function(line) {
                     return line.getLatLngs();
                 });
@@ -383,7 +403,17 @@
             }
         },
 
+        stopEditLine: function() {
+            if (this._editedLine) {
+                this._editedLine.stopEdit();
+                this._editedLine = null;
+            }
+        },
+
         onTrackSegmentClick: function(track, trackSegment) {
+            if (this._editedPoint) {
+                return;
+            }
             if (this._lineJoinCursor) {
                 this.joinTrackSegments(trackSegment);
             } else {
@@ -400,6 +430,50 @@
             polyline.once('editend', function() {
                 setTimeout(this.onLineEditEnd.bind(this, track, polyline), 0);
             }.bind(this));
+        },
+
+        placeNewPoint: function(track) {
+            this.startPlacingPoint({_parentTrack: track, _new: true});
+        },
+
+        startPlacingPoint: function(marker) {
+            this.stopPlacingPoint();
+            this.stopEditLine();
+            L.DomUtil.addClass(this._map._container, 'leaflet-point-placing');
+            this._editedPoint = marker;
+            this.map.on('click', this.placePoint, this);
+            L.DomEvent.on(document, 'keyup', this.stopPlacingPointOnEscPressed, this);
+        },
+
+        placePoint: function(e) {
+            if (!this._editedPoint) {
+                return;
+            }
+            var marker = this._editedPoint;
+            if (marker._new) {
+                marker._parentTrack._pointAutoInc += 1;
+                var name = '' + marker._parentTrack._pointAutoInc;
+                while (name.length < 3) {
+                    name = '0' + name;
+                }
+                this.addPoint(marker._parentTrack, {name: name, lat: e.latlng.lat, lng: e.latlng.lng});
+            } else {
+                marker.setLatLng(e.latlng);
+            }
+            this.stopPlacingPoint();
+        },
+
+        stopPlacingPointOnEscPressed: function(e) {
+            if (e.keyCode === 27) {
+                this.stopPlacingPoint();
+            }
+        },
+
+        stopPlacingPoint: function() {
+            this._editedPoint = null;
+            L.DomUtil.removeClass(this._map._container, 'leaflet-point-placing');
+            L.DomEvent.off(document, 'keyup', this.stopPlacingPointOnEscPressed, this);
+            this.map.off('click', this.placePoint, this);
         },
 
         joinTrackSegments: function(newSegment) {
@@ -597,9 +671,9 @@
         },
 
         addTrack: function(geodata) {
-            //var polylines = [];
-            var color =  geodata.color;
+            var color;
             if (color >= 0 && color < this.colors.length) {
+                color = geodata.color;
             } else {
                 color = this._lastTrackColor;
                 this._lastTrackColor = (this._lastTrackColor + 1) % this.colors.length;
@@ -610,9 +684,11 @@
                 visible: ko.observable(true),
                 length: ko.observable('empty'),
                 measureTicksShown: ko.observable(geodata.measureTicksShown || false),
-                feature: L.featureGroup([])
+                feature: L.featureGroup([]),
+                _pointAutoInc: 0
             };
             (geodata.tracks || []).forEach(this.addTrackSegment.bind(this, track));
+            (geodata.points || []).forEach(this.addPoint.bind(this, track));
 
             this.tracks.push(track);
 
@@ -628,9 +704,57 @@
             return track;
         },
 
+
+        updateMarkerIcon: function(marker) {
+            var symbol = 'marker',
+                colorInd = marker._parentTrack.color() + 1,
+                className = 'symbol-' + symbol + '-' + colorInd;
+            var icon = L.divIcon({className: 'track-waypoint ' + className,
+                                  html: marker._label.replace('<', '&lt;').replace('>', '&gt;')});
+            marker.setIcon(icon);
+        },
+
+        setMarkerLabel: function(marker, label) {
+            if (label.match(/\d{3,}/)) {
+                var n = parseInt(label, 10);
+                marker._parentTrack._pointAutoInc =
+                    Math.max(n, marker._parentTrack._pointAutoInc | 0);
+            }
+            marker._label = label;
+            this.updateMarkerIcon(marker);
+        },
+
+        addPoint: function(track, srcPoint) {
+            var marker = L.marker([srcPoint.lat, srcPoint.lng]);
+            marker._parentTrack = track;
+            this.setMarkerLabel(marker, srcPoint.name);
+            track.feature.addLayer(marker);
+            marker.bindContextmenu([
+                {text: 'Rename', callback: this.renamePoint.bind(this, marker)},
+                {text: 'Move', callback: this.startPlacingPoint.bind(this, marker)},
+                {text: 'Delete', callback: this.removePoint.bind(this, marker)},
+            ]);
+            marker.on('click', marker._contextMenu.showOnMouseEvent, marker._contextMenu);
+            return marker;
+        },
+
+        removePoint: function(marker) {
+            this.stopPlacingPoint();
+            marker._parentTrack.feature.removeLayer(marker);
+        },
+
+        renamePoint: function(marker) {
+            this.stopPlacingPoint();
+            var newLabel = prompt('New point name', marker._label);
+            if (newLabel !== null) {
+                this.setMarkerLabel(marker, newLabel);
+            }
+        },
+
         removeTrack: function(track) {
             track.visible(false);
             this.tracks.remove(track);
+            this.stopPlacingPoint();
         },
 
         deleteAllTracks: function() {
@@ -653,7 +777,7 @@
         },
 
         trackToString: function(track) {
-            var lines = track.feature.getLayers().map(function(line) {
+            var lines = this.getTrackPolylines(track).map(function(line) {
                     var points = line.getLatLngs();
                     points = L.LineUtil.simplifyLatlngs(points, 360 / (1 << 24));
                     return points;
@@ -693,8 +817,9 @@
         },
 
         exportTracks: function(minTicksIntervalMeters) {
+            var self = this;
             return this.tracks()
-                .filter(function(track) {return track.feature.getLayers().length;})
+                .filter(function(track) {return self.getTrackPolylines(track).length;})
                 .map(function(track) {
                     var capturedTrack = track.feature.getLayers().map(function(pl) {
                             return pl.getLatLngs().map(function(ll) {
@@ -714,6 +839,6 @@
                         }))
                     };
                 });
-        },
+        }
     });
 })();

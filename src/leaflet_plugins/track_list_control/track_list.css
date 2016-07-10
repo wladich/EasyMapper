@@ -4,7 +4,7 @@
     border-radius: 5px 5px 5px 5px;
     box-shadow: 0 1px 5px rgba(0, 0, 0, 0.4);
     padding: 8px 8px 8px 8px;
-    width: 250px;
+    width: 290px;
 }
 
 .leaflet-control-tracklist .hint {
@@ -31,7 +31,9 @@
 }
 
 .leaflet-control-tracklist .button:hover,
-.leaflet-control-tracklist .button-length:hover {
+.leaflet-control-tracklist .button-length:hover,
+.leaflet-control-tracklist .button-add-track:hover,
+.leaflet-control-tracklist .button-add-point:hover {
     background-color: #f4f4f4;
 }
 
@@ -107,7 +109,7 @@
     font-weight: bold;
     color: #333;
     cursor: pointer;
-    margin-left: 4px;
+    /*margin-left: 4px;*/
 }
 
 .leaflet-control-tracklist .button-length {
@@ -121,6 +123,30 @@
     padding: 0 3px;
     cursor: pointer;
     white-space: nowrap;
+    width: 40px;
+    text-align: right;
+}
+
+.leaflet-control-tracklist .button-add-track {
+    background-image: url("images/add_line.png");
+}
+
+
+.leaflet-control-tracklist .button-add-point {
+    background-image: url("images/add_point.png");
+}
+
+
+.leaflet-control-tracklist .button-add-track,
+.leaflet-control-tracklist .button-add-point {
+    display: block;
+    border-radius: 4px;
+    border: 1px solid #aaa;
+    width: 16px;
+    height: 16px;
+    margin-right: 4px;
+    cursor: pointer;
+
 }
 
 .leaflet-control-tracklist .ticks-enabled {
@@ -151,4 +177,55 @@
     float: right;
     cursor: pointer;
     margin-right: 2px;
+}
+
+.track-waypoint {
+    display: block;
+    width: 21px !important;
+    height: 21px !important;
+    background-repeat: no-repeat;
+    margin-top: -21px !important;
+    margin-left: -10.5px !important;
+    padding-left: 20px;
+    padding-bottom: 15px;
+    font-size: 10px;
+    font-weight: bold;
+    font-family: Verdana, Arial, sans-serif;
+    white-space: nowrap;
+    text-shadow: 1px 0 1px #fff,
+        1px 1px 1px #fff,
+        0 1px 1px #fff,
+        -1px 1px 1px #fff,
+        -1px 0 1px #fff,
+        -1px -1px 1px #fff,
+        0 -1px 1px #fff,
+        1px -1px 1px #fff;
+}
+
+.track-waypoint.symbol-marker-1 {
+    background-image: url("images/marker_1.png");
+}
+.track-waypoint.symbol-marker-2 {
+    background-image: url("images/marker_2.png");
+}
+.track-waypoint.symbol-marker-3 {
+    background-image: url("images/marker_3.png");
+}
+.track-waypoint.symbol-marker-4 {
+    background-image: url("images/marker_4.png");
+}
+.track-waypoint.symbol-marker-5 {
+    background-image: url("images/marker_5.png");
+}
+.track-waypoint.symbol-marker-6 {
+    background-image: url("images/marker_6.png");
+}
+
+.leaflet-point-placing {
+    cursor: crosshair !important;
+}
+
+
+.leaflet-point-placing svg * {
+    pointer-events: none;
 }
