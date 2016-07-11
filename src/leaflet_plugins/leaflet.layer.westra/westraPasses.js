@@ -1,5 +1,4 @@
 //@require leaflet
-//@require leaflet.markercluster
 //@require leaflet.layer.canvas.markers
 //@require westraPasses.css
 

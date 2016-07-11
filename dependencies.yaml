@@ -77,10 +77,6 @@ provides:
         - src/leaflet_plugins/coordinates_control/leaflet.control.coordinates.css
     binstream:
         - src/lib/binstream.js
-    leaflet.markercluster:
-        - src/lib/vendor/markercluster/leaflet.markercluster-src.js
-        - src/lib/vendor/markercluster/MarkerCluster.css
-        - src/lib/vendor/markercluster/MarkerCluster.Default.css
     rbush:
         - src/lib/vendor/rbush.js
     leaflet.layer.canvas.markers:
