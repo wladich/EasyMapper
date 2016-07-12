@@ -220,8 +220,8 @@
                         imgW = Math.round(img.width * self.options.iconScale);
                         imgH = Math.round(img.height * self.options.iconScale);
                         if (!(markerId in self._iconPositions)) {
-                            x = job.projectedXY.x - job.icon.center[0];
-                            y = job.projectedXY.y - job.icon.center[1];
+                            x = job.projectedXY.x - job.icon.center[0] * self.options.iconScale;
+                            y = job.projectedXY.y - job.icon.center[1] * self.options.iconScale;
                             x = Math.round(x);
                             y = Math.round(y);
                             self._iconPositions[markerId] = [x, y];
