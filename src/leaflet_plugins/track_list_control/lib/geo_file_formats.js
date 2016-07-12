@@ -207,12 +207,18 @@
 
         function getPoints(dom) {
             var points = [],
-                placemarks, i, coord, name, lat, lng;
+                placemarks, i, coord, name, lat, lng, pointObjs;
             placemarks = dom.getElementsByTagName('Placemark');
             for (i = 0; i < placemarks.length; i++) {
-                coord = placemarks[i].getElementsByTagName('coordinates');
+                pointObjs = placemarks[i].getElementsByTagName('Point');
+                if (pointObjs.length == 0) {
+                    continue
+                } else if (pointObjs.length > 1) {
+                    error = 'CORRUPT';
+                    break;
+                }
+                coord = pointObjs[0].getElementsByTagName('coordinates');
                 if (coord.length != 1) {
-                    debugger;
                     error = 'CORRUPT';
                     break;
                 }
