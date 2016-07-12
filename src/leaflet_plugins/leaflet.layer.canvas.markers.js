@@ -17,6 +17,30 @@
      }
      */
 
+    function cached(f) {
+        var cache = {};
+        return function(arg) {
+            if (!(arg in cache)) {
+                cache[arg] = f(arg);
+            }
+            return cache[arg];
+        }
+    }
+
+    function iconFromBackgroundUrl(className) {
+        var container = L.DomUtil.create('div', '', document.body),
+            el = L.DomUtil.create('div', className, container),
+            st = window.getComputedStyle(el),
+            url = st.backgroundImage.replace(/^url\("?/, '').replace(/"?\)$/, ''),
+            icon;
+        container.style.position = 'absolute';
+        icon = {'url': url, 'center': [-el.offsetLeft, -el.offsetTop]};
+        document.body.removeChild(container);
+        container.removeChild(el);
+        return icon;
+    }
+
+    L.Util.iconFromBackgroundUrl = cached(iconFromBackgroundUrl);
 
     L.TileLayer.Markers = L.TileLayer.Canvas.extend({
             options: {

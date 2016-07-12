@@ -7,31 +7,6 @@
 (function() {
     "use strict";
 
-    function cached(f) {
-        var cache = {};
-        return function(arg) {
-            if (!(arg in cache)) {
-                cache[arg] = f(arg);
-            }
-            return cache[arg];
-        }
-    }
-
-    function _iconFromBackground(className) {
-        var container = L.DomUtil.create('div', '', document.body),
-            el = L.DomUtil.create('div', className, container),
-            st = window.getComputedStyle(el),
-            url = st.backgroundImage.replace(/^url\("?/, '').replace(/"?\)$/, ''),
-            icon;
-        container.style.position = 'absolute';
-        icon = {'url': url, 'center': [-el.offsetLeft, -el.offsetTop]};
-        document.body.removeChild(container);
-        container.removeChild(el);
-        return icon;
-    }
-
-    var iconFromBackground = cached(_iconFromBackground);
-
     window.mapperOpenDetailsWindow = function(url, width) {
         var left, top, height,
             screenLeft = screen.availLeft || 0,
@@ -342,7 +317,7 @@
                 if (marker.properties.notconfirmed || !marker.properties.name || marker.properties.coords_notconfirmed) {
                     className += ' westra-pass-notconfirmed';
                 }
-                return iconFromBackground(className);
+                return L.Util.iconFromBackgroundUrl(className);
             },
 
             _loadMarkers: function(xhr) {
