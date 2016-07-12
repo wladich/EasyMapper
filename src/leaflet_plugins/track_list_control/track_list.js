@@ -16,6 +16,25 @@
     var MeasuredEditableLine = L.MeasuredLine.extend({});
     MeasuredEditableLine.include(L.Polyline.EditMixin);
 
+    var Waypoints = L.TileLayer.Markers.extend({
+        clone: function() {
+            var markers = this.rtree.all(),
+                markersCopy;
+
+            function cloneMarker(marker) {
+                return {
+                    latlng: {lat: marker.latlng.lat, lng: marker.latlng.lng},
+                    label: marker.label,
+                    icon: marker.icon
+                };
+            }
+            markersCopy = markers.map(cloneMarker);
+            var options = {};
+            L.extend(options, this.options, {iconScale: 2, labelFontSize: 16});
+            return new Waypoints(markersCopy, options);
+        }
+    });
+
     L.Control.TrackList = L.Control.extend({
         options: {position: 'bottomright'},
 
@@ -79,6 +98,9 @@
                 {text:'Delete all tracks', callback: this.deleteAllTracks.bind(this)},
                 {text:'Delete hidden tracks', callback: this.deleteHiddenTracks.bind(this)},
             ]);
+            this._markerLayer = new Waypoints(null, {print: true}).addTo(this.map);
+            this._markerLayer._container.style.zIndex = 100000;
+            this._markerLayer.on('markerclick markercontextmenu', this.onMarkerClick, this);
             return container;
         },
 
@@ -109,9 +131,7 @@
         },
 
         getTrackPoints: function(track) {
-            return track.feature.getLayers().filter(function(layer) {
-                return layer instanceof L.Marker;
-            })
+            return track.markers;
         },
 
         addNewTrack: function(name) {
@@ -233,15 +253,19 @@
                 function(polyline) {
                     polyline.setStyle({color: color});
                 });
-            this.getTrackPoints(track).forEach(this.updateMarkerIcon.bind(this));
+            var markers = this.getTrackPoints(track);
+            markers.forEach(this.setMarkerIcon.bind(this));
+            this._markerLayer.updateMarkers(markers);
         },
 
         onTrackVisibilityChanged: function(track) {
             if (track.visible()) {
                 this.map.addLayer(track.feature);
+                this._markerLayer.addMarkers(track.markers);
             } else {
                 this.map.removeLayer(track.feature);
                 this.stopPlacingPoint();
+                this._markerLayer.removeMarkers(track.markers);
             }
         },
 
@@ -311,6 +335,9 @@
         },
 
         addSegmentAndEdit: function(track) {
+            if (!track.visible()) {
+                return;
+            }
             this.stopPlacingPoint();
             var polyline = this.addTrackSegment(track, []);
             this.startEditTrackSegement(track, polyline);
@@ -433,6 +460,9 @@
         },
 
         placeNewPoint: function(track) {
+            if (!track.visible()) {
+                return;
+            }
             this.startPlacingPoint({_parentTrack: track, _new: true});
         },
 
@@ -456,9 +486,11 @@
                 while (name.length < 3) {
                     name = '0' + name;
                 }
-                this.addPoint(marker._parentTrack, {name: name, lat: e.latlng.lat, lng: e.latlng.lng});
+                marker = this.addPoint(marker._parentTrack, {name: name, lat: e.latlng.lat, lng: e.latlng.lng});
+                this._markerLayer.addMarker(marker);
             } else {
-                marker.setLatLng(e.latlng);
+                marker.latlng = e.latlng;
+                this._markerLayer.updateMarker(marker);
             }
             this.stopPlacingPoint();
         },
@@ -685,7 +717,8 @@
                 length: ko.observable('empty'),
                 measureTicksShown: ko.observable(geodata.measureTicksShown || false),
                 feature: L.featureGroup([]),
-                _pointAutoInc: 0
+                _pointAutoInc: 0,
+                markers: []
             };
             (geodata.tracks || []).forEach(this.addTrackSegment.bind(this, track));
             (geodata.points || []).forEach(this.addPoint.bind(this, track));
@@ -705,13 +738,11 @@
         },
 
 
-        updateMarkerIcon: function(marker) {
+        setMarkerIcon: function(marker) {
             var symbol = 'marker',
                 colorInd = marker._parentTrack.color() + 1,
                 className = 'symbol-' + symbol + '-' + colorInd;
-            var icon = L.divIcon({className: 'track-waypoint ' + className,
-                                  html: marker._label.replace('<', '&lt;').replace('>', '&gt;')});
-            marker.setIcon(icon);
+            marker.icon = L.Util.iconFromBackgroundUrl('track-waypoint ' + className);
         },
 
         setMarkerLabel: function(marker, label) {
@@ -720,34 +751,41 @@
                 marker._parentTrack._pointAutoInc =
                     Math.max(n, marker._parentTrack._pointAutoInc | 0);
             }
-            marker._label = label;
-            this.updateMarkerIcon(marker);
+            marker.label = label;
         },
 
         addPoint: function(track, srcPoint) {
-            var marker = L.marker([srcPoint.lat, srcPoint.lng]);
-            marker._parentTrack = track;
+            var marker = {
+                latlng: L.latLng([srcPoint.lat, srcPoint.lng]),
+                _parentTrack: track,
+            };
+            this.setMarkerIcon(marker);
             this.setMarkerLabel(marker, srcPoint.name);
-            track.feature.addLayer(marker);
-            marker.bindContextmenu([
-                {text: 'Rename', callback: this.renamePoint.bind(this, marker)},
-                {text: 'Move', callback: this.startPlacingPoint.bind(this, marker)},
-                {text: 'Delete', callback: this.removePoint.bind(this, marker)},
-            ]);
-            marker.on('click', marker._contextMenu.showOnMouseEvent, marker._contextMenu);
+            track.markers.push(marker);
+            marker._parentTrack = track;
             return marker;
+        },
+
+        onMarkerClick: function(e) {
+            L.contextmenu([
+                {text: 'Rename', callback: this.renamePoint.bind(this, e.marker)},
+                {text: 'Move', callback: this.startPlacingPoint.bind(this, e.marker)},
+                {text: 'Delete', callback: this.removePoint.bind(this, e.marker)},
+            ]).showOnMouseEvent(e);
         },
 
         removePoint: function(marker) {
             this.stopPlacingPoint();
-            marker._parentTrack.feature.removeLayer(marker);
+            this._markerLayer.removeMarker(marker);
+            marker._parentTrack.markers.remove(marker);
         },
 
         renamePoint: function(marker) {
             this.stopPlacingPoint();
-            var newLabel = prompt('New point name', marker._label);
+            var newLabel = prompt('New point name', marker.label);
             if (newLabel !== null) {
                 this.setMarkerLabel(marker, newLabel);
+                this._markerLayer.updateMarker(marker);
             }
         },
 
