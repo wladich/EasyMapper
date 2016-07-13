@@ -488,7 +488,8 @@
             pointsCount,
             arcUnit = ((1 << 24) - 1) / 360,
             x, y,
-            error, version, i;
+            error, version, i, midX, midY, symbol, waypointName,
+            wayPoints = [], color, measureTicksShown ;
         s = decodeUrlSafeBase64(s);
         if (!s) {
             return [{name: 'Text encoded track', error: ['CORRUPT']}];
@@ -496,11 +497,11 @@
         s = new PackedStreamReader(s);
         try {
             if (oldVersion) {
-                version = 1;
+                version = 0;
             } else {
                 version = s.readNumber();
             }
-            if (version != 1) {
+            if (version != 1 && version != 2) {
                 return [{name: 'Text encoded track', error: ['CORRUPT']}];
             }
             n = s.readNumber();
@@ -530,17 +531,53 @@
                 throw e;
             }
         }
-        var geoData = {name: name || "Text encoded track", tracks: segments, error: error};
         try {
-            geoData.color = s.readNumber();
-            geoData.measureTicksShown = s.readNumber();
+            color = s.readNumber();
+            measureTicksShown = s.readNumber();
         } catch (e) {
-            if (e.message.match('Unexpected end of line while unpacking number')) {
-
+            if (version === 0 && e.message.match('Unexpected end of line while unpacking number')) {
+                color = 0;
+                measureTicksShown = 0;
             } else {
                 throw e;
             }
         }
+        if (version == 2) {
+            try {
+                pointsCount = s.readNumber();
+                if (pointsCount) {
+                    midX = s.readNumber();
+                    midY = s.readNumber();
+                }
+                for (; pointsCount--;) {
+                    n = s.readNumber();
+                    waypointName = s.readString(n);
+                    waypointName = fileutils.decodeUTF8(waypointName);
+                    symbol = s.readNumber();
+                    x = s.readNumber() + midX;
+                    y = s.readNumber() + midY;
+                    wayPoints.push({
+                        name: waypointName,
+                        lat: y / arcUnit,
+                        lng: x / arcUnit
+                    });
+                }
+            } catch (e) {
+                if (e.message.match('Unexpected end of line while unpacking number')) {
+                    error = ['CORRUPT'];
+                } else {
+                    throw e;
+                }
+            }
+        }
+        var geoData = {
+            name: name || "Text encoded track",
+            tracks: segments,
+            error: error,
+            points: wayPoints,
+            color: color,
+            measureTicksShown:measureTicksShown
+        };
         return [geoData];
     }
 

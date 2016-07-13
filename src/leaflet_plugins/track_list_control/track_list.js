@@ -394,17 +394,19 @@
                 .map(function(line) {
                     return line.getLatLngs();
                 });
+            var points = this.getTrackPoints(track);
             var name = track.name(),
                 i = name.lastIndexOf('.');
             if (i > -1 && i >= name.length - 5) {
                 name = name.slice(0, i);
             }
 
-            var fileText = exporter(lines, name);
-            if (!fileText) {
+            if (lines.length === 0 && points.length === 0) {
                 alert('Track is empty, nothing to save');
                 return;
             }
+
+            var fileText = exporter(lines, name, points);
             var filename = name + extension;
             fileutils.saveStringToFile(filename, 'application/download', fileText);
           },
@@ -821,7 +823,9 @@
                     return points;
                 }
             );
-            return geoExporters.saveToString(lines, track.name(), track.color(), track.measureTicksShown());
+            return geoExporters.saveToString(lines, track.name(), track.color(), track.measureTicksShown(),
+                this.getTrackPoints(track)
+            );
         },
 
         copyAllTracks: function(mouseEvent) {
