@@ -98,7 +98,7 @@
                 {text:'Delete all tracks', callback: this.deleteAllTracks.bind(this)},
                 {text:'Delete hidden tracks', callback: this.deleteHiddenTracks.bind(this)},
             ]);
-            this._markerLayer = new Waypoints(null, {print: true}).addTo(this.map);
+            this._markerLayer = new Waypoints(null, {print: true}).addTo(map);
             this._markerLayer._container.style.zIndex = 100000;
             this._markerLayer.on('markerclick markercontextmenu', this.onMarkerClick, this);
             return container;
