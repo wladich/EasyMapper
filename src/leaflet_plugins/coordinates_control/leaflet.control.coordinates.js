@@ -1,5 +1,6 @@
 //@require leaflet
 //@require leaflet.contextmenu
+//@require fileutils
 
 (function() {
     'use strict';
@@ -19,6 +20,8 @@
                     .on(container, 'click', this.onClick, this);
                 map.on('mousemove', this.onMouseMove, this);
                 this.menu = new L.Contextmenu([
+                        {text: 'Click to copy to clipboard', callback: this.prepareForClickOnMap.bind(this)},
+                        '-',
                         {text: 'ddd.ddddd&deg;', callback: this.onMenuSelect.bind(this, 'D')},
                         {text: 'ddd&deg;mm.mmm\'', callback: this.onMenuSelect.bind(this, 'DM')},
                         {text: 'ddd&deg;mm\'ss.s"', callback: this.onMenuSelect.bind(this, 'DMS')}
@@ -140,7 +143,21 @@
 
             onRightClick: function(e) {
                 this.menu.showOnMouseEvent(e);
+            },
+
+            onMapClick: function(e) {
+                console.log('2');
+                var s = this.formatCoodinate(e.latlng.lat, true) + ' ' + this.formatCoodinate(e.latlng.lng, false);
+                s = s.replace(/&deg;/g, '°');
+                fileutils.copyToClipboard(s, e.originalEvent);
+            },
+
+            prepareForClickOnMap: function() {
+                console.log('1');
+                this._map.once('click', this.onMapClick, this);
             }
+
+
 
             // TODO: onRemove
 
