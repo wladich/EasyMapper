@@ -313,9 +313,6 @@
                 } else {
                     className += 'westra-pass-marker-' + marker.properties.grade_eng;
                 }
-                if (marker.properties.notconfirmed || !marker.properties.name || marker.properties.coords_notconfirmed) {
-                    className += ' westra-pass-notconfirmed';
-                }
                 return L.Util.iconFromBackgroundUrl(className);
             },
 
@@ -408,19 +405,6 @@
                 description.push('Добавил');
                 description.push('</td><td>');
                 description.push(properties.author || "неизвестно");
-                description.push('</td></tr>');
-
-
-                description.push('<tr><td>');
-                description.push('Подтверждено модератором');
-                description.push('</td><td>');
-                description.push(properties.notconfirmed ? 'нет' : 'да');
-                description.push('</td></tr>');
-
-                description.push('<tr><td>');
-                description.push('Координаты подтверждены модератором');
-                description.push('</td><td>');
-                description.push(properties.coords_notconfirmed ? 'нет' : 'да');
                 description.push('</td></tr>');
 
                 if (properties.comments) {

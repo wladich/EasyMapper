@@ -65,42 +65,6 @@
     background-image: url("pass-nograde.png");
 }
 
-.westra-pass-marker-1a.westra-pass-notconfirmed {
-    background-image: url("pass-1a-notconfirmed.png");
-}
-
-.westra-pass-marker-1b.westra-pass-notconfirmed {
-    background-image: url("pass-1b-notconfirmed.png");
-}
-
-.westra-pass-marker-2a.westra-pass-notconfirmed {
-    background-image: url("pass-2a-notconfirmed.png");
-}
-
-.westra-pass-marker-2b.westra-pass-notconfirmed {
-    background-image: url("pass-2b-notconfirmed.png");
-}
-
-.westra-pass-marker-3a.westra-pass-notconfirmed {
-    background-image: url("pass-3a-notconfirmed.png");
-}
-
-.westra-pass-marker-3b.westra-pass-notconfirmed {
-    background-image: url("pass-3b-notconfirmed.png");
-}
-
-.westra-pass-marker-unknown.westra-pass-notconfirmed {
-    background-image: url("pass-unknown-notconfirmed.png");
-}
-
-.westra-pass-marker-nograde.westra-pass-notconfirmed {
-    background-image: url("pass-nograde-notconfirmed.png");
-}
-
-.westra-pass-marker-summit.westra-pass-notconfirmed {
-    background-image: url("summit-notconfirmed.png");
-}
-
 .westra-region-label {
     white-space: nowrap;
     width: auto !important;
