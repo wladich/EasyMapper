@@ -104,6 +104,12 @@
                 this.updateMarkers([marker]);
             },
 
+            setMarkerPosition: function(marker, latlng) {
+                this.removeMarker(marker);
+                marker.latlng = latlng;
+                this.addMarker(marker);
+            },
+
             getMarkers: function() {
                 return this.rtree.all();
             },

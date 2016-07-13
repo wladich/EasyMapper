@@ -491,8 +491,7 @@
                 marker = this.addPoint(marker._parentTrack, {name: name, lat: e.latlng.lat, lng: e.latlng.lng});
                 this._markerLayer.addMarker(marker);
             } else {
-                marker.latlng = e.latlng;
-                this._markerLayer.updateMarker(marker);
+                this._markerLayer.setMarkerPosition(marker, e.latlng);
             }
             this.stopPlacingPoint();
         },
