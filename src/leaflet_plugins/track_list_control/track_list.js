@@ -302,8 +302,18 @@
         },
 
         setViewToTrack: function(track) {
-            if (track.feature.getLayers().length) {
-                this.map.fitBounds(track.feature.getBounds());
+            var lines = this.getTrackPolylines(track);
+            var points = this.getTrackPoints(track);
+            if (lines.length || points.length) {
+                var bounds = L.latLngBounds([]);
+                lines.forEach(function(l) {
+                    bounds.extend(l.getBounds());
+                });
+                points.forEach(function(p) {
+                    bounds.extend([p.latlng.lat, p.latlng.lng]);
+                });
+                this.map.fitBounds(bounds);
+
             }
         },
 
