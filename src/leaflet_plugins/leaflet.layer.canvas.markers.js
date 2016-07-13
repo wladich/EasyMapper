@@ -11,12 +11,36 @@
      {
      latlng: L.Latlng,
      icon: {url: string, center: [x, y]} or function(marker) returning icon,
-     label: sting,
-     tooltip: string,
+     label: sting or function,
+     tooltip: string or function,
      any other fields
      }
      */
 
+    function cached(f) {
+        var cache = {};
+        return function(arg) {
+            if (!(arg in cache)) {
+                cache[arg] = f(arg);
+            }
+            return cache[arg];
+        }
+    }
+
+    function iconFromBackgroundUrl(className) {
+        var container = L.DomUtil.create('div', '', document.body),
+            el = L.DomUtil.create('div', className, container),
+            st = window.getComputedStyle(el),
+            url = st.backgroundImage.replace(/^url\("?/, '').replace(/"?\)$/, ''),
+            icon;
+        container.style.position = 'absolute';
+        icon = {'url': url, 'center': [-el.offsetLeft, -el.offsetTop]};
+        document.body.removeChild(container);
+        container.removeChild(el);
+        return icon;
+    }
+
+    L.Util.iconFromBackgroundUrl = cached(iconFromBackgroundUrl);
 
     L.TileLayer.Markers = L.TileLayer.Canvas.extend({
             options: {
@@ -44,8 +68,50 @@
             addMarkers: function(markers) {
                 if (markers) {
                     this.rtree.load(markers);
+                    this.resetLabels();
                     setTimeout(this.redraw.bind(this), 0);
                 }
+            },
+
+            addMarker: function(marker) {
+                // FIXME: adding existing marker must be be noop
+                this.rtree.insert(marker);
+                this.resetLabels();
+                setTimeout(this.redraw.bind(this), 0);
+            },
+
+            removeMarker: function(marker) {
+                this.removeMarkers([marker]);
+            },
+
+            removeMarkers: function(markers) {
+                var i, marker, markerId;
+                for (i = 0; i < markers.length; i++) {
+                    marker = markers[i];
+                    this.rtree.remove(marker);
+                }
+                this.resetLabels();
+                setTimeout(this.redraw.bind(this), 0);
+            },
+
+            updateMarkers: function(markers) {
+                var i;
+                this.removeMarkers(markers);
+                this.addMarkers(markers);
+            },
+
+            updateMarker: function(marker) {
+                this.updateMarkers([marker]);
+            },
+
+            setMarkerPosition: function(marker, latlng) {
+                this.removeMarker(marker);
+                marker.latlng = latlng;
+                this.addMarker(marker);
+            },
+
+            getMarkers: function() {
+                return this.rtree.all();
             },
 
             findLabelPosition: function(iconCenter, iconSize, textWidth, textHeight) {
@@ -196,8 +262,8 @@
                         imgW = Math.round(img.width * self.options.iconScale);
                         imgH = Math.round(img.height * self.options.iconScale);
                         if (!(markerId in self._iconPositions)) {
-                            x = job.projectedXY.x - job.icon.center[0];
-                            y = job.projectedXY.y - job.icon.center[1];
+                            x = job.projectedXY.x - job.icon.center[0] * self.options.iconScale;
+                            y = job.projectedXY.y - job.icon.center[1] * self.options.iconScale;
                             x = Math.round(x);
                             y = Math.round(y);
                             self._iconPositions[markerId] = [x, y];
@@ -279,7 +345,7 @@
                 this._regions.clear();
             },
 
-            onMouseMove: function(e) {
+            findMarkerFromMouseEvent: function(e) {
                 var p = this._map.project(e.latlng),
                     region = this._regions.search([p.x, p.y, p.x, p.y])[0],
                     marker;
@@ -288,6 +354,11 @@
                 } else {
                     marker = null;
                 }
+                return marker;
+            },
+
+            onMouseMove: function(e) {
+                var marker = this.findMarkerFromMouseEvent(e);
                 if (this._hoverMarker !== marker) {
                     if (this._hoverMarker) {
                         this.fire('markerleave', {marker: this._hoverMarker});
@@ -336,14 +407,19 @@
             },
 
             onClick: function(e) {
-                var p = this._map.project(e.latlng),
-                    region = this._regions.search([p.x, p.y, p.x, p.y])[0],
-                    marker;
-                if (region) {
-                    marker = region[4];
-                    this.fire('markerclick', {marker: marker});
+                var marker = this.findMarkerFromMouseEvent(e);
+                if (marker) {
+                    L.extend(e, {marker: marker});
+                    this.fire('markerclick', e);
                 }
+            },
 
+            onRightClick: function(e) {
+                var marker = this.findMarkerFromMouseEvent(e);
+                if (marker) {
+                    L.extend(e, {marker: marker});
+                    this.fire('markercontextmenu', e);
+                }
             },
 
             onAdd: function(map) {
@@ -351,6 +427,7 @@
                 map.on('mousemove', this.onMouseMove, this);
                 map.on('mouseout', this.onMouseOut, this);
                 map.on('click', this.onClick, this);
+                map.on('contextmenu', this.onRightClick, this);
                 this.toolTip = L.DomUtil.create('div', 'canvas-marker-tooltip', this._map.getPanes().markerPane);
             },
 
@@ -358,13 +435,14 @@
                 this._map.off('mousemove', this.onMouseMove, this);
                 this._map.off('mouseout', this.onMouseOut, this);
                 this._map.off('click', this.onClick, this);
+                this._map.off('contextmenu', this.onRightClick, this);
                 if (this._hoverMarker) {
                     this._hoverMarker = null;
                     this.fire('markerleave', {marker: this._hoverMarker})
                 }
                 this._map.getPanes().markerPane.removeChild(this.toolTip);
                 L.TileLayer.Canvas.prototype.onRemove.call(this, map);
-            }
+            },
         }
     );
 })();

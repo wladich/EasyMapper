@@ -45,7 +45,6 @@
             return segments;
         };
 
-        /*    
         var getWaypoints = function(xml) {
             var waypoint_elements = xml.getElementsByTagName('wpt');
             var waypoints = [];
@@ -58,14 +57,13 @@
                     error = 'CORRUPT';
                     continue;
                 }
-                waypoint.name = decodeUTF8(L.Util.xmlGetNodeText(waypoint_element.getElementsByTagName('name')[0]));
-                waypoint.symbol_name = L.Util.xmlGetNodeText(waypoint_element.getElementsByTagName('sym')[0]);
+                waypoint.name = fileutils.decodeUTF8(xmlGetNodeText(waypoint_element.getElementsByTagName('name')[0]));
+                waypoint.symbol_name = xmlGetNodeText(waypoint_element.getElementsByTagName('sym')[0]);
                 waypoints.push(waypoint);
             }
             return waypoints;
         };
-        */
-        
+
         // remove namespaces
         txt = txt.replace(/<([^ >]+):([^ >]+)/g, '<$1_$2');
         var dom = (new DOMParser()).parseFromString(txt,"text/xml");
@@ -78,7 +76,7 @@
         return [{
             name: name,
             tracks: getTrackSegments(dom),
-            //points: getWaypoints(dom),
+            points: getWaypoints(dom),
             error: error}];
     }
 
@@ -121,6 +119,54 @@
         return [{name: name, tracks: segments, error: error}];
     }
 
+    function decodeCP1251(s) {
+        var c, i, s2=[];
+        for (i=0; i < s.length; i++) {
+            c = s.charCodeAt(i);
+            if (c >= 192 && c <= 255) {
+                c += (0x410 - 192);
+            } else if (c == 168) {
+                c = 0x0401;
+            } else if (c == 184) {
+                c = 0x0451;
+            }
+            s2.push(String.fromCharCode(c));
+        }
+        return s2.join('');
+    }
+
+    function parseOziWpt(txt, name) {
+        var points = [],
+            error,
+            lines, line,
+            i,
+            lat, lng, pointName, fields;
+        lines = txt.split('\n');
+        if (lines[0].indexOf('OziExplorer Waypoint File') !== 0) {
+            return null;
+        }
+        for (i=4; i < lines.length; i++) {
+            line = lines[i].trim();
+            if (!line) {
+                continue;
+            }
+            fields = line.split(',');
+            lat = parseFloat(fields[2]);
+            lng = parseFloat(fields[3]);
+            pointName = decodeCP1251(fields[1]).trim();
+            if (isNaN(lat) || isNaN(lng)) {
+                error = 'CORRUPT';
+                break;
+            }
+            points.push({
+                lat: lat,
+                lng: lng,
+                name: pointName
+            });
+        }
+        return [{name: name, points: points, error: error}];
+    }
+
     function parseKml(txt, name) {
         var error;
         var getSegmentPoints = function(coordinates_element){
@@ -134,6 +180,7 @@
                     var lat = parseFloat(point[1]);
                     var lng = parseFloat(point[0]);
                     if (isNaN(lat) || isNaN(lng)) {
+                        debugger;
                         error = 'CORRUPT';
                         break;
                     }
@@ -158,16 +205,57 @@
             return segments;
         };
 
+        function getPoints(dom) {
+            var points = [],
+                placemarks, i, coord, name, lat, lng, pointObjs;
+            placemarks = dom.getElementsByTagName('Placemark');
+            for (i = 0; i < placemarks.length; i++) {
+                pointObjs = placemarks[i].getElementsByTagName('Point');
+                if (pointObjs.length == 0) {
+                    continue
+                } else if (pointObjs.length > 1) {
+                    error = 'CORRUPT';
+                    break;
+                }
+                coord = pointObjs[0].getElementsByTagName('coordinates');
+                if (coord.length != 1) {
+                    error = 'CORRUPT';
+                    break;
+                }
+                coord = xmlGetNodeText(coord[0]);
+                coord = coord.split(',');
+                lat = parseFloat(coord[1]);
+                lng = parseFloat(coord[0]);
+                if (isNaN(lat) || isNaN(lng)) {
+                    debugger;
+                    error = 'CORRUPT';
+                    break;
+                }
+                name = placemarks[i].getElementsByTagName('name');
+                if (name.length != 1) {
+                    debugger;
+                    error = 'CORRUPT';
+                    break;
+                }
+                name = fileutils.decodeUTF8(xmlGetNodeText(name[0]).trim());
+                points.push({
+                    name: name,
+                    lat: lat,
+                    lng: lng
+                });
+            }
+            return points;
+        }
         txt = txt.replace(/<([^ >]+):([^ >]+)/g, '<$1_$2');
         var dom = (new DOMParser()).parseFromString(txt,"text/xml");
         if (dom.documentElement.nodeName == 'parsererror') {
             return null;
         }
-        if (dom.getElementsByTagName('Document').length === 0) {
+        if (dom.getElementsByTagName('kml').length === 0) {
             return null;
         }
 
-        return [{name: name, tracks: getTrackSegments(dom), error: error}];
+        return [{name: name, tracks: getTrackSegments(dom), points: getPoints(dom), error: error}];
     }
 
     function parseKmz(txt, name) {
@@ -400,7 +488,8 @@
             pointsCount,
             arcUnit = ((1 << 24) - 1) / 360,
             x, y,
-            error, version, i;
+            error, version, i, midX, midY, symbol, waypointName,
+            wayPoints = [], color, measureTicksShown ;
         s = decodeUrlSafeBase64(s);
         if (!s) {
             return [{name: 'Text encoded track', error: ['CORRUPT']}];
@@ -408,11 +497,11 @@
         s = new PackedStreamReader(s);
         try {
             if (oldVersion) {
-                version = 1;
+                version = 0;
             } else {
                 version = s.readNumber();
             }
-            if (version != 1) {
+            if (version != 1 && version != 2) {
                 return [{name: 'Text encoded track', error: ['CORRUPT']}];
             }
             n = s.readNumber();
@@ -442,17 +531,53 @@
                 throw e;
             }
         }
-        var geoData = {name: name || "Text encoded track", tracks: segments, error: error};
         try {
-            geoData.color = s.readNumber();
-            geoData.measureTicksShown = s.readNumber();
+            color = s.readNumber();
+            measureTicksShown = s.readNumber();
         } catch (e) {
-            if (e.message.match('Unexpected end of line while unpacking number')) {
-
+            if (version === 0 && e.message.match('Unexpected end of line while unpacking number')) {
+                color = 0;
+                measureTicksShown = 0;
             } else {
                 throw e;
             }
         }
+        if (version == 2) {
+            try {
+                pointsCount = s.readNumber();
+                if (pointsCount) {
+                    midX = s.readNumber();
+                    midY = s.readNumber();
+                }
+                for (; pointsCount--;) {
+                    n = s.readNumber();
+                    waypointName = s.readString(n);
+                    waypointName = fileutils.decodeUTF8(waypointName);
+                    symbol = s.readNumber();
+                    x = s.readNumber() + midX;
+                    y = s.readNumber() + midY;
+                    wayPoints.push({
+                        name: waypointName,
+                        lat: y / arcUnit,
+                        lng: x / arcUnit
+                    });
+                }
+            } catch (e) {
+                if (e.message.match('Unexpected end of line while unpacking number')) {
+                    error = ['CORRUPT'];
+                } else {
+                    throw e;
+                }
+            }
+        }
+        var geoData = {
+            name: name || "Text encoded track",
+            tracks: segments,
+            error: error,
+            points: wayPoints,
+            color: color,
+            measureTicksShown:measureTicksShown
+        };
         return [geoData];
     }
 
@@ -491,6 +616,7 @@
             parseZip,
             parseGpx,
             parseOziPlt,
+            parseOziWpt,
             parseKml,
             parseYandexRulerUrl,
 //            parseYandexMap

@@ -16,6 +16,25 @@
     var MeasuredEditableLine = L.MeasuredLine.extend({});
     MeasuredEditableLine.include(L.Polyline.EditMixin);
 
+    var Waypoints = L.TileLayer.Markers.extend({
+        clone: function() {
+            var markers = this.rtree.all(),
+                markersCopy;
+
+            function cloneMarker(marker) {
+                return {
+                    latlng: {lat: marker.latlng.lat, lng: marker.latlng.lng},
+                    label: marker.label,
+                    icon: marker.icon
+                };
+            }
+            markersCopy = markers.map(cloneMarker);
+            var options = {};
+            L.extend(options, this.options, {iconScale: 2, labelFontSize: 16});
+            return new Waypoints(markersCopy, options);
+        }
+    });
+
     L.Control.TrackList = L.Control.extend({
         options: {position: 'bottomright'},
 
@@ -40,12 +59,12 @@
                 '<div class="hint">' +
                     'GPX Ozi GoogleEarth ZIP YandexMaps' +
                 '</div>' +
-                '<div class="tracks-menu-button" data-bind="click: function(_,e){this.showMenu(e)}">&hellip;</div>' +
                 '<div class="inputs-row" data-bind="visible: !readingFiles()">' +
                     '<a class="button add-track" title="New track" data-bind="click: function(){this.addNewTrack()}"></a>' +
                     '<a class="button open-file" title="Open file" data-bind="click: loadFilesFromDisk"></a>' +
                     '<input type="text" class="input-url" placeholder="Track URL" data-bind="textInput: url, event: {keypress: onEnterPressedInInput}">' +
                     '<a class="button download-url" title="Download URL" data-bind="click: loadFilesFromUrl"></a>' +
+                    '<a class="button menu-icon" data-bind="click: function(_,e){this.showMenu(e)}"></a>' +
                 '</div>' +
                 '<div style="text-align: center"><div data-bind="' +
                     'component: {' +
@@ -60,6 +79,8 @@
                         '<td><div class="color-sample" data-bind="style: {backgroundColor: $parent.colors[track.color()]}, click: $parent.onColorSelectorClicked.bind($parent)"></div></td>' +
                         '<td><div class="track-name-wrapper"><div class="track-name" data-bind="text: track.name, attr: {title: track.name}, click: $parent.setViewToTrack.bind($parent)"></div></div></td>' +
                         '<td><div class="button-length" data-bind="text: track.length, css: {\'ticks-enabled\': track.measureTicksShown}, click: $parent.switchMeasureTicksVisibility.bind($parent)"></div></td>' +
+                        '<td><div class="button-add-track" title="Add track segment" data-bind="click: $parent.addSegmentAndEdit.bind($parent, track)"></div></td>' +
+                        '<td><div class="button-add-point" title="Add point" data-bind="click: $parent.placeNewPoint.bind($parent, track)"></div></td>' +
                         '<td><a class="track-text-button" title="Actions" data-bind="click: $parent.showTrackMenu.bind($parent)">&hellip;</a></td>' +
                     '</tr>' +
                 '</table>'
@@ -77,6 +98,9 @@
                 {text:'Delete all tracks', callback: this.deleteAllTracks.bind(this)},
                 {text:'Delete hidden tracks', callback: this.deleteHiddenTracks.bind(this)},
             ]);
+            this._markerLayer = new Waypoints(null, {print: true}).addTo(map);
+            this._markerLayer._container.style.zIndex = 100000;
+            this._markerLayer.on('markerclick markercontextmenu', this.onMarkerClick, this);
             return container;
         },
 
@@ -98,6 +122,16 @@
             } else {
                 return true;
             }
+        },
+
+        getTrackPolylines: function(track) {
+            return track.feature.getLayers().filter(function(layer) {
+                return layer instanceof L.Polyline;
+            })
+        },
+
+        getTrackPoints: function(track) {
+            return track.markers;
         },
 
         addNewTrack: function(name) {
@@ -177,12 +211,14 @@
                 var data_empty = !((geodata.tracks  && geodata.tracks.length) || (geodata.points && geodata.points.length));
 
                 if (!data_empty) {
-                    geodata.tracks = geodata.tracks.map(function(line) {
-                        return L.LineUtil.simplifyLatlngs(line, 360 / (1<<24));
-                    });
+                    if (geodata.tracks) {
+                        geodata.tracks = geodata.tracks.map(function(line) {
+                                return L.LineUtil.simplifyLatlngs(line, 360 / (1 << 24));
+                            }
+                        );
+                    }
                     this.addTrack(geodata);
                 }
-
                 var error_messages = {
                     'CORRUPT': 'File "{name}" is corrupt',
                     'UNSUPPORTED': 'File "{name}" has unsupported format or is badly corrupt',
@@ -213,22 +249,28 @@
 
         onTrackColorChanged: function(track) {
             var color = this.colors[track.color()];
-            track.feature.getLayers().forEach(
+            this.getTrackPolylines(track).forEach(
                 function(polyline) {
                     polyline.setStyle({color: color});
                 });
+            var markers = this.getTrackPoints(track);
+            markers.forEach(this.setMarkerIcon.bind(this));
+            this._markerLayer.updateMarkers(markers);
         },
 
         onTrackVisibilityChanged: function(track) {
             if (track.visible()) {
                 this.map.addLayer(track.feature);
+                this._markerLayer.addMarkers(track.markers);
             } else {
                 this.map.removeLayer(track.feature);
+                this.stopPlacingPoint();
+                this._markerLayer.removeMarkers(track.markers);
             }
         },
 
         onTrackLengthChanged: function(track) {
-            var lines = track.feature.getLayers(),
+            var lines = this.getTrackPolylines(track),
                 length = 0;
             for (var i in lines) {
                 length += lines[i].getLength();
@@ -245,7 +287,7 @@
 
         setTrackMeasureTicksVisibility: function(track) {
             var visible = track.measureTicksShown(),
-                lines = track.feature.getLayers();
+                lines = this.getTrackPolylines(track);
             for (var i in lines) {
                 lines[i].setMeasureTicksVisible(visible);
             }
@@ -260,8 +302,18 @@
         },
 
         setViewToTrack: function(track) {
-            if (track.feature.getLayers().length) {
-                this.map.fitBounds(track.feature.getBounds());
+            var lines = this.getTrackPolylines(track);
+            var points = this.getTrackPoints(track);
+            if (lines.length || points.length) {
+                var bounds = L.latLngBounds([]);
+                lines.forEach(function(l) {
+                    bounds.extend(l.getBounds());
+                });
+                points.forEach(function(p) {
+                    bounds.extend([p.latlng.lat, p.latlng.lng]);
+                });
+                this.map.fitBounds(bounds);
+
             }
         },
 
@@ -279,11 +331,6 @@
             var items = [
                 function() {return {text: track.name(), disabled: true};},
                 '-',
-                {text: 'Add segment', callback: function() {
-                    var polyline = this.addTrackSegment(track, []);
-                    this.startEditTrackSegement(track, polyline);
-                    polyline.startDrawingLine(1);
-                }.bind(this)},
                 {text: 'Rename', callback: this.renameTrack.bind(this, track)},
                 {text: 'Duplicate', callback: this.duplicateTrack.bind(this, track)},
                 {text: 'Reverse', callback: this.reverseTrack.bind(this, track)},
@@ -297,10 +344,20 @@
             track._actionsMenu = new L.Contextmenu(items);
         },
 
+        addSegmentAndEdit: function(track) {
+            if (!track.visible()) {
+                return;
+            }
+            this.stopPlacingPoint();
+            var polyline = this.addTrackSegment(track, []);
+            this.startEditTrackSegement(track, polyline);
+            polyline.startDrawingLine(1);
+        },
+
         duplicateTrack: function(track) {
             var segments = [], segment,
                 line,
-                lines = track.feature.getLayers();
+                lines = this.getTrackPolylines(track);
             for (var i = 0; i < lines.length; i++) {
                 segment = [];
                 line = lines[i].getLatLngs();
@@ -329,7 +386,7 @@
 
         reverseTrack: function(track) {
             var self = this;
-            track.feature.getLayers().forEach(function(trackSegment) {
+            this.getTrackPolylines(track).forEach(function(trackSegment) {
                 self.reverseTrackSegment(trackSegment);
             });
         },
@@ -343,21 +400,23 @@
 
         saveTrackAsFile: function(track, exporter, extension) {
             this.stopActiveDraw();
-            var lines = track.feature.getLayers()
+            var lines = this.getTrackPolylines(track)
                 .map(function(line) {
                     return line.getLatLngs();
                 });
+            var points = this.getTrackPoints(track);
             var name = track.name(),
                 i = name.lastIndexOf('.');
             if (i > -1 && i >= name.length - 5) {
                 name = name.slice(0, i);
             }
 
-            var fileText = exporter(lines, name);
-            if (!fileText) {
+            if (lines.length === 0 && points.length === 0) {
                 alert('Track is empty, nothing to save');
                 return;
             }
+
+            var fileText = exporter(lines, name, points);
             var filename = name + extension;
             fileutils.saveStringToFile(filename, 'application/download', fileText);
           },
@@ -383,7 +442,17 @@
             }
         },
 
+        stopEditLine: function() {
+            if (this._editedLine) {
+                this._editedLine.stopEdit();
+                this._editedLine = null;
+            }
+        },
+
         onTrackSegmentClick: function(track, trackSegment) {
+            if (this._editedPoint) {
+                return;
+            }
             if (this._lineJoinCursor) {
                 this.joinTrackSegments(trackSegment);
             } else {
@@ -400,6 +469,54 @@
             polyline.once('editend', function() {
                 setTimeout(this.onLineEditEnd.bind(this, track, polyline), 0);
             }.bind(this));
+        },
+
+        placeNewPoint: function(track) {
+            if (!track.visible()) {
+                return;
+            }
+            this.startPlacingPoint({_parentTrack: track, _new: true});
+        },
+
+        startPlacingPoint: function(marker) {
+            this.stopPlacingPoint();
+            this.stopEditLine();
+            L.DomUtil.addClass(this._map._container, 'leaflet-point-placing');
+            this._editedPoint = marker;
+            this.map.on('click', this.placePoint, this);
+            L.DomEvent.on(document, 'keyup', this.stopPlacingPointOnEscPressed, this);
+        },
+
+        placePoint: function(e) {
+            if (!this._editedPoint) {
+                return;
+            }
+            var marker = this._editedPoint;
+            if (marker._new) {
+                marker._parentTrack._pointAutoInc += 1;
+                var name = '' + marker._parentTrack._pointAutoInc;
+                while (name.length < 3) {
+                    name = '0' + name;
+                }
+                marker = this.addPoint(marker._parentTrack, {name: name, lat: e.latlng.lat, lng: e.latlng.lng});
+                this._markerLayer.addMarker(marker);
+            } else {
+                this._markerLayer.setMarkerPosition(marker, e.latlng);
+            }
+            this.stopPlacingPoint();
+        },
+
+        stopPlacingPointOnEscPressed: function(e) {
+            if (e.keyCode === 27) {
+                this.stopPlacingPoint();
+            }
+        },
+
+        stopPlacingPoint: function() {
+            this._editedPoint = null;
+            L.DomUtil.removeClass(this._map._container, 'leaflet-point-placing');
+            L.DomEvent.off(document, 'keyup', this.stopPlacingPointOnEscPressed, this);
+            this.map.off('click', this.placePoint, this);
         },
 
         joinTrackSegments: function(newSegment) {
@@ -597,9 +714,9 @@
         },
 
         addTrack: function(geodata) {
-            //var polylines = [];
-            var color =  geodata.color;
+            var color;
             if (color >= 0 && color < this.colors.length) {
+                color = geodata.color;
             } else {
                 color = this._lastTrackColor;
                 this._lastTrackColor = (this._lastTrackColor + 1) % this.colors.length;
@@ -610,9 +727,12 @@
                 visible: ko.observable(true),
                 length: ko.observable('empty'),
                 measureTicksShown: ko.observable(geodata.measureTicksShown || false),
-                feature: L.featureGroup([])
+                feature: L.featureGroup([]),
+                _pointAutoInc: 0,
+                markers: []
             };
             (geodata.tracks || []).forEach(this.addTrackSegment.bind(this, track));
+            (geodata.points || []).forEach(this.addPoint.bind(this, track));
 
             this.tracks.push(track);
 
@@ -628,9 +748,62 @@
             return track;
         },
 
+
+        setMarkerIcon: function(marker) {
+            var symbol = 'marker',
+                colorInd = marker._parentTrack.color() + 1,
+                className = 'symbol-' + symbol + '-' + colorInd;
+            marker.icon = L.Util.iconFromBackgroundUrl('track-waypoint ' + className);
+        },
+
+        setMarkerLabel: function(marker, label) {
+            if (label.match(/\d{3,}/)) {
+                var n = parseInt(label, 10);
+                marker._parentTrack._pointAutoInc =
+                    Math.max(n, marker._parentTrack._pointAutoInc | 0);
+            }
+            marker.label = label;
+        },
+
+        addPoint: function(track, srcPoint) {
+            var marker = {
+                latlng: L.latLng([srcPoint.lat, srcPoint.lng]),
+                _parentTrack: track,
+            };
+            this.setMarkerIcon(marker);
+            this.setMarkerLabel(marker, srcPoint.name);
+            track.markers.push(marker);
+            marker._parentTrack = track;
+            return marker;
+        },
+
+        onMarkerClick: function(e) {
+            L.contextmenu([
+                {text: 'Rename', callback: this.renamePoint.bind(this, e.marker)},
+                {text: 'Move', callback: this.startPlacingPoint.bind(this, e.marker)},
+                {text: 'Delete', callback: this.removePoint.bind(this, e.marker)},
+            ]).showOnMouseEvent(e);
+        },
+
+        removePoint: function(marker) {
+            this.stopPlacingPoint();
+            this._markerLayer.removeMarker(marker);
+            marker._parentTrack.markers.remove(marker);
+        },
+
+        renamePoint: function(marker) {
+            this.stopPlacingPoint();
+            var newLabel = prompt('New point name', marker.label);
+            if (newLabel !== null) {
+                this.setMarkerLabel(marker, newLabel);
+                this._markerLayer.updateMarker(marker);
+            }
+        },
+
         removeTrack: function(track) {
             track.visible(false);
             this.tracks.remove(track);
+            this.stopPlacingPoint();
         },
 
         deleteAllTracks: function() {
@@ -653,13 +826,15 @@
         },
 
         trackToString: function(track) {
-            var lines = track.feature.getLayers().map(function(line) {
+            var lines = this.getTrackPolylines(track).map(function(line) {
                     var points = line.getLatLngs();
                     points = L.LineUtil.simplifyLatlngs(points, 360 / (1 << 24));
                     return points;
                 }
             );
-            return geoExporters.saveToString(lines, track.name(), track.color(), track.measureTicksShown());
+            return geoExporters.saveToString(lines, track.name(), track.color(), track.measureTicksShown(),
+                this.getTrackPoints(track)
+            );
         },
 
         copyAllTracks: function(mouseEvent) {
@@ -693,8 +868,9 @@
         },
 
         exportTracks: function(minTicksIntervalMeters) {
+            var self = this;
             return this.tracks()
-                .filter(function(track) {return track.feature.getLayers().length;})
+                .filter(function(track) {return self.getTrackPolylines(track).length;})
                 .map(function(track) {
                     var capturedTrack = track.feature.getLayers().map(function(pl) {
                             return pl.getLatLngs().map(function(ll) {
@@ -714,6 +890,6 @@
                         }))
                     };
                 });
-        },
+        }
     });
 })();

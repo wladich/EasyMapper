@@ -112,6 +112,10 @@
         }
     });
 
+    L.contextmenu = function(items) {
+        return new L.Contextmenu(items);
+    };
+
     L.Mixin.Contextmenu = {
         bindContextmenu: function(items) {
             this._contextMenu = new L.Contextmenu(items);
