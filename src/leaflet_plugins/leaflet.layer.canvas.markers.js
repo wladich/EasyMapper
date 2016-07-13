@@ -68,6 +68,7 @@
             addMarkers: function(markers) {
                 if (markers) {
                     this.rtree.load(markers);
+                    this.resetLabels();
                     setTimeout(this.redraw.bind(this), 0);
                 }
             },
@@ -75,6 +76,7 @@
             addMarker: function(marker) {
                 // FIXME: adding existing marker must be be noop
                 this.rtree.insert(marker);
+                this.resetLabels();
                 setTimeout(this.redraw.bind(this), 0);
             },
 
@@ -88,7 +90,6 @@
                     marker = markers[i];
                     this.rtree.remove(marker);
                 }
-                // FIXME: update without resetting all labels
                 this.resetLabels();
                 setTimeout(this.redraw.bind(this), 0);
             },
