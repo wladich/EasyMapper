@@ -39,7 +39,7 @@
 
 .leaflet-control-tracklist .input-url {
     display: inline-block;
-    width: 150px;
+    width: 156px;
     height: 26px;
     line-height: 26px;
     padding: 0 3px;
@@ -57,6 +57,12 @@
 .leaflet-control-tracklist .add-track {
     background-image: url("images/plus.png");
     margin-right: 5px;
+}
+
+.leaflet-control-tracklist .menu-icon {
+    background-image: url("images/menu.png");
+    margin-left: 5px;
+    margin-right: 0 !important;
 }
 
 
@@ -87,7 +93,7 @@
 
 .leaflet-control-tracklist .track-name-wrapper {
     display: block;
-    width: 140px;
+    width: 136px;
     margin-left: 2px;
 }
 
@@ -109,7 +115,8 @@
     font-weight: bold;
     color: #333;
     cursor: pointer;
-    /*margin-left: 4px;*/
+    vertical-align: top;
+    line-height: 16px;
 }
 
 .leaflet-control-tracklist .button-length {
@@ -169,14 +176,6 @@
     border-collapse: collapse;
     width: 100%;
     line-height: 20px;
-}
-
-.leaflet-control-tracklist .tracks-menu-button {
-    display: inline-block;
-    font-weight: bold;
-    float: right;
-    cursor: pointer;
-    margin-right: 2px;
 }
 
 .track-waypoint {

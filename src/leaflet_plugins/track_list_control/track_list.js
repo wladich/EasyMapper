@@ -59,12 +59,12 @@
                 '<div class="hint">' +
                     'GPX Ozi GoogleEarth ZIP YandexMaps' +
                 '</div>' +
-                '<div class="tracks-menu-button" data-bind="click: function(_,e){this.showMenu(e)}">&hellip;</div>' +
                 '<div class="inputs-row" data-bind="visible: !readingFiles()">' +
                     '<a class="button add-track" title="New track" data-bind="click: function(){this.addNewTrack()}"></a>' +
                     '<a class="button open-file" title="Open file" data-bind="click: loadFilesFromDisk"></a>' +
                     '<input type="text" class="input-url" placeholder="Track URL" data-bind="textInput: url, event: {keypress: onEnterPressedInInput}">' +
                     '<a class="button download-url" title="Download URL" data-bind="click: loadFilesFromUrl"></a>' +
+                    '<a class="button menu-icon" data-bind="click: function(_,e){this.showMenu(e)}"></a>' +
                 '</div>' +
                 '<div style="text-align: center"><div data-bind="' +
                     'component: {' +
