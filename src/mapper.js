@@ -164,6 +164,7 @@
         },
 
         saveTracksToStorage: function() {
+            var maxSessions = 3;
             if (!(window.Storage && window.localStorage)) {
                 return;
             }
@@ -204,10 +205,9 @@
                     keys.push(+m[1]);
                 }
             }
-            if (keys.length > 10) {
+            if (keys.length > maxSessions) {
                 keys.sort(function(a, b) {return a - b});
-                console.log(keys);
-                for (i = 0; i < keys.length - 10; i++) {
+                for (i = 0; i < keys.length - maxSessions; i++) {
                     key = 'trackList_' + keys[i];
                     localStorage.removeItem(key);
                 }
