@@ -578,7 +578,7 @@
             var items = [];
             if (e.nodeIndex > 0 && e.nodeIndex < e.line.getLatLngs().length - 1) {
                 items.push({text: 'Cut',
-                            callback: this.splitTrackSegment.bind(this, e.line, e.nodeIndex)});
+                            callback: this.splitTrackSegment.bind(this, e.line, e.nodeIndex, null)});
             }
             if (e.nodeIndex === 0 || e.nodeIndex == e.line.getLatLngs().length - 1) {
                 items.push({text: 'Join', callback: this.startLineJoinSelection.bind(this, e)});
