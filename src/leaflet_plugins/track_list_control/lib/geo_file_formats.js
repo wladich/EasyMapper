@@ -180,7 +180,6 @@
                     var lat = parseFloat(point[1]);
                     var lng = parseFloat(point[0]);
                     if (isNaN(lat) || isNaN(lng)) {
-                        debugger;
                         error = 'CORRUPT';
                         break;
                     }
@@ -227,13 +226,11 @@
                 lat = parseFloat(coord[1]);
                 lng = parseFloat(coord[0]);
                 if (isNaN(lat) || isNaN(lng)) {
-                    debugger;
                     error = 'CORRUPT';
                     break;
                 }
                 name = placemarks[i].getElementsByTagName('name');
                 if (name.length != 1) {
-                    debugger;
                     error = 'CORRUPT';
                     break;
                 }
