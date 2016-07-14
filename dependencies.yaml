@@ -91,5 +91,3 @@ depends:
         - leaflet
     leaflet.bing:
         - leaflet
-    leaflet.markercluster:
-        - leaflet
