@@ -715,9 +715,8 @@
 
         addTrack: function(geodata) {
             var color;
-            if (color >= 0 && color < this.colors.length) {
-                color = geodata.color;
-            } else {
+            color = geodata.color;
+            if (!(color >= 0 && color < this.colors.length)) {
                 color = this._lastTrackColor;
                 this._lastTrackColor = (this._lastTrackColor + 1) % this.colors.length;
             }
