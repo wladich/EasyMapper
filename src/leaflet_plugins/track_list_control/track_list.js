@@ -17,6 +17,10 @@
     MeasuredEditableLine.include(L.Polyline.EditMixin);
 
     var Waypoints = L.TileLayer.Markers.extend({
+        options: {
+            scaleDependent: true
+        },
+
         clone: function() {
             var markers = this.rtree.all(),
                 markersCopy;
@@ -30,7 +34,7 @@
             }
             markersCopy = markers.map(cloneMarker);
             var options = {};
-            L.extend(options, this.options, {iconScale: 2, labelFontSize: 16});
+            L.extend(options, this.options, {iconScale: 1.5, labelFontSize: 14});
             return new Waypoints(markersCopy, options);
         }
     });
