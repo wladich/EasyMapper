@@ -31,7 +31,7 @@
                 '<label><input type="radio" name="overlay" value="no" checked>Base layer</label><br/>' +
                 '<label><input type="radio" name="overlay" value="yes">Overlay</label><br/>' +
                 '<label><input type="checkbox" name="scaleDependent"/>Content depends on scale(like OSM or Google maps)</label><br/>' +
-                '<label><input type="checkbox" name="tms" checked />TMS rows order</label><br />' +
+                '<label><input type="checkbox" name="tms" />TMS rows order</label><br />' +
 
             '<label>Max zoom<br>' +
                 '<select name="maxZoom">' +
