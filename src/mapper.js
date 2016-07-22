@@ -157,8 +157,10 @@
                 key = 'trackList_' + maxKey;
                 s = localStorage.getItem(key);
                 localStorage.removeItem(key);
-                geodata = parseGeoFile('', s);
-                this.trackList.addTracksFromGeodataArray(geodata);
+                if (s) {
+                    geodata = parseGeoFile('', s);
+                    this.trackList.addTracksFromGeodataArray(geodata);
+                }
             }
 
         },
@@ -172,7 +174,20 @@
                 serialized = [],
                 maxKey = -1,
                 i, track, s, key, m, keys = [];
+
+            for (i = 0; i < localStorage.length; i++) {
+                key = localStorage.key(i);
+                m = key.match(/^trackList_(\d+)$/);
+                if (m && m[1] !== undefined) {
+                    if (+m[1] > maxKey) {
+                        maxKey = +m[1];
+                    }
+                }
+            }
+            key = 'trackList_' + (maxKey + 1);
+
             if (tracks.length === 0) {
+                localStorage.setItem(key, '');
                 return;
             }
             for (i = 0; i < tracks.length; i++) {
@@ -185,16 +200,6 @@
             }
             s = '#nktk=' + serialized.join('/');
 
-            for (i = 0; i < localStorage.length; i++) {
-                key = localStorage.key(i);
-                m = key.match(/^trackList_(\d+)$/);
-                if (m && m[1] !== undefined) {
-                    if (+m[1] > maxKey) {
-                        maxKey = +m[1];
-                    }
-                }
-            }
-            key = 'trackList_' + (maxKey + 1);
             localStorage.setItem(key, s);
 
             //cleanup stale records
