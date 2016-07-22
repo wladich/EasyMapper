@@ -25,9 +25,9 @@
             this.newLayerForm = L.DomUtil.create('form', 'custom-layers-dialog-form', this.newLayerFormContainer);
             this.newLayerForm.innerHTML =
                 '<label>Tile url<br/>' +
-                '<input name="url" style="width: 100%"/></label><br/>' +
+                '<textarea name="url" style="width: 100%"></textarea></label><br/>' +
                 '<label>Layer name<br/>' +
-                '<input name="name"/></label><br/>' +
+                '<input name="name" value="Custom layer"/></label><br/>' +
                 '<label><input type="radio" name="overlay" value="no" checked>Base layer</label><br/>' +
                 '<label><input type="radio" name="overlay" value="yes">Overlay</label><br/>' +
                 '<label><input type="checkbox" name="scaleDependent"/>Content depends on scale(like OSM or Google maps)</label><br/>' +

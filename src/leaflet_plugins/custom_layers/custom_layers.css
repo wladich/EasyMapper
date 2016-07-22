@@ -1,7 +1,7 @@
 .custom-layers-dialog-container {
     position: absolute;
     left: 50%;
-    width: 9cm;
+    width: 500px;
     margin-left: -5cm;
     margin-top: 2cm;
     background-color: white;
@@ -11,14 +11,15 @@
     color: #333;
 }
 
-.custom-layers-dialog-container input, .custom-layers-dialog-container select {
+.custom-layers-dialog-container textarea,
+.custom-layers-dialog-container input,
+.custom-layers-dialog-container select {
     padding: 0.5mm 5px;
     margin: 1mm 1mm 1mm 0;
-    border: 1px solid #777;
     border-radius: 3px;
     border: 1px solid #aaa;
     vertical-align: middle;
-
+    box-sizing: border-box;
 }
 
 .custom-layers-dialog-container .button {
