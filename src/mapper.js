@@ -162,7 +162,6 @@
                     this.trackList.addTracksFromGeodataArray(geodata);
                 }
             }
-
         },
 
         saveTracksToStorage: function() {
