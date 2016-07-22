@@ -43,7 +43,8 @@
         _onHotkeyUp: function(e) {
             var pressedKey = this._keyDown;
             this._keyDown = null;
-            if ('input' == e.target.tagName.toLowerCase() || pressedKey != e.keyCode) {
+            var tagName = e.target.tagName.toLowerCase();
+            if ('input' ==  tagName|| 'textarea' == tagName|| pressedKey != e.keyCode) {
                 return;
             }
             var key = String.fromCharCode(e.keyCode);
