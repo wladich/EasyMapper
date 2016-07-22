@@ -67,7 +67,9 @@
                 var layer = new L.TileLayer(url, {
                     tms: isTms,
                     maxNativeZoom: maxZoom,
-                    scaleDependent: scaleDependent
+                    scaleDependent: scaleDependent,
+                    print: true,
+                    jnx: true
                 });
                 if (isOverlay) {
                     this.addOverlay(layer, name);
