@@ -110,8 +110,10 @@
                 .addTo(map);
             var btn = L.functionButtons([{content: '<div title="Measure distance" class="leaflet-mapper-button-ruler"></div>'}], {position: 'topleft'})
                 .addTo(map);
-            
+
+            this.layersControl.loadCustomLayers();
             this.layersControl.enableHashState('l', ['O']);
+
             this.printPagesControl.enableHashState('p');
             this.jnx.enableHashState('j');
             if (!window.location.href.match(/[&#]nktk=/)) {
@@ -119,6 +121,7 @@
             }
             this.trackList.enableHashState('nktk');
             window.onbeforeunload = this.saveTracksToStorage.bind(this);
+
 
             btn.on('clicked', this.startRuler, this);
             map.on('baselayerchange overlayadd overlayremove', function () {

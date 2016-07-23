@@ -39,3 +39,31 @@
     background-color: #f4f4f4;
 }
 
+.custom-layer-edit-button {
+    width: 16px;
+    height: 16px;
+    display: inline-block;
+    background-image: url("pencil.png");
+    vertical-align: text-bottom;
+    margin-left: 2px;
+    cursor: pointer;
+}
+
+.custom-layers-add-button {
+    width: 16px;
+    height: 16px;
+    background-image: url("plus.png");
+    background-repeat: no-repeat;
+    background-position: 50% 50%;
+    position: absolute;
+    top: 0;
+    right: 0;
+    margin-top: 6px;
+    margin-right: 6px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.custom-layers-add-button:hover {
+    background-color: #f4f4f4;
+}
