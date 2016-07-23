@@ -165,7 +165,7 @@
         },
 
         saveTracksToStorage: function() {
-            var maxSessions = 3;
+            var maxSessions = 10;
             if (!(window.Storage && window.localStorage)) {
                 return;
             }
