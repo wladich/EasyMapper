@@ -16,7 +16,7 @@
                 var isOverlay = isControlled && this._layers[layer_id].overlay;
                 var isStale = isControlled && e && e.type == 'baselayerchange' && !isOverlay && layer != e.layer;
                 if (isControlled && !isStale && layer.options && layer.options.code) {
-                    layer_id = layer.options.code || layer_id;
+                    layer_id = layer.options.code;
                     state.push(layer_id);
                 }
             }
@@ -33,17 +33,12 @@
                 i,
                 new_layers = [];
             for (i in values) {
-                layer_id = parseInt(values[i], 10);
-                if (isNaN(layer_id)) {
-                    for (layer_id in this._layers) {
-                        layer = this._layers[layer_id].layer;
-                        if (layer.options.code == values[i]) {
-                            break;
-                        }
-                        layer = null;
-                    }
-                } else {
+                for (layer_id in this._layers) {
                     layer = this._layers[layer_id].layer;
+                    if (layer.options.code == values[i]) {
+                        break;
+                    }
+                    layer = null;
                 }
                 if (layer && (!(layer in new_layers))) {
                     new_layers.push(layer);
