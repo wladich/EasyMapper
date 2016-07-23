@@ -30,7 +30,7 @@
 
                 var form = this.newLayerForm =
                     L.DomUtil.create('form', 'custom-layers-dialog-form', this.newLayerFormContainer);
-                L.DomEvent.on(form, 'keypress', L.DomEvent.preventDefault);
+                L.DomEvent.on(form, 'submit', L.Util.falseFn);
                 var formHtml = [
                     '<label>Layer name<br/>' +
                     '<input name="name"/></label><br/>' +
