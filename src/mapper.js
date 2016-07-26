@@ -11,6 +11,7 @@
 //@require leaflet.jnx
 //@require leaflet.layers_control.custom_layers
 //@require leaflet.coordinates
+//@require leaflet.elevation_profile
 
 (function(){
     "use strict";
@@ -130,6 +131,7 @@
             this.printPagesControl.on('pdfstart', this.beforePdfBuild, this);
             this.updateJnxLayer();
             this.coordinatesControl = new L.Control.Coordinates().addTo(map);
+            new L.Control.ElevationProfile().addTo(map);
             //FIXME: remove after migratirng to leaflet 1.0
             L.DomEvent.on(document, 'keydown', function(e) {
                 var key = e.keyCode;

@@ -47,6 +47,8 @@ provides:
         - src/leaflet_plugins/LineUtil.simplifyLatngs.js
     leaflet.layers_control.custom_layers:
         - src/leaflet_plugins/custom_layers/custom_layers.js
+    leaflet.elevation_profile:
+        - src/leaflet_plugins/elevation_profile/leaflet.control.elevation-profile.js
     knockout:
         production:
             - src/lib/vendor/knockout/knockout-3.2.0.js
