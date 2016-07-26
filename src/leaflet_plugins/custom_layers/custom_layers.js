@@ -1,6 +1,7 @@
 //@require leaflet
 //@require custom_layers.css
 //@require leaflet.hash_state
+//@require nordeskart.js
 
 (function() {
     'use strict';
