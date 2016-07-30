@@ -1,5 +1,7 @@
 //@require leaflet
 //@require leaflet.control.elevation-profile.css
+//@require fileutils
+
 (function() {
     'use strict';
 
@@ -9,7 +11,7 @@
             var keys = Object.keys(attributes),
                 key, value;
             for (var i = 0; i < keys.length; i++) {
-                key  = keys[i];
+                key = keys[i];
                 value = attributes[key];
                 element.setAttribute(key, value);
             }
@@ -20,21 +22,182 @@
         return element;
     }
 
+    function pointOnSegmentAtDistance(p1, p2, dist) {
+        //FIXME: we should place markers along projected line to avoid transformation distortions
+        var q = dist / p1.distanceTo(p2),
+            x = p1.lng + (p2.lng - p1.lng) * q,
+            y = p1.lat + (p2.lat - p1.lat) * q;
+        return L.latLng(y, x);
+    }
+
+
+    function gradientToAngle(g) {
+        return Math.round(Math.atan(g) * 180 / Math.PI);
+    }
+
+    function pathRegularSamples(latlngs, step) {
+        var samples = [],
+            lastSampleDist = 0,
+            lastPointDistance = 0,
+            nextPointDistance = 0,
+            segmentLength, i;
+
+        samples.push(latlngs[0]);
+        for (i = 1; i < latlngs.length; i++) {
+            segmentLength = latlngs[i].distanceTo(latlngs[i - 1]);
+            nextPointDistance = lastPointDistance + segmentLength;
+            if (nextPointDistance >= lastSampleDist + step) {
+                while (lastSampleDist + step <= nextPointDistance) {
+                    lastSampleDist += step;
+                    samples.push(
+                        pointOnSegmentAtDistance(latlngs[i - 1], latlngs[i], lastSampleDist - lastPointDistance)
+                    );
+                }
+            }
+            lastPointDistance = nextPointDistance;
+        }
+        if (samples.length < 2) {
+            samples.push(latlngs[latlngs.length - 1]);
+        }
+        return samples;
+    }
+
+    var DragEvents = L.Class.extend({
+        options: {
+            dragTolerance: 2,
+            dragButtons: {0: true}
+        },
+
+        includes: L.Mixin.Events,
+
+        initialize: function (eventsSource, eventsTarget, options) {
+            options = L.setOptions(this, options);
+            if (eventsTarget) {
+                this.eventsTarget = eventsTarget;
+            } else {
+                this.eventsTarget = this;
+            }
+            this.dragStartPos = {};
+            this.isDragging = {};
+
+            L.DomEvent.on(eventsSource, 'mousemove', this.onMouseMove, this);
+            L.DomEvent.on(eventsSource, 'mouseup', this.onMouseUp, this);
+            L.DomEvent.on(eventsSource, 'mousedown', this.onMouseDown, this);
+            L.DomEvent.on(eventsSource, 'mouseleave', this.onMouseLeave, this);
+        },
+
+        onMouseDown: function(e) {
+            if (this.options.dragButtons[e.button]) {
+                this.dragStartPos[e.button] = e;
+            }
+        },
+
+        onMouseUp: function(e) {
+            if (this.options.dragButtons[e.button]) {
+                this.dragStartPos[e.button] = null;
+                if (this.isDragging[e.button]) {
+                    this.isDragging[e.button] = false;
+                    this.fire('dragend', {dragButton: e.button, origEvent: e});
+                } else {
+                    this.fire('click', {dragButton: e.button, origEvent: e});
+                }
+            }
+        },
+
+        onMouseMove: function(e) {
+            var i, button, self=this;
+
+            function exceedsTolerance(button) {
+                var tolerance = self.options.dragTolerance;
+                return Math.abs(e.clientX - self.dragStartPos[button].x) > tolerance ||
+                       Math.abs(e.clientY - self.dragStartPos[button].y) > tolerance;
+            }
+
+            var dragButtons = Object.keys(this.options.dragButtons);
+            for (i = 0; i < dragButtons.length; i++) {
+                button = dragButtons[i];
+                if (this.isDragging[button]) {
+                    this.eventsTarget.fire('drag', {dragButton: e.button, origEvent: e});
+                } else if (this.dragStartPos[button] && exceedsTolerance(button)) {
+                    this.isDragging[button] = true;
+                    this.eventsTarget.fire('dragstart', {dragButton: button, origEvent: this.dragStartPos[button]});
+                    this.eventsTarget.fire('drag', {dragButton: button, origEvent: e});
+                }
+            }
+        },
+
+        onMouseLeave: function(e) {
+            var i, button;
+            var dragButtons = Object.keys(this.options.dragButtons);
+            for (i = 0; i < dragButtons.length; i++) {
+                button = dragButtons[i];
+                if (this.isDragging[button]) {
+                    this.isDragging[button] = false;
+                    this.fire('dragend', {dragButton: button, origEvent: e});
+                }
+            }
+            this.dragStartPos = {};
+        }
+    });
+
     L.Control.ElevationProfile = L.Class.extend({
+            options: {
+                elevationsServer: 'http://127.0.0.1:8051/',
+                samplingInterval: 100
+            },
+
             initialize: function(path, options) {
                 L.setOptions(this, options);
-                this.values = [1,2,3,4,5,6,7,8,9,10,8,5,2,2,6,7];
+                var samples = this.samples = pathRegularSamples(path, this.options.samplingInterval);
+                var self = this;
+                this._getElevation(samples).done(function(values) {
+                    self.values = values;
+                    self.updateGraph();
+                });
+                this.values = null;
             },
 
             addTo: function(map) {
                 this._map = map;
-                var container = L.DomUtil.create('div', 'elevation-profile-container');
+                var container = this.container = L.DomUtil.create('div', 'elevation-profile-container');
+                if (!L.Browser.touch) {
+                    L.DomEvent
+                        .disableClickPropagation(container)
+                        .disableScrollPropagation(container);
+                } else {
+                    L.DomEvent.on(container, 'click', L.DomEvent.stopPropagation);
+                }
                 this._map._controlContainer.appendChild(container);
-                this.propsContainer = L.DomUtil.create('div', 'elevation-profile-properties', container);
-                this.graphContainer = L.DomUtil.create('div', 'elevation-profile-graph', container);
-                this.updatePropsDisplay();
-                this.setupGraph();
+                this.setupContainerLayout();
+                this.updateGraph();
+                this.trackMarker = L.marker();
+                map.addLayer(this.trackMarker);
                 return this;
+            },
+
+            setupContainerLayout: function() {
+                var horizZoom = this.horizZoom = 1;
+                var container = this.container;
+                this.propsContainer = L.DomUtil.create('div', 'elevation-profile-properties', container);
+                this.leftAxisLables = L.DomUtil.create('div', 'elevation-profile-left-axis', container);
+                this.drawingContainer = L.DomUtil.create('div', 'elevation-profile-drawingContainer', container);
+                this.graphCursor = L.DomUtil.create('div', 'elevation-profile-cursor elevation-profile-cursor-hidden',
+                    this.drawingContainer);
+                this.graphCursorLabel = L.DomUtil.create('div', 'elevation-profile-cursor-label elevation-profile-cursor-hidden',
+                    this.drawingContainer);
+                this.graphSelection = L.DomUtil.create('div', 'elevation-profile-selection elevation-profile-cursor-hidden',
+                    this.drawingContainer);
+                var svgWidth = this.svgWidth = this.drawingContainer.clientWidth * horizZoom,
+                    svgHeight = this.svgHeight = this.drawingContainer.clientHeight;
+                var svg = this.svg = createSvg('svg', {width: svgWidth, height: svgHeight}, this.drawingContainer);
+                L.DomEvent.on(svg, 'mousemove', this.onSvgMouseMove, this);
+                L.DomEvent.on(svg, 'mouseenter', this.onSvgEnter, this);
+                L.DomEvent.on(svg, 'mouseleave', this.onSvgLeave, this);
+                this.svgDragEvents = new DragEvents(this.svg);
+                this.svgDragEvents.on('dragstart', this.onSvgDragStart, this);
+                this.svgDragEvents.on('dragend', this.onSvgDragEnd, this);
+                this.svgDragEvents.on('drag', this.onSvgDrag, this);
+                this.svgDragEvents.on('click', this.onSvgClick, this);
             },
 
             removeFrom: function(map) {
@@ -44,51 +207,245 @@
                 return this;
             },
 
+            onSvgDragStart: function(e) {
+                L.DomUtil.addClass(this.graphCursor, 'elevation-profile-cursor-hidden-while-drag');
+                L.DomUtil.addClass(this.graphCursorLabel, 'elevation-profile-cursor-hidden-while-drag');
+                L.DomUtil.removeClass(this.graphSelection, 'elevation-profile-cursor-hidden');
+                this.dragStart = e.origEvent.offsetX;
+            },
 
-            updatePropsDisplay: function() {
+            onSvgDragEnd: function(e) {
+                L.DomUtil.removeClass(this.graphCursor, 'elevation-profile-cursor-hidden-while-drag');
+                L.DomUtil.removeClass(this.graphCursorLabel, 'elevation-profile-cursor-hidden-while-drag');
+
+                var x = e.origEvent.offsetX;
+                var selStart = Math.min(x, this.dragStart);
+                selStart = Math.round(selStart / (this.svgWidth - 1) * (this.values.length - 1))
+                var selEnd = Math.max(x, this.dragStart);
+                selEnd = Math.round(selEnd / (this.svgWidth - 1) * (this.values.length - 1))
+
+                var stats = this.calcProfileStats(this.values.slice(selStart, selEnd + 1));
+                this.updatePropsDisplay(stats);
+                L.DomUtil.addClass(this.propsContainer, 'elevation-profile-properties-selected');
+
+            },
+
+            onSvgDrag: function(e) {
+                var x = e.origEvent.offsetX,
+                    selStart, selEnd;
+                var selStart = Math.min(x, this.dragStart);
+                var selEnd = Math.max(x, this.dragStart);
+                this.graphSelection.style.left = selStart + 'px';
+                this.graphSelection.style.width = (selEnd - selStart)+ 'px';
+            },
+
+            onSvgClick: function() {
+                L.DomUtil.addClass(this.graphSelection, 'elevation-profile-cursor-hidden');
+                L.DomUtil.removeClass(this.propsContainer, 'elevation-profile-properties-selected');
+                this.updatePropsDisplay(this.stats);
+            },
+
+
+            updateGraph: function() {
+                if (!this._map || !this.values) {
+                    return;
+                }
+                this.stats = this.calcProfileStats(this.values);
+                this.updatePropsDisplay(this.stats);
+                this.setupGraph();
+            },
+
+            updatePropsDisplay: function(stats) {
                 if (!this._map) {
                     return;
                 }
+                var ascentAngleStr = isNaN(stats.angleAvgAscent) ? '-' : L.Util.template('{avg} / {max}&deg;',
+                    {avg: stats.angleAvgAscent, max: stats.angleMaxAscent});
+                var descentAngleStr = isNaN(stats.angleAvgDescent) ? '-' : L.Util.template('{avg} / {max}&deg;',
+                    {avg: stats.angleAvgDescent, max: stats.angleMaxDescent});
+
                 this.propsContainer.innerHTML =
                     '<table>' +
-                        '<tr><td>Max elevation:</td><td></td></tr>' +
-                        '<tr><td>Min elevation:</td><td></td></tr>' +
-                        '<tr><td>Ascent:</td><td></td></tr>' +
-                        '<tr><td>Descent:</td><td></td></tr>' +
+                    '<tr><td>Max elevation:</td><td>' + stats.max + '</td></tr>' +
+                    '<tr><td>Min elevation:</td><td>' + stats.min + '</td></tr>' +
+                    '<tr><td>Start elevation:</td><td>' + stats.start + '</td></tr>' +
+                    '<tr><td>Finish elevation:</td><td>' + stats.end + '</td></tr>' +
+                    '<tr><td>Overall elevation change:</td><td>' + stats.finalAscent + '</td></tr>' +
+                    '<tr><td>Avg / Max ascent inclination:</td><td>' + ascentAngleStr + '</td></tr>' +
+                    '<tr><td>Avg / Max descent inclination:</td><td>' + descentAngleStr + '</td></tr>' +
+                    '<tr><td>Distance:</td><td>' + (stats.distance / 1000).toFixed(1) + ' km</td></tr>' +
+                    '<tr><td>Total ascent:</td><td></td></tr>' +
+                    '<tr><td>Total descent:</td><td></td></tr>' +
                     '</table>'
+            },
+
+            calcGridValues: function(minValue, maxValue) {
+                var ticksNs = [3, 4, 5],
+                    tickSteps = [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000, 10000],
+                    ticks = [],
+                    i, j, k, ticksN, tickStep, tick1, tick2;
+                for (i = 0; i < tickSteps.length; i++) {
+                    tickStep = tickSteps[i];
+                    for (j = 0; j< ticksNs.length; j++) {
+                        ticksN = ticksNs[j];
+                        tick1 = Math.floor(minValue / tickStep);
+                        tick2 = Math.ceil(maxValue / tickStep);
+                        if ((tick2 - tick1) < ticksN) {
+                            for (k = tick1; k < tick1 + ticksN; k++) {
+                                ticks.push(k * tickStep);
+                            }
+                            return ticks;
+                        }
+                    }
+                }
+            },
+
+            calcProfileStats: function(values) {
+                var stats = {},
+                    gradient, i;
+                stats.min = Math.min.apply(null, values);
+                stats.max = Math.max.apply(null, values);
+                stats.finalAscent = values[values.length - 1] - values[0];
+                var ascents = [],
+                    descents = [];
+                for (i = 1; i < values.length; i++) {
+                    gradient = (values[i] - values[i - 1]);
+                    if (gradient > 0) {
+                        ascents.push(gradient);
+                    } else if (gradient < 0) {
+                        descents.push(-gradient);
+                    }
+                }
+                function sum(a, b) {
+                    return a + b;
+                }
+                stats.gradientAvgAscent = ascents.reduce(sum, 0) / ascents.length / this.options.samplingInterval;
+                stats.gradientMinAscent = Math.min.apply(null, ascents) / this.options.samplingInterval;
+                stats.gradientMaxAscent = Math.max.apply(null, ascents) / this.options.samplingInterval;
+                stats.gradientAvgDescent = descents.reduce(sum, 0) / descents.length / this.options.samplingInterval;
+                stats.gradientMinDescent = Math.min.apply(null, descents) / this.options.samplingInterval;
+                stats.gradientMaxDescent = Math.max.apply(null, descents) / this.options.samplingInterval;
+
+                stats.angleAvgAscent = gradientToAngle(stats.gradientAvgAscent);
+                stats.angleMinAscent = gradientToAngle(stats.gradientMinAscent);
+                stats.angleMaxAscent = gradientToAngle(stats.gradientMaxAscent);
+                stats.angleAvgDescent = gradientToAngle(stats.gradientAvgDescent);
+                stats.angleMinDescent = gradientToAngle(stats.gradientMinDescent);
+                stats.angleMaxDescent = gradientToAngle(stats.gradientMaxDescent);
+
+                stats.start = values[0];
+                stats.end = values[values.length - 1];
+                stats.distance = (values.length - 1) * this.options.samplingInterval;
+                return stats;
+
+            },
+
+            onSvgMouseMove: function(e) {
+                if (!this.values) {
+                    return;
+                }
+                var x = e.offsetX;
+                this.graphCursor.style.left = x + 'px';
+                var ind = (x / (this.svgWidth - 1) * (this.values.length - 1));
+                var distance = this.options.samplingInterval * ind;
+                distance = (distance / 1000).toFixed(2) + ' km';
+                var gradient = (this.values[Math.ceil(ind)] - this.values[Math.floor(ind)]) / this.options.samplingInterval;
+                var angle = Math.round(Math.atan(gradient) * 180 / Math.PI);
+                gradient = Math.round(gradient * 100);
+
+                ind = Math.round(ind);
+                var elevation = this.values[ind];
+                this.graphCursorLabel.innerHTML = L.Util.template('{ele}<br>{dist}<br>{angle}&deg;',
+                    {ele: elevation, dist: distance, grad: gradient, angle: angle});
+                this.graphCursorLabel.style.left = x + 'px';
+                if (this.drawingContainer.getBoundingClientRect().left - this.drawingContainer.scrollLeft + x +  this.graphCursorLabel.offsetWidth >= this.container.getBoundingClientRect().right) {
+                    L.DomUtil.addClass(this.graphCursorLabel, 'elevation-profile-cursor-label-left');
+                } else {
+                    L.DomUtil.removeClass(this.graphCursorLabel, 'elevation-profile-cursor-label-left');
+                }
+
+                var markerPos = this.samples[ind];
+                this.trackMarker.setLatLng(markerPos);
+            },
+
+            onSvgEnter: function() {
+                L.DomUtil.removeClass(this.graphCursor, 'elevation-profile-cursor-hidden');
+                L.DomUtil.removeClass(this.graphCursorLabel, 'elevation-profile-cursor-hidden');
+            },
+
+            onSvgLeave: function() {
+                L.DomUtil.addClass(this.graphCursor, 'elevation-profile-cursor-hidden');
+                L.DomUtil.addClass(this.graphCursorLabel, 'elevation-profile-cursor-hidden');
             },
 
             setupGraph: function() {
                 if (!this._map) {
                     return;
                 }
-                var i, x, y, line, path;
-                var svg = createSvg('svg', {width: '100%', 'height': '100%'}, this.graphContainer);
-                var width = this.graphContainer.offsetWidth;
-                var height = this.graphContainer.offsetHeight;
-                var step = height / 5;
-                for (i = 0; i < 5; i++) {
-                    y = i * step;
-                    y = Math.round(y);
-                    path = L.Util.template('M0 {y} L{w} {y}', {y: y, w: width});
-                    createSvg('path', {d: path, "stroke-width": "1", stroke: "green", fill: 'none'}, svg);
-                    // line = createSvg(path);
-                    // line
 
+                var maxValue = Math.max.apply(null, this.values),
+                    minValue = Math.min.apply(null, this.values),
+                    svg = this.svg,
+                    path, i, horizStep, verticalMultiplier, x, y, gridValues, label;
+
+
+                var paddingBottom = 8 + 16,
+                    paddingTop = 8;
+
+                gridValues = this.calcGridValues(minValue, maxValue);
+                var gridStep = (this.svgHeight - paddingBottom - paddingTop) / (gridValues.length - 1);
+                for (i = 0; i < gridValues.length; i++) {
+                    y = Math.round(i * gridStep - 0.5) + 0.5 + paddingTop;
+                    path = L.Util.template('M{x1} {y} L{x2} {y}', {x1: 0, x2: this.svgWidth * this.horizZoom, y: y});
+                    createSvg('path', {d: path, 'stroke-width': '1px', stroke: 'green', fill: 'none'}, svg);
+
+                    label = L.DomUtil.create('div', 'elevation-profile-grid-label', this.leftAxisLables);
+                    label.innerHTML = gridValues[gridValues.length - i - 1];
+                    label.style.top = (gridStep * i + paddingTop) + 'px';
                 }
 
+                horizStep = this.svgWidth / (this.values.length - 1);
+                verticalMultiplier = (this.svgHeight - paddingTop - paddingBottom) / (gridValues[gridValues.length - 1] - gridValues[0]);
 
-                // var step = width / this.values.length;
-                // var range = Math.max(this.values) - Math.min(this.values);
-                // var verticalMultiplier = height / m
-
-
-
+                path = [];
+                for (i = 0; i < this.values.length; i++) {
+                    path.push(i ? 'L' : 'M');
+                    x = i * horizStep;
+                    y = (this.values[i] - gridValues[0]) * verticalMultiplier;
+                    y = this.svgHeight - y - paddingBottom;
+                    path.push(x + ' ' + y + ' ');
+                }
+                path = path.join('');
+                createSvg('path', {d: path, 'stroke-width': '1px', stroke: 'brown', fill: 'none'}, svg);
             },
 
             onRemove: function(map) {
 
+            },
+
+            _getElevation: function(latlngs) {
+                function parseResponse(s) {
+                    var values = [];
+                    s = s.split('\n');
+                    for (var i = 0; i < s.length; i++) {
+                        if (s[i]) {
+                            values.push(parseFloat(s[i]));
+                        }
+                    }
+                    return values;
+                }
+
+                var req = [];
+                for (var i = 0; i < latlngs.length; i++) {
+                    req.push(latlngs[i].lat.toFixed(5) + ' ' + latlngs[i].lng.toFixed(5));
+                }
+                req = req.join('\n');
+                return fileutils.get(this.options.elevationsServer, {postData: req})
+                    .then(function(xhr){
+                        return parseResponse(xhr.responseText);
+                    });
             }
+
 
         }
     );

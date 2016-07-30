@@ -1,26 +1,117 @@
 .elevation-profile-container {
     background-color: white;
     width: 100%;
-    height: 200px;
+    height: 220px;
     position: absolute;
     bottom: 0;
     z-index: 2000;
+    cursor: default;
 }
 
 .elevation-profile-properties {
+    padding-left: 4px;
     height: 100%;
     float: left;
-    width: 200px;
+    width: 260px;
     border-right: 1px solid #dddddd;
 }
 
-.elevation-profile-graph {
-    height: 100%;
-    width: auto;
-    overflow: hidden;
+.elevation-profile-properties-selected {
+    background-color: #dfeef4;
 }
 
-.graphContainer {
-    margin: 0;
-    padding: 0;
+.elevation-profile-properties td:last-child {
+    padding-left: 4px;
+}
+
+.elevation-profile-properties td {
+    /*border-bottom: 1px solid #ddd;*/
+}
+
+.elevation-profile-left-axis {
+    position: relative;
+    height: 100%;
+    float: left;
+    width: 50px;
+}
+
+.elevation-profile-drawingContainer {
+    height: 100%;
+    width: auto;
+    overflow-x: scroll;
+    overflow-y: hidden;
+    position: relative;
+}
+
+.elevation-profile-grid-label {
+    font-family: Arial sans-serif;
+    font-size: 12px;
+    line-height: 12px;
+    margin-top: -6px;
+    position: absolute;
+    text-align: right;
+    right: 4px;
+}
+
+.elevation-profile-container svg {
+    /*cursor: default;*/
+}
+
+.elevation-profile-cursor {
+    border-right: 1px solid blue;
+    position: absolute;
+    top: 8px;
+    bottom: 24px;
+    pointer-events: none;
+}
+
+.elevation-profile-cursor-label {
+    position: absolute;
+    pointer-events: none;
+    top: 8px;
+    font-family: Arial sans-serif;
+    font-size: 12px;
+    line-height: 16px;
+    padding-left: 8px;
+    user-select: none;
+
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    white-space: nowrap;
+
+    text-shadow: 1px 0 0 #fff,
+    1px 1px 0 #fff,
+    0 1px 0 #fff,
+    -1px 1px 0 #fff,
+    -1px 0 0 #fff,
+    -1px -1px 0 #fff,
+    0 -1px 0 #fff,
+    1px -1px 0 #fff;
+}
+
+.elevation-profile-cursor-label-left {
+    width: 100px;
+    margin-left: -116px;
+    text-align: right;
+}
+
+.elevation-profile-cursor-hidden {
+    visibility: hidden;
+}
+
+.elevation-profile-cursor-hidden-while-drag {
+    visibility: hidden;
+}
+
+.elevation-profile-selection {
+    background-color: #0078A8;
+    opacity: .3;
+    position: absolute;
+    top: 8px;
+    bottom: 24px;
+    pointer-events: none;
 }

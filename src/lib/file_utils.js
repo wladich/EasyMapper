@@ -38,7 +38,7 @@ var fileutils = (function() {
             }
                 
             xhr.timeout = timeout;
-            xhr.open('GET', url);
+            xhr.open(task.postData ? 'POST' : 'GET', url);
             xhr.responseType = responseType;
             xhr.onreadystatechange = function(e) {
                 if (this.readyState == 4) {
@@ -60,7 +60,7 @@ var fileutils = (function() {
                 }
             };
             activeDownloads += 1;
-            xhr.send();
+            xhr.send(task.postData);
         }
 
         function processQueue() {
