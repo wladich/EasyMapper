@@ -172,7 +172,7 @@
                 this._map._controlContainer.appendChild(container);
                 this.setupContainerLayout();
                 this.updateGraph();
-                this.trackMarker = L.marker(null, {clickable: false});
+                this.trackMarker = L.marker([1000, 0], {clickable: false});
                 this.polyline = L.polyline(this.path, {weight: 20, opacity: 0}).addTo(map);
                 this.polyline.on('mousemove', this.onLineMouseMove, this);
                 this.polyline.on('mouseover', this.onLineMouseEnter, this);
@@ -208,6 +208,9 @@
             },
 
             removeFrom: function(map) {
+                if (!this._map) {
+                    return;
+                }
                 this._map._controlContainer.removeChild(this._container);
                 map.removeLayer(this.polyline);
                 map.removeLayer(this.trackMarker);
@@ -580,9 +583,7 @@
                         });
             },
             onCloseButtonClick: function() {
-                if (this._map) {
-                    this.removeFrom(this._map);
-                }
+                this.removeFrom(this._map);
             }
         }
     );

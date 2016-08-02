@@ -9,6 +9,7 @@
 //@require leaflet.measured_line
 //@require leaflet.edit_line
 //@require leaflet.simplify_latlngs
+//@require leaflet.elevation_profile
 
 (function() {
     "use strict";
@@ -336,6 +337,7 @@
                 {text: 'Rename', callback: this.renameTrack.bind(this, track)},
                 {text: 'Duplicate', callback: this.duplicateTrack.bind(this, track)},
                 {text: 'Reverse', callback: this.reverseTrack.bind(this, track)},
+                {text: 'Show elevation profile', callback: this.showElevationProfileForTrack.bind(this, track)},
                 '-',
                 {text: 'Delete', callback: this.removeTrack.bind(this, track)},
                 '-',
@@ -588,6 +590,7 @@
             items.push({text: 'Reverse', callback: this.reverseTrackSegment.bind(this, e.line)});
             items.push({text: 'Delete segment', callback: this.deleteTrackSegment.bind(this, e.line)});
             items.push({text: 'New track from segment', callback: this.newTrackFromSegment.bind(this, e.line)});
+            items.push({text: 'Show elevation profile for segment', callback: this.showElevationProfileForSegment.bind(this, e.line)});
 
             var menu = new L.Contextmenu(items);
             menu.showOnMouseEvent(e.mouseEvent);
@@ -600,7 +603,8 @@
                                          callback: this.splitTrackSegment.bind(this, e.line, e.nodeIndex, e.mouseEvent.latlng)},
                                         {text: 'Reverse', callback: this.reverseTrackSegment.bind(this, e.line)},
                                         {text: 'Delete segment', callback: this.deleteTrackSegment.bind(this, e.line)},
-                                        {text: 'New track from segment', callback: this.newTrackFromSegment.bind(this, e.line)}
+                                        {text: 'New track from segment', callback: this.newTrackFromSegment.bind(this, e.line)},
+                                        {text: 'Show elevation profile for segment', callback: this.showElevationProfileForSegment.bind(this, e.line)}
                                         ]);
             menu.showOnMouseEvent(e.mouseEvent);
         },
@@ -891,6 +895,28 @@
                         }))
                     };
                 });
+        },
+
+        showElevationProfileForSegment: function(line) {
+             if (this._elevationControl) {
+                this._elevationControl.removeFrom(this._map);
+             }
+             this._elevationControl = new L.Control.ElevationProfile(line.getLatLngs()).addTo(this._map);
+        },
+
+        showElevationProfileForTrack: function(track) {
+            var lines = this.getTrackPolylines(track),
+                path = [],
+                i;
+            for (i = 0; i < lines.length; i++) {
+                path = path.concat(lines[i].getLatLngs());
+            }
+            if (this._elevationControl) {
+                this._elevationControl.removeFrom(this._map);
+            }
+            this._elevationControl = new L.Control.ElevationProfile(path).addTo(this._map);
+
         }
+
     });
 })();
