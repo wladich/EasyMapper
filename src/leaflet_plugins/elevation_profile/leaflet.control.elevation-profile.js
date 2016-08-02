@@ -142,7 +142,7 @@
 
     L.Control.ElevationProfile = L.Class.extend({
             options: {
-                elevationsServer: 'http://127.0.0.1:8051/',
+                elevationsServer: 'http://elevation/',
                 samplingInterval: 100
             },
 
@@ -185,6 +185,8 @@
                 var container = this._container;
                 this.propsContainer = L.DomUtil.create('div', 'elevation-profile-properties', container);
                 this.leftAxisLables = L.DomUtil.create('div', 'elevation-profile-left-axis', container);
+                this.closeButton = L.DomUtil.create('div', 'elevation-profile-close', this.leftAxisLables);
+                L.DomEvent.on(this.closeButton, 'click', this.onCloseButtonClick, this);
                 this.drawingContainer = L.DomUtil.create('div', 'elevation-profile-drawingContainer', container);
                 this.graphCursor = L.DomUtil.create('div', 'elevation-profile-cursor elevation-profile-cursor-hidden',
                     this.drawingContainer);
@@ -207,8 +209,9 @@
 
             removeFrom: function(map) {
                 this._map._controlContainer.removeChild(this._container);
+                map.removeLayer(this.polyline);
+                map.removeLayer(this.trackMarker);
                 this._map = null;
-                this.onRemove(map);
                 return this;
             },
 
@@ -550,10 +553,6 @@
                 createSvg('path', {d: path, 'stroke-width': '1px', stroke: 'brown', fill: 'none'}, svg);
             },
 
-            onRemove: function(map) {
-
-            },
-
             _getElevation: function(latlngs) {
                 function parseResponse(s) {
                     var values = [];
@@ -572,12 +571,19 @@
                 }
                 req = req.join('\n');
                 return fileutils.get(this.options.elevationsServer, {postData: req})
-                    .then(function(xhr){
-                        return parseResponse(xhr.responseText);
-                    });
+                    .then(
+                        function(xhr){
+                            return parseResponse(xhr.responseText);
+                        },
+                        function() {
+                            console.log('ERROR', arguments);
+                        });
+            },
+            onCloseButtonClick: function() {
+                if (this._map) {
+                    this.removeFrom(this._map);
+                }
             }
-
-
         }
     );
 

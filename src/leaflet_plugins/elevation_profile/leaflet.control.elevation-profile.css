@@ -12,7 +12,7 @@
     padding-left: 4px;
     height: 100%;
     float: left;
-    width: 260px;
+    width: 230px;
     border-right: 1px solid #dddddd;
 }
 
@@ -114,7 +114,9 @@
     top: 8px;
     bottom: 24px;
     pointer-events: none;
-}.elevation-profile-marker {
+}
+
+.elevation-profile-marker {
     margin-left: 0 !important;
     margin-top: 0 !important;
     white-space: nowrap;
@@ -147,3 +149,16 @@
     1px -1px 1px #fff;
     margin-left: 20px;
 }
+
+.elevation-profile-close {
+    position: absolute;
+    right: 0;
+    left: 0;
+    width: 16px;
+    height: 16px;
+    background-image: url("close.png");
+    margin-left: 4px;
+    margin-top: 4px;
+    cursor: pointer;
+}
+
