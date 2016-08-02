@@ -114,4 +114,36 @@
     top: 8px;
     bottom: 24px;
     pointer-events: none;
+}.elevation-profile-marker {
+    margin-left: 0 !important;
+    margin-top: 0 !important;
+    white-space: nowrap;
+    pointer-events: none;
+}
+
+.elevation-profile-marker-icon {
+    display: inline-block;
+    width: 8px !important;
+    height: 8px !important;
+    margin-left: -4px;
+    margin-top: -4px;
+    border-radius: 4px;
+    background-color: #0078A8;
+    position: absolute;
+    top: 0;
+    left: 0;
+    /*opacity: .5;*/
+}
+
+.elevation-profile-marker-label {
+    display: inline-block;
+    text-shadow: 1px 0 0 #fff,
+    1px 1px 1px #fff,
+    0 1px 1px #fff,
+    -1px 1px 1px #fff,
+    -1px 0 1px #fff,
+    -1px -1px 1px #fff,
+    0 -1px 1px #fff,
+    1px -1px 1px #fff;
+    margin-left: 20px;
 }

@@ -146,9 +146,11 @@
                 samplingInterval: 100
             },
 
-            initialize: function(path, options) {
+            initialize: function(latlngs, options) {
                 L.setOptions(this, options);
-                var samples = this.samples = pathRegularSamples(path, this.options.samplingInterval);
+                // this.polyline = polyline;
+                this.path = latlngs;
+                var samples = this.samples = pathRegularSamples(this.path, this.options.samplingInterval);
                 var self = this;
                 this._getElevation(samples).done(function(values) {
                     self.values = values;
@@ -159,7 +161,7 @@
 
             addTo: function(map) {
                 this._map = map;
-                var container = this.container = L.DomUtil.create('div', 'elevation-profile-container');
+                var container = this._container = L.DomUtil.create('div', 'elevation-profile-container');
                 if (!L.Browser.touch) {
                     L.DomEvent
                         .disableClickPropagation(container)
@@ -170,14 +172,17 @@
                 this._map._controlContainer.appendChild(container);
                 this.setupContainerLayout();
                 this.updateGraph();
-                this.trackMarker = L.marker();
-                map.addLayer(this.trackMarker);
+                this.trackMarker = L.marker(null, {clickable: false});
+                this.polyline = L.polyline(this.path, {weight: 20, opacity: 0}).addTo(map);
+                this.polyline.on('mousemove', this.onLineMouseMove, this);
+                this.polyline.on('mouseover', this.onLineMouseEnter, this);
+                this.polyline.on('mouseout', this.onLineMouseLeave, this);
                 return this;
             },
 
             setupContainerLayout: function() {
                 var horizZoom = this.horizZoom = 1;
-                var container = this.container;
+                var container = this._container;
                 this.propsContainer = L.DomUtil.create('div', 'elevation-profile-properties', container);
                 this.leftAxisLables = L.DomUtil.create('div', 'elevation-profile-left-axis', container);
                 this.drawingContainer = L.DomUtil.create('div', 'elevation-profile-drawingContainer', container);
@@ -208,31 +213,27 @@
             },
 
             onSvgDragStart: function(e) {
-                L.DomUtil.addClass(this.graphCursor, 'elevation-profile-cursor-hidden-while-drag');
-                L.DomUtil.addClass(this.graphCursorLabel, 'elevation-profile-cursor-hidden-while-drag');
+                this.cursorHide();
                 L.DomUtil.removeClass(this.graphSelection, 'elevation-profile-cursor-hidden');
                 this.dragStart = e.origEvent.offsetX;
             },
 
             onSvgDragEnd: function(e) {
-                L.DomUtil.removeClass(this.graphCursor, 'elevation-profile-cursor-hidden-while-drag');
-                L.DomUtil.removeClass(this.graphCursorLabel, 'elevation-profile-cursor-hidden-while-drag');
-
+                this.cursorShow();
                 var x = e.origEvent.offsetX;
                 var selStart = Math.min(x, this.dragStart);
-                selStart = Math.round(selStart / (this.svgWidth - 1) * (this.values.length - 1))
+                selStart = Math.round(selStart / (this.svgWidth - 1) * (this.values.length - 1));
                 var selEnd = Math.max(x, this.dragStart);
-                selEnd = Math.round(selEnd / (this.svgWidth - 1) * (this.values.length - 1))
+                selEnd = Math.round(selEnd / (this.svgWidth - 1) * (this.values.length - 1));
 
-                var stats = this.calcProfileStats(this.values.slice(selStart, selEnd + 1));
+                var stats = this.calcProfileStats(this.values.slice(selStart, selEnd + 1), true);
                 this.updatePropsDisplay(stats);
                 L.DomUtil.addClass(this.propsContainer, 'elevation-profile-properties-selected');
 
             },
 
             onSvgDrag: function(e) {
-                var x = e.origEvent.offsetX,
-                    selStart, selEnd;
+                var x = e.origEvent.offsetX;
                 var selStart = Math.min(x, this.dragStart);
                 var selEnd = Math.max(x, this.dragStart);
                 this.graphSelection.style.left = selStart + 'px';
@@ -250,6 +251,7 @@
                 if (!this._map || !this.values) {
                     return;
                 }
+
                 this.stats = this.calcProfileStats(this.values);
                 this.updatePropsDisplay(this.stats);
                 this.setupGraph();
@@ -274,8 +276,8 @@
                     '<tr><td>Avg / Max ascent inclination:</td><td>' + ascentAngleStr + '</td></tr>' +
                     '<tr><td>Avg / Max descent inclination:</td><td>' + descentAngleStr + '</td></tr>' +
                     '<tr><td>Distance:</td><td>' + (stats.distance / 1000).toFixed(1) + ' km</td></tr>' +
-                    '<tr><td>Total ascent:</td><td></td></tr>' +
-                    '<tr><td>Total descent:</td><td></td></tr>' +
+                    '<tr><td>Total ascent:</td><td>'+ stats.ascent +'</td></tr>' +
+                    '<tr><td>Total descent:</td><td>'+ stats.descent +'</td></tr>' +
                     '</table>'
             },
 
@@ -300,7 +302,42 @@
                 }
             },
 
-            calcProfileStats: function(values) {
+            filterElevations: function(values, tolerance) {
+                var filtered = values.slice(0);
+                if (filtered.length < 3) {
+                    return filtered;
+                }
+                var scanStart, scanEnd, job, linearValue, linearDelta, maxError, maxErrorInd, i, error;
+                var queue = [[0, filtered.length - 1]];
+                while (queue.length) {
+                    job = queue.pop();
+                    scanStart = job[0];
+                    scanEnd = job[1];
+                    linearValue = filtered[scanStart];
+                    linearDelta = (filtered[scanEnd] - filtered[scanStart]) / (scanEnd - scanStart);
+                    maxError = null;
+                    maxErrorInd = null;
+                    for (i = scanStart + 1; i < scanEnd; i++) {
+                        linearValue += linearDelta;
+                        error = Math.abs(filtered[i] - linearValue);
+                        if (error === null || error > maxError) {
+                            maxError = error;
+                            maxErrorInd = i;
+                        }
+                    }
+                    if (maxError > tolerance) {
+                        if (scanEnd > scanStart + 2) {
+                            queue.push([scanStart, maxErrorInd]);
+                            queue.push([maxErrorInd, scanEnd]);
+                        }
+                    } else {
+                        filtered.splice(scanStart + 1, scanEnd - scanStart - 1);
+                    }
+                }
+                return filtered;
+            },
+
+            calcProfileStats: function(values, partial) {
                 var stats = {},
                     gradient, i;
                 stats.min = Math.min.apply(null, values);
@@ -336,17 +373,33 @@
                 stats.start = values[0];
                 stats.end = values[values.length - 1];
                 stats.distance = (values.length - 1) * this.options.samplingInterval;
+
+                var filterTolerance;
+                if (partial) {
+                    filterTolerance = Math.max((this.stats.max - this.stats.min) / 25, 5)
+                } else {
+                    filterTolerance = Math.max((stats.max - stats.min) / 25, 5);
+                }
+                var filtered = this.filterElevations(values, filterTolerance);
+                var ascent = 0,
+                    descent = 0,
+                    delta;
+                for (i = 1; i < filtered.length; i++) {
+                    delta = filtered[i] - filtered[i - 1];
+                    if (delta < 0) {
+                        descent += -delta;
+                    } else {
+                        ascent += delta;
+                    }
+                }
+                stats.ascent = ascent;
+                stats.descent = descent;
+
                 return stats;
 
             },
 
-            onSvgMouseMove: function(e) {
-                if (!this.values) {
-                    return;
-                }
-                var x = e.offsetX;
-                this.graphCursor.style.left = x + 'px';
-                var ind = (x / (this.svgWidth - 1) * (this.values.length - 1));
+            setCursorPosition: function(ind) {
                 var distance = this.options.samplingInterval * ind;
                 distance = (distance / 1000).toFixed(2) + ' km';
                 var gradient = (this.values[Math.ceil(ind)] - this.values[Math.floor(ind)]) / this.options.samplingInterval;
@@ -357,8 +410,10 @@
                 var elevation = this.values[ind];
                 this.graphCursorLabel.innerHTML = L.Util.template('{ele}<br>{dist}<br>{angle}&deg;',
                     {ele: elevation, dist: distance, grad: gradient, angle: angle});
+                var x = ind / (this.values.length - 1) * (this.svgWidth - 1);
+                this.graphCursor.style.left = x + 'px';
                 this.graphCursorLabel.style.left = x + 'px';
-                if (this.drawingContainer.getBoundingClientRect().left - this.drawingContainer.scrollLeft + x +  this.graphCursorLabel.offsetWidth >= this.container.getBoundingClientRect().right) {
+                if (this.drawingContainer.getBoundingClientRect().left - this.drawingContainer.scrollLeft + x +  this.graphCursorLabel.offsetWidth >= this._container.getBoundingClientRect().right) {
                     L.DomUtil.addClass(this.graphCursorLabel, 'elevation-profile-cursor-label-left');
                 } else {
                     L.DomUtil.removeClass(this.graphCursorLabel, 'elevation-profile-cursor-label-left');
@@ -366,17 +421,93 @@
 
                 var markerPos = this.samples[ind];
                 this.trackMarker.setLatLng(markerPos);
+                var label = L.Util.template('{ele}<br>{dist}<br>{angle}&deg;',
+                    {ele: elevation, dist: distance, grad: gradient, angle: angle});
+                var icon = L.divIcon({className: 'elevation-profile-marker',
+                    html: '<div class="elevation-profile-marker-icon"></div><div class="elevation-profile-marker-label">' + label + '</div>'});
+                this.trackMarker.setIcon(icon);
+            },
+
+            onSvgMouseMove: function(e) {
+                if (!this.values) {
+                    return;
+                }
+                var x = e.offsetX;
+                var ind = (x / (this.svgWidth - 1) * (this.values.length - 1));
+                this.setCursorPosition(ind);
+            },
+
+            cursorShow: function() {
+                L.DomUtil.removeClass(this.graphCursor, 'elevation-profile-cursor-hidden');
+                L.DomUtil.removeClass(this.graphCursorLabel, 'elevation-profile-cursor-hidden');
+                this._map.addLayer(this.trackMarker);
+            },
+
+            cursorHide: function() {
+                L.DomUtil.addClass(this.graphCursor, 'elevation-profile-cursor-hidden');
+                L.DomUtil.addClass(this.graphCursorLabel, 'elevation-profile-cursor-hidden');
+                this._map.removeLayer(this.trackMarker);
             },
 
             onSvgEnter: function() {
-                L.DomUtil.removeClass(this.graphCursor, 'elevation-profile-cursor-hidden');
-                L.DomUtil.removeClass(this.graphCursorLabel, 'elevation-profile-cursor-hidden');
+                this.cursorShow();
             },
 
             onSvgLeave: function() {
-                L.DomUtil.addClass(this.graphCursor, 'elevation-profile-cursor-hidden');
-                L.DomUtil.addClass(this.graphCursorLabel, 'elevation-profile-cursor-hidden');
+                this.cursorHide();
             },
+
+            onLineMouseEnter: function() {
+                this.cursorShow();
+            },
+
+            onLineMouseLeave: function() {
+                this.cursorHide();
+            },
+
+            onLineMouseMove: function(e) {
+                function sqrDist(latlng1, latlng2) {
+                    var dx = (latlng1.lng - latlng2.lng);
+                    var dy = (latlng1.lat - latlng2.lat);
+                    return dx * dx + dy * dy;
+                }
+
+                var nearestInd = null,
+                    minDist = null,
+                    mouseLatlng = e.latlng,
+                    i, sampleLatlng, dist;
+                for (i = 0; i < this.samples.length; i++) {
+                    sampleLatlng = this.samples[i];
+                    dist  = sqrDist(sampleLatlng, mouseLatlng);
+                    if (nearestInd === null || dist < minDist) {
+                        nearestInd = i;
+                        minDist = dist;
+                    }
+                }
+
+                if (nearestInd !== null) {
+                    // Workaroud to make inclination calculation work.
+                    // Should be removed when we use interpolation for index calculation or calculate inclination
+                    // using 3+ points
+                    if (nearestInd === 0) {
+                        nearestInd += .5;
+                    } else if (nearestInd === this.samples.length - 1) {
+                        nearestInd -= .5
+                    } else {
+                        var prevDist = sqrDist(mouseLatlng, this.samples[nearestInd - 1]),
+                            nextDist = sqrDist(mouseLatlng, this.samples[nearestInd + 1]);
+                        if (prevDist < nextDist) {
+                            nearestInd -= .1;
+                        } else {
+                            nearestInd += .1;
+                        }
+                    }
+
+                    this.setCursorPosition(nearestInd);
+                }
+
+            },
+
 
             setupGraph: function() {
                 if (!this._map) {

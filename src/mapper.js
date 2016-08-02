@@ -131,7 +131,9 @@
             this.printPagesControl.on('pdfstart', this.beforePdfBuild, this);
             this.updateJnxLayer();
             this.coordinatesControl = new L.Control.Coordinates().addTo(map);
-            new L.Control.ElevationProfile().addTo(map);
+            var testPolyline = L.polyline([L.latLng([42.39911, 44.01123]), L.latLng([42.89408, 44.38751])]).
+                addTo(map);
+            new L.Control.ElevationProfile(testPolyline.getLatLngs()).addTo(map);
             //FIXME: remove after migratirng to leaflet 1.0
             L.DomEvent.on(document, 'keydown', function(e) {
                 var key = e.keyCode;
