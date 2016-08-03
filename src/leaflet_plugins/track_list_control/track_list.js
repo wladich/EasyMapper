@@ -901,6 +901,7 @@
              if (this._elevationControl) {
                 this._elevationControl.removeFrom(this._map);
              }
+             this.stopEditLine();
              this._elevationControl = new L.Control.ElevationProfile(line.getLatLngs()).addTo(this._map);
         },
 
@@ -910,6 +911,9 @@
                 i;
             for (i = 0; i < lines.length; i++) {
                 path = path.concat(lines[i].getLatLngs());
+                if (lines[i] === this._editedLine) {
+                    this.stopEditLine();
+                }
             }
             if (this._elevationControl) {
                 this._elevationControl.removeFrom(this._map);
