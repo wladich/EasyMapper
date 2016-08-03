@@ -910,10 +910,10 @@
                 path = [],
                 i;
             for (i = 0; i < lines.length; i++) {
-                path = path.concat(lines[i].getLatLngs());
                 if (lines[i] === this._editedLine) {
                     this.stopEditLine();
                 }
+                path = path.concat(lines[i].getLatLngs());
             }
             if (this._elevationControl) {
                 this._elevationControl.removeFrom(this._map);
