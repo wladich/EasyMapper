@@ -142,7 +142,7 @@
 
     L.Control.ElevationProfile = L.Class.extend({
             options: {
-                elevationsServer: 'http://elevation/',
+                elevationsServer: 'http://elevation.nakarte.tk/',
                 samplingInterval: 100
             },
 
@@ -219,7 +219,8 @@
             },
 
             onSvgDragStart: function(e) {
-                this.cursorHide();
+                // FIXME: restore hiding when we make display of selection on map
+                // this.cursorHide();
                 L.DomUtil.removeClass(this.graphSelection, 'elevation-profile-cursor-hidden');
                 this.dragStart = e.origEvent.offsetX;
             },
@@ -249,7 +250,9 @@
             onSvgClick: function() {
                 L.DomUtil.addClass(this.graphSelection, 'elevation-profile-cursor-hidden');
                 L.DomUtil.removeClass(this.propsContainer, 'elevation-profile-properties-selected');
-                this.updatePropsDisplay(this.stats);
+                if (this.stats) {
+                    this.updatePropsDisplay(this.stats);
+                }
             },
 
 
@@ -267,6 +270,7 @@
                 if (!this._map) {
                     return;
                 }
+                this.propsContainer.innerHTML = '';
                 var ascentAngleStr = isNaN(stats.angleAvgAscent) ? '-' : L.Util.template('{avg} / {max}&deg;',
                     {avg: stats.angleAvgAscent, max: stats.angleMaxAscent});
                 var descentAngleStr = isNaN(stats.angleAvgDescent) ? '-' : L.Util.template('{avg} / {max}&deg;',
