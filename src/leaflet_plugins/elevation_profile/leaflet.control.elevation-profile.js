@@ -416,11 +416,12 @@
                 var angle = Math.round(Math.atan(gradient) * 180 / Math.PI);
                 gradient = Math.round(gradient * 100);
 
+                var x = ind / (this.values.length - 1) * (this.svgWidth - 1);
                 ind = Math.round(ind);
                 var elevation = this.values[ind];
                 this.graphCursorLabel.innerHTML = L.Util.template('{ele}<br>{dist}<br>{angle}&deg;',
                     {ele: elevation, dist: distance, grad: gradient, angle: angle});
-                var x = ind / (this.values.length - 1) * (this.svgWidth - 1);
+
                 this.graphCursor.style.left = x + 'px';
                 this.graphCursorLabel.style.left = x + 'px';
                 if (this.drawingContainer.getBoundingClientRect().left - this.drawingContainer.scrollLeft + x +  this.graphCursorLabel.offsetWidth >= this._container.getBoundingClientRect().right) {
