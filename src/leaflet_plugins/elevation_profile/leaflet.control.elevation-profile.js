@@ -562,11 +562,16 @@
 
             _getElevation: function(latlngs) {
                 function parseResponse(s) {
-                    var values = [];
+                    var values = [], v;
                     s = s.split('\n');
                     for (var i = 0; i < s.length; i++) {
                         if (s[i]) {
-                            values.push(parseFloat(s[i]));
+                            if (s[i] == 'NULL') {
+                                v = 0;
+                            } else {
+                                v = parseFloat(s[i]);
+                            }
+                            values.push(v);
                         }
                     }
                     return values;
