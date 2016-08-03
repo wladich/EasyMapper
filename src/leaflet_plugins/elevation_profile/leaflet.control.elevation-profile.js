@@ -177,6 +177,7 @@
                 this.polyline.on('mousemove', this.onLineMouseMove, this);
                 this.polyline.on('mouseover', this.onLineMouseEnter, this);
                 this.polyline.on('mouseout', this.onLineMouseLeave, this);
+                this.polyLineSelection = L.polyline([], {weight: 20, opacity: .5, color: 'yellow'});
                 return this;
             },
 
@@ -222,6 +223,7 @@
                 // FIXME: restore hiding when we make display of selection on map
                 // this.cursorHide();
                 L.DomUtil.removeClass(this.graphSelection, 'elevation-profile-cursor-hidden');
+                this.polyLineSelection.addTo(this._map).bringToBack();
                 this.dragStart = e.origEvent.offsetX;
             },
 
@@ -245,11 +247,15 @@
                 var selEnd = Math.max(x, this.dragStart);
                 this.graphSelection.style.left = selStart + 'px';
                 this.graphSelection.style.width = (selEnd - selStart)+ 'px';
+                var selStartInd = Math.round(selStart / (this.svgWidth - 1) * (this.values.length - 1)),
+                    selEndInd = Math.round(selEnd / (this.svgWidth - 1) * (this.values.length - 1));
+                this.polyLineSelection.setLatLngs(this.samples.slice(selStartInd, selEndInd + 1));
             },
 
             onSvgClick: function() {
                 L.DomUtil.addClass(this.graphSelection, 'elevation-profile-cursor-hidden');
                 L.DomUtil.removeClass(this.propsContainer, 'elevation-profile-properties-selected');
+                this._map.removeLayer(this.polyLineSelection);
                 if (this.stats) {
                     this.updatePropsDisplay(this.stats);
                 }
