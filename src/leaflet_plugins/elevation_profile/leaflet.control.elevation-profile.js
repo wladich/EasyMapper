@@ -62,6 +62,22 @@
         return samples;
     }
 
+    function offestFromEvent(e) {
+        if (e.offsetX === undefined) {
+            console.log('1');
+            var rect = e.target.getBoundingClientRect();
+            return {
+                offsetX: e.clientX - rect.left,
+                offestY: e.clientY - rect.top
+            }
+        } else {
+            return {
+                offsetX: e.offsetX,
+                offestY: e.offsetY
+            }
+        }
+    }
+
     var DragEvents = L.Class.extend({
         options: {
             dragTolerance: 2,
@@ -77,8 +93,8 @@
             } else {
                 this.eventsTarget = this;
             }
-            this.dragStartPos = {};
-            this.isDragging = {};
+            this.dragStartPos = [];
+            this.isDragging = [];
 
             L.DomEvent.on(eventsSource, 'mousemove', this.onMouseMove, this);
             L.DomEvent.on(eventsSource, 'mouseup', this.onMouseUp, this);
@@ -88,6 +104,7 @@
 
         onMouseDown: function(e) {
             if (this.options.dragButtons[e.button]) {
+                e._offset = offestFromEvent(e);
                 this.dragStartPos[e.button] = e;
             }
         },
@@ -97,9 +114,9 @@
                 this.dragStartPos[e.button] = null;
                 if (this.isDragging[e.button]) {
                     this.isDragging[e.button] = false;
-                    this.fire('dragend', {dragButton: e.button, origEvent: e});
+                    this.fire('dragend', L.extend({dragButton: e.button, origEvent: e}, offestFromEvent(e)));
                 } else {
-                    this.fire('click', {dragButton: e.button, origEvent: e});
+                    this.fire('click', L.extend({dragButton: e.button, origEvent: e}, offestFromEvent(e)));
                 }
             }
         },
@@ -109,19 +126,21 @@
 
             function exceedsTolerance(button) {
                 var tolerance = self.options.dragTolerance;
-                return Math.abs(e.clientX - self.dragStartPos[button].x) > tolerance ||
-                       Math.abs(e.clientY - self.dragStartPos[button].y) > tolerance;
+                return Math.abs(e.clientX - self.dragStartPos[button].clientX) > tolerance ||
+                       Math.abs(e.clientY - self.dragStartPos[button].clientY) > tolerance;
             }
 
             var dragButtons = Object.keys(this.options.dragButtons);
             for (i = 0; i < dragButtons.length; i++) {
                 button = dragButtons[i];
                 if (this.isDragging[button]) {
-                    this.eventsTarget.fire('drag', {dragButton: e.button, origEvent: e});
+                    this.eventsTarget.fire('drag', L.extend({dragButton: e.button, origEvent: e}, offestFromEvent(e)));
                 } else if (this.dragStartPos[button] && exceedsTolerance(button)) {
                     this.isDragging[button] = true;
-                    this.eventsTarget.fire('dragstart', {dragButton: button, origEvent: this.dragStartPos[button]});
-                    this.eventsTarget.fire('drag', {dragButton: button, origEvent: e});
+                    this.eventsTarget.fire('dragstart', L.extend(
+                        {dragButton: button, origEvent: this.dragStartPos[button]},
+                        this.dragStartPos[button]._offset));
+                    this.eventsTarget.fire('drag', L.extend({dragButton: e.button, origEvent: e}, offestFromEvent(e)));
                 }
             }
         },
@@ -201,7 +220,7 @@
                 L.DomEvent.on(svg, 'mousemove', this.onSvgMouseMove, this);
                 L.DomEvent.on(svg, 'mouseenter', this.onSvgEnter, this);
                 L.DomEvent.on(svg, 'mouseleave', this.onSvgLeave, this);
-                this.svgDragEvents = new DragEvents(this.svg);
+                this.svgDragEvents = new DragEvents(svg);
                 this.svgDragEvents.on('dragstart', this.onSvgDragStart, this);
                 this.svgDragEvents.on('dragend', this.onSvgDragEnd, this);
                 this.svgDragEvents.on('drag', this.onSvgDrag, this);
@@ -224,12 +243,12 @@
                 // this.cursorHide();
                 L.DomUtil.removeClass(this.graphSelection, 'elevation-profile-cursor-hidden');
                 this.polyLineSelection.addTo(this._map).bringToBack();
-                this.dragStart = e.origEvent.offsetX;
+                this.dragStart = e.offsetX;
             },
 
             onSvgDragEnd: function(e) {
                 this.cursorShow();
-                var x = e.origEvent.offsetX;
+                var x = e.offsetX;
                 var selStart = Math.min(x, this.dragStart);
                 selStart = Math.round(selStart / (this.svgWidth - 1) * (this.values.length - 1));
                 var selEnd = Math.max(x, this.dragStart);
@@ -242,7 +261,7 @@
             },
 
             onSvgDrag: function(e) {
-                var x = e.origEvent.offsetX;
+                var x = e.offsetX;
                 var selStart = Math.min(x, this.dragStart);
                 var selEnd = Math.max(x, this.dragStart);
                 this.graphSelection.style.left = selStart + 'px';
@@ -449,7 +468,7 @@
                 if (!this.values) {
                     return;
                 }
-                var x = e.offsetX;
+                var x = offestFromEvent(e).offsetX;
                 var ind = (x / (this.svgWidth - 1) * (this.values.length - 1));
                 this.setCursorPosition(ind);
             },
