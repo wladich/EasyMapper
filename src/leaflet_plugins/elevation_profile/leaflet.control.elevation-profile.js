@@ -442,8 +442,8 @@
                 gradient = Math.round(gradient * 100);
 
                 var x = ind / (this.values.length - 1) * (this.svgWidth - 1);
-                ind = Math.round(ind);
-                var elevation = this.values[ind];
+                var indInt = Math.round(ind);
+                var elevation = this.values[indInt];
                 this.graphCursorLabel.innerHTML = L.Util.template('{ele}<br>{dist}<br>{angle}&deg;',
                     {ele: elevation, dist: distance, grad: gradient, angle: angle});
 
@@ -455,7 +455,17 @@
                     L.DomUtil.removeClass(this.graphCursorLabel, 'elevation-profile-cursor-label-left');
                 }
 
-                var markerPos = this.samples[ind];
+                var markerPos;
+                if (ind <= 0) {
+                    markerPos = this.samples[0];
+                } else if (ind >= this.samples.length - 1) {
+                    markerPos = this.samples[this.samples.length - 1];
+                } else {
+                    var p1 = this.samples[Math.floor(ind)],
+                        p2 = this.samples[Math.ceil(ind)],
+                        indFrac = ind - Math.floor(ind);
+                    markerPos = [p1.lat + (p2.lat - p1.lat) * indFrac, p1.lng + (p2.lng - p1.lng) * indFrac];
+                }
                 this.trackMarker.setLatLng(markerPos);
                 var label = L.Util.template('{ele}<br>{dist}<br>{angle}&deg;',
                     {ele: elevation, dist: distance, grad: gradient, angle: angle});
@@ -522,20 +532,33 @@
                 }
 
                 if (nearestInd !== null) {
-                    // Workaroud to make inclination calculation work.
-                    // Should be removed when we use interpolation for index calculation or calculate inclination
-                    // using 3+ points
-                    if (nearestInd === 0) {
-                        nearestInd += .5;
-                    } else if (nearestInd === this.samples.length - 1) {
-                        nearestInd -= .5
-                    } else {
+                    if (nearestInd > 0) {
                         var prevDist = sqrDist(mouseLatlng, this.samples[nearestInd - 1]),
-                            nextDist = sqrDist(mouseLatlng, this.samples[nearestInd + 1]);
-                        if (prevDist < nextDist) {
-                            nearestInd -= .1;
+                            prevSampleDist = sqrDist(this.samples[nearestInd], this.samples[nearestInd - 1]);
+                    }
+                    if (nearestInd < this.samples.length - 1) {
+                        var nextDist = sqrDist(mouseLatlng, this.samples[nearestInd + 1]),
+                            nextSampleDist = sqrDist(this.samples[nearestInd], this.samples[nearestInd + 1]);
+                    }
+
+                    if (nearestInd === 0) {
+                        if (nextDist < minDist + nextSampleDist) {
+                            nearestInd += (minDist - nextDist) / 2 / nextSampleDist + 1/2;
                         } else {
-                            nearestInd += .1;
+                            nearestInd = .001;
+                        }
+                    } else if (nearestInd === this.samples.length - 1) {
+                        if (prevDist < minDist + prevSampleDist) {
+                            nearestInd -= ((minDist - prevDist) / 2 / prevSampleDist + 1 / 2);
+                        } else {
+                            nearestInd -= .001
+                        }
+                    } else {
+                        if (prevDist < nextDist) {
+                            nearestInd -= ((minDist - prevDist) / 2 / prevSampleDist + 1 / 2);
+                        } else {
+                            nearestInd += (minDist - nextDist) / 2 / nextSampleDist + 1/2;
+
                         }
                     }
 
