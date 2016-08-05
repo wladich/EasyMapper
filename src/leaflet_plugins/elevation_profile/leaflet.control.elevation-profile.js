@@ -152,7 +152,7 @@
                 button = dragButtons[i];
                 if (this.isDragging[button]) {
                     this.isDragging[button] = false;
-                    this.fire('dragend', {dragButton: button, origEvent: e});
+                    this.fire('dragend', L.extend({dragButton: button, origEvent: e}, offestFromEvent(e)));
                 }
             }
             this.dragStartPos = {};
@@ -254,7 +254,12 @@
                 selStart = Math.round(selStart / (this.svgWidth - 1) * (this.values.length - 1));
                 var selEnd = Math.max(x, this.dragStart);
                 selEnd = Math.round(selEnd / (this.svgWidth - 1) * (this.values.length - 1));
-
+                if (selStart < 0) {
+                    selStart = 0;
+                }
+                if (selEnd > this.values.length - 1) {
+                    selEnd = this.values.length - 1;
+                }
                 var stats = this.calcProfileStats(this.values.slice(selStart, selEnd + 1), true);
                 this.updatePropsDisplay(stats);
                 L.DomUtil.addClass(this.propsContainer, 'elevation-profile-properties-selected');
