@@ -234,6 +234,7 @@
                 this._map._controlContainer.removeChild(this._container);
                 map.removeLayer(this.polyline);
                 map.removeLayer(this.trackMarker);
+                map.removeLayer(this.polyLineSelection);
                 this._map = null;
                 return this;
             },
