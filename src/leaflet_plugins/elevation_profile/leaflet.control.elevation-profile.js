@@ -192,7 +192,7 @@
                 this.setupContainerLayout();
                 this.updateGraph();
                 this.trackMarker = L.marker([1000, 0], {clickable: false});
-                this.polyline = L.polyline(this.path, {weight: 20, opacity: 0}).addTo(map);
+                this.polyline = L.polyline(this.path, {weight: 30, opacity: 0}).addTo(map);
                 this.polyline.on('mousemove', this.onLineMouseMove, this);
                 this.polyline.on('mouseover', this.onLineMouseEnter, this);
                 this.polyline.on('mouseout', this.onLineMouseLeave, this);
