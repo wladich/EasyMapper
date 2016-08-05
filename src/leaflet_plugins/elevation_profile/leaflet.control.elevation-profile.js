@@ -196,7 +196,7 @@
                 this.polyline.on('mousemove', this.onLineMouseMove, this);
                 this.polyline.on('mouseover', this.onLineMouseEnter, this);
                 this.polyline.on('mouseout', this.onLineMouseLeave, this);
-                this.polyLineSelection = L.polyline([], {weight: 20, opacity: .5, color: 'yellow'});
+                this.polyLineSelection = L.polyline([], {weight: 20, opacity: .5, color: 'yellow', lineCap: 'butt'});
                 return this;
             },
 
