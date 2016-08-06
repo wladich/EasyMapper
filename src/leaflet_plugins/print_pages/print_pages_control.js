@@ -34,7 +34,7 @@
         
         srcZoomLevelOptions: ['auto', 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18],
         predefinedScales: [['100 m', 100], ['500 m', 500], ['1 km', 1000]],
-        predefinedPaperSizes: [['A2', 420, 594], ['A3', 297, 420], ['A4', 210, 297], ['A5', 148, 210]],
+        predefinedPaperSizes: [['A1', 594, 841], ['A2', 420, 594], ['A3', 297, 420], ['A4', 210, 297], ['A5', 148, 210]],
 
         initialize: function(options) {
             L.Control.prototype.initialize.call(this, options);
