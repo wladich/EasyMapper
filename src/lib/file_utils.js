@@ -13,7 +13,7 @@ var fileutils = (function() {
         get('http://example.com', {
             responseType: 'blob', // [text, arraybuffer, document, json,
                                   // binarystring (nonstandard)], default=text
-            triesCount: 3, // default and 0 mean indefinite
+            maxTries: 3, // default and 0 mean indefinite
             isResponseSuccessful: function(xhr) {return True}, // default -- if status == 200
             shouldRetry: function(xhr) {return True}  // default -- do not retry
         }).done(function(xhr) {console.log(xhr.responseText)})

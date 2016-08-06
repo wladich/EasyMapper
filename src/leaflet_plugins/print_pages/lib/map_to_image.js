@@ -64,7 +64,7 @@ var mapRender = (function() {
                 var url = layer.options.noCors ? urlViaCorsProxy(tile.url) : tile.url;
                 return fileutils.get(url, {
                         responseType: 'binarystring',
-                        maxTries: 3,
+                        maxTries: 10,
                         isResponseSuccessful: function(xhr) {
                             return (xhr.status == 200 && checkImage(xhr.responseBytes)) || xhr.status == 404;
                         },
