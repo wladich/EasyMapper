@@ -67,3 +67,7 @@
 .custom-layers-add-button:hover {
     background-color: #f4f4f4;
 }
+
+.custom-layers-dialog-container a {
+    color: #999;
+}

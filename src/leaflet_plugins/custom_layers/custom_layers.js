@@ -33,6 +33,7 @@
                     L.DomUtil.create('form', 'custom-layers-dialog-form', this.newLayerFormContainer);
                 L.DomEvent.on(form, 'submit', L.Util.falseFn);
                 var formHtml = [
+                    '<p><a href="https://checkvist.com/checklists/568202" target="_blank">Custom layers examples</a></p>' +
                     '<label>Layer name<br/>' +
                     '<input name="name"/></label><br/>' +
                     '<label>Tile url<br/>' +
