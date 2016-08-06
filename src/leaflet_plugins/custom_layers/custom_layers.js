@@ -124,6 +124,7 @@
                     this.addOverlay(layer, name);
                 } else {
                     this.addBaseLayer(layer, name);
+                    layer.setZIndex(0);
                 }
                 this._layers[L.stamp(layer)].custom = true;
                 layer._fieldValues = fieldValues;
