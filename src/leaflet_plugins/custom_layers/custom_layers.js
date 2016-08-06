@@ -164,7 +164,6 @@
             },
 
             removeCustomLayer: function(layer) {
-                this.removeLayer(layer);
                 if (window.Storage && window.localStorage) {
                     localStorage.removeItem(layer._customSerialized);
                 }
@@ -179,6 +178,7 @@
                         }
                     }
                 }
+                this.removeLayer(layer);
                 this.hideLayerForm();
             },
 
