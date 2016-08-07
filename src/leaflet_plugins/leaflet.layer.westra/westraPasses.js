@@ -142,7 +142,7 @@
         },
 
         setZIndex: function(z) {
-            this.markers.setZIndex(z);
+            this.markers.setZIndex(z + this.options.zIndexOffset || 0);
         },
 
         setLayersVisibility: function(e) {

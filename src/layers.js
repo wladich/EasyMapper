@@ -52,9 +52,9 @@ window.layers.getOverlays = function getOverlays() {
         "O-sport": new L.TileLayer("http://{s}.tiles.nakarte.tk/osport/{z}/{x}/{y}",
                                    {code: 'R', tms: true, maxNativeZoom: 17, print: true, jnx: true}),
         "Soviet military grid": new L.SovietTopoGrid({code: 'Ng'}),
-        "Wikimapia": new L.Wikimapia({code: 'W'}),
-        "Google Street View": new L.GoogleStreetView('street-view', {print: true, code: 'Gs'}),
-        "Mountain passes (Westra)": new L.WestraPasses('/westraPasses/', {code: 'Wp', print: true})
+        "Wikimapia": new L.Wikimapia({code: 'W', zIndexOffset: 10000}),
+        "Google Street View": new L.GoogleStreetView('street-view', {print: true, code: 'Gs', zIndexOffset: 10000}),
+        "Mountain passes (Westra)": new L.WestraPasses('/westraPasses/', {code: 'Wp', print: true, zIndexOffset: 10000})
     };
 };
 

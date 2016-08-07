@@ -73,7 +73,6 @@
                 radius: radius,
                 preference: google.maps.StreetViewPreference.NEAREST
             }, function(panoData, status) {
-                console.log(status, panoData);
                 if (status == google.maps.StreetViewStatus.OK) {
                     this.panorama.setPosition(panoData.location.latLng);
                 }

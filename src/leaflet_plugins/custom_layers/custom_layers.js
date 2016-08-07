@@ -116,7 +116,8 @@
                         scaleDependent: fieldValues.scaleDependent,
                         print: true,
                         jnx: true,
-                        code: serialized
+                        code: serialized,
+                        zIndexOffset: fieldValues.isOverlay ? 1000 : 0
                     }
                 );
                 var name = fieldValues['name'].trim();

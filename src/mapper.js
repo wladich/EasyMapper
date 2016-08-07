@@ -11,7 +11,7 @@
 //@require leaflet.jnx
 //@require leaflet.layers_control.custom_layers
 //@require leaflet.coordinates
-
+//@require leaflet.zindex_offset
 (function(){
     "use strict";
 
