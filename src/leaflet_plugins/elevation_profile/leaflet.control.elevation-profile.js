@@ -524,10 +524,10 @@
                     return dx * dx + dy * dy;
                 }
 
-                var nearestInd = null,
+                var nearestInd = null, ind,
                     minDist = null,
                     mouseLatlng = e.latlng,
-                    i, sampleLatlng, dist;
+                    i, sampleLatlng, dist, di;
                 for (i = 0; i < this.samples.length; i++) {
                     sampleLatlng = this.samples[i];
                     dist  = sqrDist(sampleLatlng, mouseLatlng);
@@ -538,6 +538,7 @@
                 }
 
                 if (nearestInd !== null) {
+                    ind = nearestInd;
                     if (nearestInd > 0) {
                         var prevDist = sqrDist(mouseLatlng, this.samples[nearestInd - 1]),
                             prevSampleDist = sqrDist(this.samples[nearestInd], this.samples[nearestInd - 1]);
@@ -549,26 +550,30 @@
 
                     if (nearestInd === 0) {
                         if (nextDist < minDist + nextSampleDist) {
-                            nearestInd += (minDist - nextDist) / 2 / nextSampleDist + 1/2;
+                            di = (minDist - nextDist) / 2 / nextSampleDist + 1/2;
                         } else {
-                            nearestInd = .001;
+                            di = .001;
                         }
                     } else if (nearestInd === this.samples.length - 1) {
                         if (prevDist < minDist + prevSampleDist) {
-                            nearestInd -= ((minDist - prevDist) / 2 / prevSampleDist + 1 / 2);
+                            di = -((minDist - prevDist) / 2 / prevSampleDist + 1 / 2);
                         } else {
-                            nearestInd -= .001
+                            di = -0.001
                         }
                     } else {
                         if (prevDist < nextDist) {
-                            nearestInd -= ((minDist - prevDist) / 2 / prevSampleDist + 1 / 2);
+                            di =  -((minDist - prevDist) / 2 / prevSampleDist + 1 / 2);
                         } else {
-                            nearestInd += (minDist - nextDist) / 2 / nextSampleDist + 1/2;
-
+                            di = (minDist - nextDist) / 2 / nextSampleDist + 1/2;
                         }
                     }
-
-                    this.setCursorPosition(nearestInd);
+                    if (di < -1) {
+                        di = -1;
+                    }
+                    if (di > 1) {
+                        di = 1;
+                    }
+                    this.setCursorPosition(ind + di);
                 }
 
             },
