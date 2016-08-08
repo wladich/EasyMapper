@@ -410,14 +410,14 @@
                     '<table>' +
                     '<tr><td>Max elevation:</td><td>' + stats.max + '</td></tr>' +
                     '<tr><td>Min elevation:</td><td>' + stats.min + '</td></tr>' +
-                    '<tr><td>Start elevation:</td><td>' + stats.start + '</td></tr>' +
+                    '<tr class="start-group"><td>Start elevation:</td><td>' + stats.start + '</td></tr>' +
                     '<tr><td>Finish elevation:</td><td>' + stats.end + '</td></tr>' +
-                    '<tr><td>Overall elevation change:</td><td>' + stats.finalAscent + '</td></tr>' +
-                    '<tr><td>Avg / Max ascent inclination:</td><td>' + ascentAngleStr + '</td></tr>' +
+                    '<tr><td>Start to finish elevation change:</td><td>' + stats.finalAscent + '</td></tr>' +
+                    '<tr class="start-group"><td>Avg / Max ascent inclination:</td><td>' + ascentAngleStr + '</td></tr>' +
                     '<tr><td>Avg / Max descent inclination:</td><td>' + descentAngleStr + '</td></tr>' +
-                    '<tr><td>Distance:</td><td>' + (stats.distance / 1000).toFixed(1) + ' km</td></tr>' +
-                    '<tr><td>Total ascent:</td><td>'+ stats.ascent +'</td></tr>' +
+                    '<tr class="start-group"><td>Total ascent:</td><td>'+ stats.ascent +'</td></tr>' +
                     '<tr><td>Total descent:</td><td>'+ stats.descent +'</td></tr>' +
+                    '<tr class="start-group"><td>Distance:</td><td>' + (stats.distance / 1000).toFixed(1) + ' km</td></tr>' +
                     '</table>'
             },
 

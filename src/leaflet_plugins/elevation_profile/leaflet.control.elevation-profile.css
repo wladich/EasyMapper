@@ -12,8 +12,19 @@
     padding-left: 4px;
     height: 100%;
     float: left;
-    width: 230px;
+    width: 240px;
     border-right: 1px solid #dddddd;
+}
+
+.elevation-profile-properties table {
+    border-collapse: collapse;
+}
+.elevation-profile-properties .start-group td{
+    border-top: 1px solid #c3c3c3;
+}
+
+.elevation-profile-properties td {
+    white-space: nowrap;
 }
 
 .elevation-profile-properties-selected {
