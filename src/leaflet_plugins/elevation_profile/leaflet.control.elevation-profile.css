@@ -59,6 +59,9 @@
 
 .elevation-profile-cursor {
     border-right: 1px solid blue;
+    width: 0;
+    padding: 0;
+    margin: 0;
     position: absolute;
     top: 8px;
     bottom: 24px;
@@ -153,8 +156,8 @@
 
 .elevation-profile-close {
     position: absolute;
-    right: 0;
-    left: 0;
+    /*right: 0;*/
+    left: 234px;
     width: 16px;
     height: 16px;
     background-image: url("close.png");

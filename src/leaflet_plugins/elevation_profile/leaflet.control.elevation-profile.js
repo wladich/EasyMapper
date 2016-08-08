@@ -77,6 +77,13 @@
         }
     }
 
+    function movementFromEvents(e1, e2) {
+        return {
+            movementX: e2.clientX - e1.clientX,
+            movementY: e2.clientY - e1.clientY
+        }
+    }
+
     var DragEvents = L.Class.extend({
         options: {
             dragTolerance: 2,
@@ -93,6 +100,7 @@
                 this.eventsTarget = this;
             }
             this.dragStartPos = [];
+            this.prevEvent = [];
             this.isDragging = [];
 
             L.DomEvent.on(eventsSource, 'mousemove', this.onMouseMove, this);
@@ -105,6 +113,7 @@
             if (this.options.dragButtons[e.button]) {
                 e._offset = offestFromEvent(e);
                 this.dragStartPos[e.button] = e;
+                this.prevEvent[e.button] = e;
             }
         },
 
@@ -113,15 +122,17 @@
                 this.dragStartPos[e.button] = null;
                 if (this.isDragging[e.button]) {
                     this.isDragging[e.button] = false;
-                    this.fire('dragend', L.extend({dragButton: e.button, origEvent: e}, offestFromEvent(e)));
+                    this.fire('dragend', L.extend({dragButton: e.button, origEvent: e},
+                        offestFromEvent(e), movementFromEvents(this.prevEvent[e.button], e)));
                 } else {
-                    this.fire('click', L.extend({dragButton: e.button, origEvent: e}, offestFromEvent(e)));
+                    this.fire('click', L.extend({dragButton: e.button, origEvent: e},
+                        offestFromEvent(e)));
                 }
             }
         },
 
         onMouseMove: function(e) {
-            var i, button, self=this;
+            var i, button, self = this;
 
             function exceedsTolerance(button) {
                 var tolerance = self.options.dragTolerance;
@@ -133,14 +144,20 @@
             for (i = 0; i < dragButtons.length; i++) {
                 button = dragButtons[i];
                 if (this.isDragging[button]) {
-                    this.eventsTarget.fire('drag', L.extend({dragButton: e.button, origEvent: e}, offestFromEvent(e)));
+                    this.eventsTarget.fire('drag', L.extend({dragButton: button, origEvent: e},
+                        offestFromEvent(e), movementFromEvents(this.prevEvent[button], e)));
                 } else if (this.dragStartPos[button] && exceedsTolerance(button)) {
                     this.isDragging[button] = true;
                     this.eventsTarget.fire('dragstart', L.extend(
                         {dragButton: button, origEvent: this.dragStartPos[button]},
                         this.dragStartPos[button]._offset));
-                    this.eventsTarget.fire('drag', L.extend({dragButton: e.button, origEvent: e}, offestFromEvent(e)));
+                    this.eventsTarget.fire('drag', L.extend({
+                        dragButton: button,
+                        origEvent: e,
+                        startEvent: self.dragStartPos[button]
+                    }, offestFromEvent(e), movementFromEvents(this.prevEvent[button], e)));
                 }
+                this.prevEvent[button] = e;
             }
         },
 
@@ -151,7 +168,8 @@
                 button = dragButtons[i];
                 if (this.isDragging[button]) {
                     this.isDragging[button] = false;
-                    this.fire('dragend', L.extend({dragButton: button, origEvent: e}, offestFromEvent(e)));
+                    this.fire('dragend', L.extend({dragButton: button, origEvent: e},
+                        offestFromEvent(e), movementFromEvents(this.prevEvent[button], e)));
                 }
             }
             this.dragStartPos = {};
@@ -170,11 +188,15 @@
                 this.path = latlngs;
                 var samples = this.samples = pathRegularSamples(this.path, this.options.samplingInterval);
                 var self = this;
+                this.horizZoom = 1;
+                this.dragStart = null;
+
                 this._getElevation(samples).done(function(values) {
                     self.values = values;
                     self.updateGraph();
                 });
                 this.values = null;
+
             },
 
             addTo: function(map) {
@@ -204,7 +226,7 @@
                 var container = this._container;
                 this.propsContainer = L.DomUtil.create('div', 'elevation-profile-properties', container);
                 this.leftAxisLables = L.DomUtil.create('div', 'elevation-profile-left-axis', container);
-                this.closeButton = L.DomUtil.create('div', 'elevation-profile-close', this.leftAxisLables);
+                this.closeButton = L.DomUtil.create('div', 'elevation-profile-close', container);
                 L.DomEvent.on(this.closeButton, 'click', this.onCloseButtonClick, this);
                 this.drawingContainer = L.DomUtil.create('div', 'elevation-profile-drawingContainer', container);
                 this.graphCursor = L.DomUtil.create('div', 'elevation-profile-cursor elevation-profile-cursor-hidden',
@@ -219,11 +241,13 @@
                 L.DomEvent.on(svg, 'mousemove', this.onSvgMouseMove, this);
                 L.DomEvent.on(svg, 'mouseenter', this.onSvgEnter, this);
                 L.DomEvent.on(svg, 'mouseleave', this.onSvgLeave, this);
-                this.svgDragEvents = new DragEvents(svg);
+                L.DomEvent.on(svg, 'mousewheel', this.onSvgMouseWheel, this);
+                this.svgDragEvents = new DragEvents(this.drawingContainer, null, {dragButtons: {0: true, 2: true}});
                 this.svgDragEvents.on('dragstart', this.onSvgDragStart, this);
                 this.svgDragEvents.on('dragend', this.onSvgDragEnd, this);
                 this.svgDragEvents.on('drag', this.onSvgDrag, this);
                 this.svgDragEvents.on('click', this.onSvgClick, this);
+                L.DomEvent.on(svg, 'dblclick', this.onSvgDblClick, this);
             },
 
             removeFrom: function(map) {
@@ -239,50 +263,126 @@
             },
 
             onSvgDragStart: function(e) {
-                // FIXME: restore hiding when we make display of selection on map
-                // this.cursorHide();
+
+                if (e.dragButton == 0) {
+                    // FIXME: restore hiding when we make display of selection on map
+                    // this.cursorHide();
+                    this.polyLineSelection.addTo(this._map).bringToBack();
+                    this.dragStart = e.offsetX;
+                }
+            },
+
+            xToIndex: function(x) {
+                return x / (this.svgWidth - 1) * (this.values.length - 1);
+            },
+
+            updateGraphSelection: function(e) {
+                if (this.dragStart === null) {
+                    return;
+                }
+                var selStart, selEnd;
+                if (e) {
+                    var x = e.offsetX;
+                    selStart = Math.min(x, this.dragStart);
+                    selEnd = Math.max(x, this.dragStart);
+                    this.selStartInd = Math.round(this.xToIndex(selStart));
+                    this.selEndInd = Math.round(this.xToIndex(selEnd));
+
+                    if (this.selStartInd < 0) {
+                        this.selStartInd = 0;
+                    }
+                    if (this.selEndInd > this.values.length - 1) {
+                        this.selEndInd = this.values.length - 1;
+                    }
+
+                } else {
+                    selStart = this.selStartInd * (this.svgWidth - 1) / (this.values.length - 1);
+                    selEnd = this.selEndInd * (this.svgWidth - 1) / (this.values.length - 1);
+                }
+                this.graphSelection.style.left = selStart + 'px';
+                this.graphSelection.style.width = (selEnd - selStart)+ 'px';
                 L.DomUtil.removeClass(this.graphSelection, 'elevation-profile-cursor-hidden');
-                this.polyLineSelection.addTo(this._map).bringToBack();
-                this.dragStart = e.offsetX;
             },
 
             onSvgDragEnd: function(e) {
-                this.cursorShow();
-                var x = e.offsetX;
-                var selStart = Math.min(x, this.dragStart);
-                selStart = Math.round(selStart / (this.svgWidth - 1) * (this.values.length - 1));
-                var selEnd = Math.max(x, this.dragStart);
-                selEnd = Math.round(selEnd / (this.svgWidth - 1) * (this.values.length - 1));
-                if (selStart < 0) {
-                    selStart = 0;
+                if (e.dragButton == 0) {
+                    this.cursorShow();
+                    this.updateGraphSelection(e);
+                    var stats = this.calcProfileStats(this.values.slice(this.selStartInd, this.selEndInd + 1), true);
+                    this.updatePropsDisplay(stats);
+                    L.DomUtil.addClass(this.propsContainer, 'elevation-profile-properties-selected');
                 }
-                if (selEnd > this.values.length - 1) {
-                    selEnd = this.values.length - 1;
+                if (e.dragButton === 2) {
+                    this.drawingContainer.scrollLeft -= e.movementX;
                 }
-                var stats = this.calcProfileStats(this.values.slice(selStart, selEnd + 1), true);
-                this.updatePropsDisplay(stats);
-                L.DomUtil.addClass(this.propsContainer, 'elevation-profile-properties-selected');
-
             },
 
             onSvgDrag: function(e) {
-                var x = e.offsetX;
-                var selStart = Math.min(x, this.dragStart);
-                var selEnd = Math.max(x, this.dragStart);
-                this.graphSelection.style.left = selStart + 'px';
-                this.graphSelection.style.width = (selEnd - selStart)+ 'px';
-                var selStartInd = Math.round(selStart / (this.svgWidth - 1) * (this.values.length - 1)),
-                    selEndInd = Math.round(selEnd / (this.svgWidth - 1) * (this.values.length - 1));
-                this.polyLineSelection.setLatLngs(this.samples.slice(selStartInd, selEndInd + 1));
+                if (e.dragButton == 0) {
+                    this.updateGraphSelection(e);
+                    this.polyLineSelection.setLatLngs(this.samples.slice(this.selStartInd, this.selEndInd + 1));
+                }
+                if (e.dragButton == 2) {
+                    this.drawingContainer.scrollLeft -= e.movementX;
+                }
             },
 
-            onSvgClick: function() {
-                L.DomUtil.addClass(this.graphSelection, 'elevation-profile-cursor-hidden');
-                L.DomUtil.removeClass(this.propsContainer, 'elevation-profile-properties-selected');
-                this._map.removeLayer(this.polyLineSelection);
-                if (this.stats) {
-                    this.updatePropsDisplay(this.stats);
+            onSvgClick: function(e) {
+                if (e.dragButton == 0) {
+                    this.dragStart = null;
+                    L.DomUtil.addClass(this.graphSelection, 'elevation-profile-cursor-hidden');
+                    L.DomUtil.removeClass(this.propsContainer, 'elevation-profile-properties-selected');
+                    this._map.removeLayer(this.polyLineSelection);
+                    if (this.stats) {
+                        this.updatePropsDisplay(this.stats);
+                    }
                 }
+                if (e.dragButton == 2) {
+                    this.setMapPositionAtIndex(Math.round(this.xToIndex(e.offsetX)));
+                }
+            },
+
+            onSvgDblClick: function(e) {
+                this.setMapPositionAtIndex(Math.round(this.xToIndex(e.offsetX)));
+            },
+
+            setMapPositionAtIndex: function(ind) {
+                var latlng = this.samples[ind];
+                if (latlng) {
+                    this._map.panTo(latlng);
+                }
+            },
+
+            onSvgMouseWheel: function(e) {
+                var oldHorizZoom = this.horizZoom;
+                this.horizZoom += L.DomEvent.getWheelDelta(e);
+                if (this.horizZoom < 1) {
+                    this.horizZoom = 1;
+                }
+                if (this.horizZoom > 10) {
+                    this.horizZoom = 10;
+                }
+
+                var x = offestFromEvent(e).offsetX;
+                var ind = this.xToIndex(x);
+
+                var newScrollLeft = this.drawingContainer.scrollLeft + offestFromEvent(e).offsetX * (this.horizZoom / oldHorizZoom - 1);
+                if (newScrollLeft < 0) {
+                    newScrollLeft = 0;
+                }
+
+                this.svgWidth = this.drawingContainer.clientWidth * this.horizZoom;
+                this.svg.setAttribute('width', this.svgWidth + 'px');
+                this.setupGraph();
+                if (newScrollLeft > this.svgWidth - this.drawingContainer.clientWidth) {
+                    newScrollLeft = this.svgWidth - this.drawingContainer.clientWidth;
+                }
+                this.drawingContainer.scrollLeft = newScrollLeft;
+
+                this.cursorHide();
+                this.setCursorPosition(ind);
+                this.cursorShow();
+                this.updateGraphSelection();
             },
 
 
@@ -446,7 +546,7 @@
                 var angle = Math.round(Math.atan(gradient) * 180 / Math.PI);
                 gradient = Math.round(gradient * 100);
 
-                var x = ind / (this.values.length - 1) * (this.svgWidth - 1);
+                var x = Math.round(ind / (this.values.length - 1) * (this.svgWidth - 1));
                 var indInt = Math.round(ind);
                 var elevation = this.values[indInt];
                 this.graphCursorLabel.innerHTML = L.Util.template('{ele}<br>{dist}<br>{angle}&deg;',
@@ -581,6 +681,13 @@
             setupGraph: function() {
                 if (!this._map) {
                     return;
+                }
+
+                while (this.svg.hasChildNodes()) {
+                    this.svg.removeChild(this.svg.lastChild);
+                }
+                while (this.leftAxisLables.hasChildNodes()) {
+                    this.leftAxisLables.removeChild(this.leftAxisLables.lastChild);
                 }
 
                 var maxValue = Math.max.apply(null, this.values),
