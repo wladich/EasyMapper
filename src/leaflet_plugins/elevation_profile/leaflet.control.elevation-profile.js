@@ -64,7 +64,6 @@
 
     function offestFromEvent(e) {
         if (e.offsetX === undefined) {
-            console.log('1');
             var rect = e.target.getBoundingClientRect();
             return {
                 offsetX: e.clientX - rect.left,
