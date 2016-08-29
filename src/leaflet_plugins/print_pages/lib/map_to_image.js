@@ -13,14 +13,15 @@ var mapRender = (function() {
         return L.point(pixel_width, pixel_height, true);
     }
     
-    function _getTempMap(width, height, center, zoom) {
+    function _getTempMap(width, height, latLngBounds, zoom) {
         var container = L.DomUtil.create('div', '', document.body);
         container.style.position = 'absolute';
         container.style.left = '20000px';
         container.style.width = width + 'px';
         container.style.height = height + 'px';
         var map = new L.Map(container, {fadeAnimation: false, zoomAnimation: false, inertia: false});
-        map.setView(center, zoom, {animate: false});
+        map.setView([0, 0], zoom, {animate: false});
+        map.panInsideBounds(latLngBounds, {animate: false});
         return new Promise(
             function(resolve){
                 map.whenReady(function(){resolve(map);});
@@ -90,7 +91,7 @@ var mapRender = (function() {
         canvas.height = canvasSize.y;
         canvasCtx = canvas.getContext('2d');
 
-        return _getTempMap(canvasSize.x, canvasSize.y, latLngBounds.getCenter(), zoom)
+        return _getTempMap(canvasSize.x, canvasSize.y, latLngBounds, zoom)
             .then(function(tempMap_) {
                 tempMap = tempMap_;
                 var layerCopy = layer.clone();
