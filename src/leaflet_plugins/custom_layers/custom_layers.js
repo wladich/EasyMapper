@@ -19,6 +19,10 @@
             },
 
             showLayerForm: function(buttons, fieldValues) {
+                if (this.newLayerFormContainer) {
+                    return;
+                }
+
                 this.newLayerFormContainer =
                     L.DomUtil.create('div', 'custom-layers-dialog-container', this._map._controlContainer);
                 if (!L.Browser.touch) {
@@ -31,7 +35,7 @@
 
                 var form = this.newLayerForm =
                     L.DomUtil.create('form', 'custom-layers-dialog-form', this.newLayerFormContainer);
-                L.DomEvent.on(form, 'submit', L.Util.falseFn);
+                L.DomEvent.on(form, 'submit', L.DomEvent.preventDefault);
                 var formHtml = [
                     '<p><a href="https://checkvist.com/checklists/568202" target="_blank">Custom layers examples</a></p>' +
                     '<label>Layer name<br/>' +
