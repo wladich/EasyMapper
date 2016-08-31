@@ -121,7 +121,8 @@
                         print: true,
                         jnx: true,
                         code: serialized,
-                        zIndexOffset: fieldValues.isOverlay ? 1000 : 0
+                        zIndexOffset: fieldValues.isOverlay ? 1000 : 0,
+                        noCors: true
                     }
                 );
                 var name = fieldValues['name'].trim();
