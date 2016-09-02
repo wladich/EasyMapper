@@ -498,7 +498,7 @@
             } else {
                 version = s.readNumber();
             }
-            if (version != 1 && version != 2) {
+            if (version !== 0 && version !== 1 && version !== 2) {
                 return [{name: 'Text encoded track', error: ['CORRUPT']}];
             }
             n = s.readNumber();
