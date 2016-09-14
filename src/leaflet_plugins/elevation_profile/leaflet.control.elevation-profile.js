@@ -212,7 +212,7 @@
                 this._map._controlContainer.appendChild(container);
                 this.setupContainerLayout();
                 this.updateGraph();
-                this.trackMarker = L.marker([1000, 0], {clickable: false});
+                this.trackMarker = L.marker([1000, 0], {clickable: false, icon: L.divIcon()});
                 this.polyline = L.polyline(this.path, {weight: 30, opacity: 0}).addTo(map);
                 this.polyline.on('mousemove', this.onLineMouseMove, this);
                 this.polyline.on('mouseover', this.onLineMouseEnter, this);
