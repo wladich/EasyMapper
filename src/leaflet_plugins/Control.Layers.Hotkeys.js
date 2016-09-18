@@ -14,7 +14,7 @@
             var code;
             if (layer.options && (code=layer.options.code) && code.length == 1) {
                 var hotkeySpan = L.DomUtil.create('span', 'layers-control-hotkey', label);
-                hotkeySpan.innerHTML = ' (' + code +')';
+                hotkeySpan.innerHTML = code;
             }
             return label;
         },
