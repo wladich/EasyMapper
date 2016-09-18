@@ -513,12 +513,7 @@
                 stats.end = values[values.length - 1];
                 stats.distance = (values.length - 1) * this.options.samplingInterval;
 
-                var filterTolerance;
-                if (partial) {
-                    filterTolerance = Math.max((this.stats.max - this.stats.min) / 25, 5)
-                } else {
-                    filterTolerance = Math.max((stats.max - stats.min) / 25, 5);
-                }
+                var filterTolerance = 5;
                 var filtered = this.filterElevations(values, filterTolerance);
                 var ascent = 0,
                     descent = 0,
