@@ -40,6 +40,7 @@
         }
     });
 
+
     L.Control.TrackList = L.Control.extend({
         options: {position: 'bottomright'},
 
@@ -83,7 +84,7 @@
                         '<td><input type="checkbox" class="visibility-switch" data-bind="checked: track.visible"></td>' +
                         '<td><div class="color-sample" data-bind="style: {backgroundColor: $parent.colors[track.color()]}, click: $parent.onColorSelectorClicked.bind($parent)"></div></td>' +
                         '<td><div class="track-name-wrapper"><div class="track-name" data-bind="text: track.name, attr: {title: track.name}, click: $parent.setViewToTrack.bind($parent)"></div></div></td>' +
-                        '<td><div class="button-length" data-bind="text: track.length, css: {\'ticks-enabled\': track.measureTicksShown}, click: $parent.switchMeasureTicksVisibility.bind($parent)"></div></td>' +
+                        '<td><div class="button-length" data-bind="text: $parent.formatLength(track.length()), css: {\'ticks-enabled\': track.measureTicksShown}, click: $parent.switchMeasureTicksVisibility.bind($parent)"></div></td>' +
                         '<td><div class="button-add-track" title="Add track segment" data-bind="click: $parent.addSegmentAndEdit.bind($parent, track)"></div></td>' +
                         '<td><div class="button-add-point" title="Add point" data-bind="click: $parent.placeNewPoint.bind($parent, track)"></div></td>' +
                         '<td><a class="track-text-button" title="Actions" data-bind="click: $parent.showTrackMenu.bind($parent)">&hellip;</a></td>' +
@@ -277,14 +278,17 @@
             for (var i in lines) {
                 length += lines[i].getLength();
             }
-            if (length < 10000) {
-                length = Math.round(length / 10) / 100;
-            } else if (length < 100000) {
-                length = Math.round(length / 100) / 10;
-            } else {
-                length = Math.round(length / 1000);
+            track.length(length);
+        },
+
+        formatLength: function(x) {
+            var digits = 0;
+            if (x < 10000) {
+                digits = 2;
+            } else if (x < 100000) {
+                digits = 1;
             }
-            track.length(length + ' km');
+            return (x / 1000).toFixed(digits) + ' km';
         },
 
         setTrackMeasureTicksVisibility: function(track) {
@@ -896,12 +900,30 @@
                 });
         },
 
+        calcSamplingInterval: function(length) {
+            var targetPointsN = 2000;
+            var maxPointsN = 9999;
+            var samplingIntgerval = length / targetPointsN;
+            if (samplingIntgerval < 10) {
+                samplingIntgerval = 10;
+            }
+            if (samplingIntgerval > 50) {
+                samplingIntgerval = 50;
+            }
+            if (length / samplingIntgerval > maxPointsN) {
+                samplingIntgerval = length / maxPointsN;
+            }
+            return samplingIntgerval;
+        },
+
         showElevationProfileForSegment: function(line) {
              if (this._elevationControl) {
                 this._elevationControl.removeFrom(this._map);
              }
              this.stopEditLine();
-             this._elevationControl = new L.Control.ElevationProfile(line.getLatLngs()).addTo(this._map);
+             this._elevationControl = new L.Control.ElevationProfile(line.getLatLngs(), {
+                 samplingInterval: this.calcSamplingInterval(line.getLength())
+             }).addTo(this._map);
         },
 
         showElevationProfileForTrack: function(track) {
@@ -917,7 +939,9 @@
             if (this._elevationControl) {
                 this._elevationControl.removeFrom(this._map);
             }
-            this._elevationControl = new L.Control.ElevationProfile(path).addTo(this._map);
+            this._elevationControl = new L.Control.ElevationProfile(path, {
+                samplingInterval: this.calcSamplingInterval(track.length())
+            }).addTo(this._map);
 
         }
 

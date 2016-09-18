@@ -179,12 +179,11 @@
     L.Control.ElevationProfile = L.Class.extend({
             options: {
                 elevationsServer: 'http://elevation.nakarte.tk/',
-                samplingInterval: 100
+                samplingInterval: 50
             },
 
             initialize: function(latlngs, options) {
                 L.setOptions(this, options);
-                // this.polyline = polyline;
                 this.path = latlngs;
                 var samples = this.samples = pathRegularSamples(this.path, this.options.samplingInterval);
                 var self = this;
@@ -408,15 +407,15 @@
 
                 this.propsContainer.innerHTML =
                     '<table>' +
-                    '<tr><td>Max elevation:</td><td>' + stats.max + '</td></tr>' +
-                    '<tr><td>Min elevation:</td><td>' + stats.min + '</td></tr>' +
-                    '<tr class="start-group"><td>Start elevation:</td><td>' + stats.start + '</td></tr>' +
-                    '<tr><td>Finish elevation:</td><td>' + stats.end + '</td></tr>' +
-                    '<tr><td>Start to finish elevation change:</td><td>' + stats.finalAscent + '</td></tr>' +
+                    '<tr><td>Max elevation:</td><td>' + Math.round(stats.max) + '</td></tr>' +
+                    '<tr><td>Min elevation:</td><td>' + Math.round(stats.min) + '</td></tr>' +
+                    '<tr class="start-group"><td>Start elevation:</td><td>' + Math.round(stats.start) + '</td></tr>' +
+                    '<tr><td>Finish elevation:</td><td>' + Math.round(stats.end) + '</td></tr>' +
+                    '<tr><td>Start to finish elevation change:</td><td>' + Math.round(stats.finalAscent) + '</td></tr>' +
                     '<tr class="start-group"><td>Avg / Max ascent inclination:</td><td>' + ascentAngleStr + '</td></tr>' +
                     '<tr><td>Avg / Max descent inclination:</td><td>' + descentAngleStr + '</td></tr>' +
-                    '<tr class="start-group"><td>Total ascent:</td><td>'+ stats.ascent +'</td></tr>' +
-                    '<tr><td>Total descent:</td><td>'+ stats.descent +'</td></tr>' +
+                    '<tr class="start-group"><td>Total ascent:</td><td>'+ Math.round(stats.ascent) +'</td></tr>' +
+                    '<tr><td>Total descent:</td><td>'+ Math.round(stats.descent) +'</td></tr>' +
                     '<tr class="start-group"><td>Distance:</td><td>' + (stats.distance / 1000).toFixed(1) + ' km</td></tr>' +
                     '</table>'
             },
@@ -541,7 +540,7 @@
 
             setCursorPosition: function(ind) {
                 var distance = this.options.samplingInterval * ind;
-                distance = (distance / 1000).toFixed(2) + ' km';
+                distance = (distance / 1000).toFixed(2);
                 var gradient = (this.values[Math.ceil(ind)] - this.values[Math.floor(ind)]) / this.options.samplingInterval;
                 var angle = Math.round(Math.atan(gradient) * 180 / Math.PI);
                 gradient = Math.round(gradient * 100);
@@ -549,8 +548,8 @@
                 var x = Math.round(ind / (this.values.length - 1) * (this.svgWidth - 1));
                 var indInt = Math.round(ind);
                 var elevation = this.values[indInt];
-                this.graphCursorLabel.innerHTML = L.Util.template('{ele}<br>{dist}<br>{angle}&deg;',
-                    {ele: elevation, dist: distance, grad: gradient, angle: angle});
+                this.graphCursorLabel.innerHTML = L.Util.template('{ele} m<br>{dist} km<br>{angle}&deg;',
+                    {ele: Math.round(elevation), dist: distance, grad: gradient, angle: angle});
 
                 this.graphCursor.style.left = x + 'px';
                 this.graphCursorLabel.style.left = x + 'px';
@@ -572,8 +571,8 @@
                     markerPos = [p1.lat + (p2.lat - p1.lat) * indFrac, p1.lng + (p2.lng - p1.lng) * indFrac];
                 }
                 this.trackMarker.setLatLng(markerPos);
-                var label = L.Util.template('{ele}<br>{dist}<br>{angle}&deg;',
-                    {ele: elevation, dist: distance, grad: gradient, angle: angle});
+                var label = L.Util.template('{ele} m<br>{dist} km<br>{angle}&deg;',
+                    {ele: Math.round(elevation), dist: distance, grad: gradient, angle: angle});
                 var icon = L.divIcon({className: 'elevation-profile-marker',
                     html: '<div class="elevation-profile-marker-icon"></div><div class="elevation-profile-marker-label">' + label + '</div>'});
                 this.trackMarker.setIcon(icon);
@@ -745,7 +744,7 @@
 
                 var req = [];
                 for (var i = 0; i < latlngs.length; i++) {
-                    req.push(latlngs[i].lat.toFixed(5) + ' ' + latlngs[i].lng.toFixed(5));
+                    req.push(latlngs[i].lat.toFixed(6) + ' ' + latlngs[i].lng.toFixed(5));
                 }
                 req = req.join('\n');
                 return fileutils.get(this.options.elevationsServer, {postData: req})
@@ -754,7 +753,7 @@
                             return parseResponse(xhr.responseText);
                         },
                         function() {
-                            console.log('ERROR', arguments);
+                            alert('Failed to plot elevation profile, server error');
                         });
             },
             onCloseButtonClick: function() {
