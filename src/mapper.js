@@ -95,10 +95,13 @@
         },
 
         setupMap: function(mapContainer) {
-            var map = this._map = L.map(mapContainer, {fadeAnimation: false, attributionControl: false});
+            var map = this._map = L.map(mapContainer, {fadeAnimation: false, attributionControl: false, zoomControl: false});
             map.enableHashState('m', [10, 55.7, 37.5]);
 
             var baseMaps = layers.getBaseMaps();
+
+            new L.Control.Attribution({prefix: '<a href="mailto:nakarte@nakarte.tk">nakarte@nakarte.tk</a>', position: 'topleft'}).addTo(map);
+            new L.Control.Zoom().addTo(map);
             this.layersControl = L.control.layers(baseMaps, layers.getOverlays(), {collapsed: false, hotkeys: true})
                 .addTo(map);
 
