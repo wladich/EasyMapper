@@ -258,16 +258,30 @@
     function parseKmz(txt, name) {
         var uncompressed;
         var unzipper = new JSUnzip(txt);
+        var tracks = [],
+            points = [],
+            geodata,
+            error;
+        var hasDocKml = false;
         if (!unzipper.isZipFile()) {
             return null;
         }
         unzipper.readEntries();
-        for (var i=0; i < unzipper.entries.length; i++) {
-            var entry = unzipper.entries[i];
-            if (entry.fileName === 'doc.kml') {
-                if (entry.uncompressedSize > 10000000) {
-                    return null;
-                }
+        var i, entry;
+        for (i=0; i < unzipper.entries.length; i++) {
+            entry = unzipper.entries[i];
+            if (entry.fileName == 'doc.kml') {
+                hasDocKml = true;
+                break;
+            }
+        }
+        if (!hasDocKml) {
+            return null;
+        }
+
+        for (i=0; i < unzipper.entries.length; i++) {
+            entry = unzipper.entries[i];
+            if (entry.fileName.match(/\.kml$/i)) {
                 if (entry.compressionMethod === 0) {
                     uncompressed = entry.data;
                 } else if (entry.compressionMethod === 8) {
@@ -275,16 +289,17 @@
                 } else {
                     return null;
                 }
-                var geodata = parseKml(uncompressed, 'doc.kml');
+                geodata = parseKml(uncompressed, 'dummmy');
                 if (geodata) {
-                    geodata[0].name = name;
-                } else {
-                    geodata = [{name: name, error: 'CORRUPT'}];
+                    error = error || geodata.error;
+                    tracks.push.apply(tracks, geodata[0].tracks);
+                    points.push.apply(points, geodata[0].points);
                 }
-                return geodata;
             }
         }
-        return null;
+
+        geodata = [{name: name, error: error, tracks: tracks, points: points}];
+        return geodata;
     }
 
     function parseYandexRulerString(s) {
