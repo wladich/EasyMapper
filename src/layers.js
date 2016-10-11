@@ -31,7 +31,7 @@ window.layers.getBaseMaps = function getBaseMaps() {
 
 window.layers.getOverlays = function getOverlays() {
     return {
-        "Poehali 10km": new L.TileLayer("http://{s}.tiles.nakarte.tk/poehali001m/{z}/{x}/{y}",
+        "Topo 10km": new L.TileLayer("http://{s}.tiles.nakarte.tk/topo001m/{z}/{x}/{y}",
                                         {code: 'D', tms: true, maxNativeZoom: 9, print: true, jnx: true}),
         "ArbaletMO": new L.TileLayer("http://{s}.tiles.nakarte.tk/ArbaletMO/{z}/{x}/{y}",
                                      {code: 'A', tms: true, maxNativeZoom: 13, print: true, jnx: true}),
