@@ -33,6 +33,8 @@ window.layers.getOverlays = function getOverlays() {
     return {
         "Topo 10km": new L.TileLayer("http://{s}.tiles.nakarte.tk/topo001m/{z}/{x}/{y}",
                                         {code: 'D', tms: true, maxNativeZoom: 9, print: true, jnx: true}),
+        "GGC 2 km": new L.TileLayer("http://{s}.tiles.nakarte.tk/ggc2000/{z}/{x}/{y}",
+            {code: 'N', tms: true, maxNativeZoom: 15, print: true, jnx: true}),
         "ArbaletMO": new L.TileLayer("http://{s}.tiles.nakarte.tk/ArbaletMO/{z}/{x}/{y}",
                                      {code: 'A', tms: true, maxNativeZoom: 13, print: true, jnx: true}),
         "Slazav mountains": new L.TileLayer("http://{s}.tiles.nakarte.tk/map_hr/{z}/{x}/{y}",
