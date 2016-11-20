@@ -95,7 +95,7 @@
                                             }"></a>\
                             </div>\
                             <input type="text" maxlength="4" title="width" placeholder="width" style="width: 2.1em" data-bind="value: pageWidth">\
-                            x <input type="text" maxlength="4" heigh="height" placeholder="height" style="width: 2.1em" data-bind="value: pageHeight"> mm\
+                            x <input type="text" maxlength="4" title="height" placeholder="height" style="width: 2.1em" data-bind="value: pageHeight"> mm\
                         </td>\
                     </tr>\
                     <tr data-bind="visible: settingsExpanded">\
@@ -438,7 +438,7 @@
             }
             return true;
 
-        },
+        }
 
     });
 })();
