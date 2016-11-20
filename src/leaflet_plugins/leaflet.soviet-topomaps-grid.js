@@ -40,7 +40,9 @@
 
 		getQuadName100k: function(column, row, join) {
 			var name = this.getQuadName1m(Math.floor(column / 12), Math.floor(row / 12), 1);
-			var subquad = 132-(row % 12) * 12 + (column % 12) + 1;
+			row = row - Math.floor(row / 12) * 12;
+			column = column - Math.floor(column / 12) * 12;
+			var subquad = 132- row * 12 + column + 1;
 			name = name + ' &ndash; ' + zeroPad(subquad, 3);
 			if (join > 1) {
 				name += ',' + zeroPad(subquad+1, 3);
@@ -48,7 +50,6 @@
 			if (join == 4) {
 				name += ',' + zeroPad(subquad+2, 3) + ',' + zeroPad(subquad+3, 3);
 			}
-
 			return name;
 		},
 
@@ -238,13 +239,9 @@
 		},
 
 		_update: function(reset) {
-			var t = new Date().getTime();
 			this._cleanupQuads(reset);
 			this._updatePathViewport();
 			this._addGrid();
-			t = new Date().getTime() - t;
-			console.log('Time:', t);
-			console.log('Objects:', this.getLayers().length);
 		}
 	});
 
