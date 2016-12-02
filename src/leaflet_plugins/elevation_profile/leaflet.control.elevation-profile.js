@@ -114,10 +114,12 @@
                 e._offset = offestFromEvent(e);
                 this.dragStartPos[e.button] = e;
                 this.prevEvent[e.button] = e;
+                L.DomUtil.disableTextSelection();
             }
         },
 
         onMouseUp: function(e) {
+            L.DomUtil.enableTextSelection();
             if (this.options.dragButtons[e.button]) {
                 this.dragStartPos[e.button] = null;
                 if (this.isDragging[e.button]) {
