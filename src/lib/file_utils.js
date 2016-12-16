@@ -101,7 +101,7 @@ var fileutils = (function() {
                 resolve(fileInput.files);
             };
         });
-        setTimeout(fileInput.click.bind(fileInput), 0);
+	    fileInput.click();
         return result;
     }
 
