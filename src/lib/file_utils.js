@@ -199,6 +199,13 @@ var fileutils = (function() {
         }
     }
 
+    function stripBom(s) {
+        if (s.substr(0, 3) === '\xef\xbb\xbf') {
+            s = s.substr(3);
+        }
+        return s;
+    }
+
     return {
         get: get,
         arrayBufferToString: arrayBufferToString,
@@ -208,6 +215,7 @@ var fileutils = (function() {
         decodeUTF8: decodeUTF8,
         encodeUTF8: encodeUTF8,
         escapeHtml: escapeHtml,
-        copyToClipboard: copyToClipboard
+        copyToClipboard: copyToClipboard,
+        stripBom: stripBom
     };
 })();

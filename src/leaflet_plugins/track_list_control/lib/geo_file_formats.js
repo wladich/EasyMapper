@@ -64,6 +64,7 @@
             return waypoints;
         };
 
+        txt = fileutils.stripBom(txt);
         // remove namespaces
         txt = txt.replace(/<([^ >]+):([^ >]+)/g, '<$1_$2');
         var dom = (new DOMParser()).parseFromString(txt,"text/xml");
@@ -243,6 +244,8 @@
             }
             return points;
         }
+
+        txt = fileutils.stripBom(txt);
         txt = txt.replace(/<([^ >]+):([^ >]+)/g, '<$1_$2');
         var dom = (new DOMParser()).parseFromString(txt,"text/xml");
         if (dom.documentElement.nodeName == 'parsererror') {
