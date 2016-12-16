@@ -100,7 +100,7 @@
 
             var baseMaps = layers.getBaseMaps();
 
-            new L.Control.Attribution({prefix: '<a href="mailto:nakarte@nakarte.tk">nakarte@nakarte.tk</a>', position: 'topleft'}).addTo(map);
+            new L.Control.Attribution({prefix: '<a href="http://about.nakarte.tk">News</a> | <a href="mailto:nakarte@nakarte.tk">nakarte@nakarte.tk</a>', position: 'topleft'}).addTo(map);
             new L.Control.Zoom().addTo(map);
             this.layersControl = L.control.layers(baseMaps, layers.getOverlays(), {collapsed: false, hotkeys: true})
                 .addTo(map);
