@@ -1,6 +1,18 @@
 //@require leaflet
 //@require leaflet.contextmenu.css
 (function(){
+    function isDescendant(parent, child) {
+        if (!parent) {
+            return false;
+        }
+        while (child) {
+            if (child === parent) {
+                return true;
+            }
+            child = child.parentNode;
+        }
+    }
+
     L.Contextmenu = L.Class.extend({
         initialize: function (items) {
             this._visible = false;
@@ -32,7 +44,9 @@
         },
 
         onMouseDown: function(e) {
-            this.hide();
+            if (!isDescendant(this._container, e.target)) {
+                this.hide();
+            }
         },
 
         hide: function() {
@@ -76,11 +90,13 @@
             el.innerHTML = itemOptions.text;
             var callback = itemOptions.callback;
             if (callback && !itemOptions.disabled) {
-                L.DomEvent.addListener(el, 'mousedown', function(e) {
-                    callback(e);
+                L.DomEvent.addListener(el, 'click', function(e) {
                     L.DomEvent.stopPropagation(e);
                     L.DomEvent.preventDefault(e);
                     this.hide();
+                    setTimeout(function() {
+                        callback(e);
+                    }, 0);
                 }, this);
             }
         },
