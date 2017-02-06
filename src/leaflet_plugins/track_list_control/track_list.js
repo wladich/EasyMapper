@@ -796,7 +796,9 @@
         removePoint: function(marker) {
             this.stopPlacingPoint();
             this._markerLayer.removeMarker(marker);
-            marker._parentTrack.markers.remove(marker);
+            var markers = marker._parentTrack.markers,
+                i = markers.indexOf(marker);
+            markers.splice(i, 1);
         },
 
         renamePoint: function(marker) {
