@@ -94,9 +94,7 @@
                     L.DomEvent.stopPropagation(e);
                     L.DomEvent.preventDefault(e);
                     this.hide();
-                    setTimeout(function() {
-                        callback(e);
-                    }, 0);
+                    callback(e);
                 }, this);
             }
         },

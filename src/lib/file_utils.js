@@ -196,8 +196,12 @@ var fileutils = (function() {
             showNotification('Copied', mouseEvent);
         } catch (e) {
             prompt("Copy to clipboard: Ctrl+C, Enter", s);
+        } finally {
+            document.body.removeChild(ta);
         }
-    }
+
+
+}
 
     function stripBom(s) {
         if (s.substr(0, 3) === '\xef\xbb\xbf') {
