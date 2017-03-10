@@ -1,3 +1,5 @@
+This repo is deprecated, source code of site nakarte.tk is now at http://github.com/wladich/nakarte
+
 EasyMapper
 ==========
 http://nakarte.tk
